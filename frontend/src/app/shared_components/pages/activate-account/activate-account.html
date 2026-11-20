@@ -1,0 +1,27 @@
+<main class="activation-page">
+	<div class="activation-card">
+		<app-brand />
+		@if (loading()) {
+			<p>{{ 'Checking your invitation…' | translate }}</p>
+		} @else if (success()) {
+			<p class="eyebrow">{{ 'Account ready' | translate }}</p>
+			<h1>{{ 'Your account is activated.' | translate }}</h1>
+			<p>{{ 'You can now sign in with your email and your new password.' | translate }}</p>
+			<button class="primary" type="button" (click)="goToLogin()">{{ 'Go to sign in' | translate }}</button>
+		} @else {
+			<p class="eyebrow">{{ 'Secure account activation' | translate }}</p>
+			<h1>{{ 'Choose your password.' | translate }}</h1>
+			<p>{{ 'This invitation is for' | translate }} <strong>{{ email() }}</strong></p>
+			@if (error()) { <p class="error" role="alert">{{ error() | translate }}</p> }
+			@if (valid()) {
+				<form #form="ngForm" (ngSubmit)="form.valid && submit()">
+					<label>{{ 'Password' | translate }}<input type="password" name="password" [(ngModel)]="password" required minlength="8" pattern="(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[^A-Za-z0-9\s]).{8,}" autocomplete="new-password"></label>
+					<label>{{ 'Confirm password' | translate }}<input type="password" name="confirmPassword" [(ngModel)]="confirmPassword" required autocomplete="new-password"></label>
+					<small>{{ 'Use at least 8 characters, with an uppercase and lowercase letter, a number and a special character.' | translate }}</small>
+					<button class="primary" type="submit" [disabled]="busy() || form.invalid">{{ (busy() ? 'Please wait…' : 'Activate account') | translate }}</button>
+				</form>
+			}
+			<a routerLink="/backoffice/login">{{ 'Return to sign in' | translate }}</a>
+		}
+	</div>
+</main>

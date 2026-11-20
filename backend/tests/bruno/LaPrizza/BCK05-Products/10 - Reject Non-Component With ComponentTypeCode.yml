@@ -1,0 +1,40 @@
+info:
+  name: 10 - Reject Non-Component With ComponentTypeCode
+  type: http
+  seq: 14
+http:
+  method: POST
+  url: '{{baseUrl}}/products'
+  body:
+    type: json
+    data: |-
+      {
+          "name": "Soda With Type",
+          "description": "Non-component carrying componentTypeName",
+          "categoryName": "Beverages",
+          "isSellable": true,
+          "isPizzaComponent": false,
+          "isStockControlled": true,
+          "componentTypeName": "Base Dough",
+          "sku": "{{nonCompInvalidSku}}"
+      }
+  auth:
+    type: bearer
+    token: '{{managerToken}}'
+runtime:
+  scripts:
+    - type: before-request
+      code: |-
+        const suffix = Date.now().toString().slice(-4);
+        bru.setVar("nonCompInvalidSku", "PRD-INV-" + suffix);
+    - type: tests
+      code: |-
+        test("Rejects non-component with type with 400 Bad Request", function() {
+            expect(res.getStatus()).to.equal(400);
+        });
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: true

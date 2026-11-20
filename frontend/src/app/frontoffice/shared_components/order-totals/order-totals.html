@@ -1,0 +1,51 @@
+<aside class="totals shop-panel">
+	<h2>{{ 'Order summary' | translate }} <app-icon name="orders" /></h2>
+	<dl>
+		<div>
+			<dt>{{ 'Subtotal' | translate }}</dt>
+			<dd>{{ subtotal() | localCurrency: currency() }}</dd>
+		</div>
+		<div>
+			<dt>{{ 'Delivery' | translate }}</dt>
+			<dd>
+				{{
+					delivery() === null
+						? ('Not calculated' | translate)
+						: (delivery() | localCurrency: currency())
+				}}
+			</dd>
+		</div>
+		<div>
+			<dt>{{ 'Tax' | translate }}</dt>
+			<dd>
+				{{ tax() === null ? ('Not calculated' | translate) : (tax() | localCurrency: currency()) }}
+			</dd>
+		</div>
+	</dl>
+	<div class="total">
+		<span>{{
+			delivery() === null || tax() === null ? ('Items total' | translate) : ('Total' | translate)
+		}}</span
+		><strong>{{ total() | localCurrency: currency() }}</strong>
+	</div>
+	<button shopButton [disabled]="!checkoutEnabled()" (click)="checkout.emit()">
+		{{ 'Check out' | translate }} <app-icon name="arrow" />
+	</button>
+	@if (!checkoutEnabled()) {
+		<p class="order-note">
+			{{
+				'Checkout is not available yet. Your draft is saved in this browser; no order has been placed.'
+					| translate
+			}}
+		</p>
+	}
+	@if (delivery() === null || tax() === null) {
+		<p class="order-note">
+			{{
+				'Delivery charges and tax are not included. Prices and availability need confirmation before placing an order.'
+					| translate
+			}}
+		</p>
+	}
+	<div class="delivery-slot"><ng-content /></div>
+</aside>

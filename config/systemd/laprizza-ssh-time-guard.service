@@ -1,0 +1,13 @@
+[Unit]
+Description=Laprizza SSH Time Guard - Kill sessions outside allowed window
+Documentation=man:laprizza-ssh-time-guard.sh(1)
+After=network.target ssh.service
+Requires=ssh.service
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/sbin/laprizza-ssh-time-guard.sh
+User=root
+Group=root
+StandardOutput=journal
+StandardError=journal

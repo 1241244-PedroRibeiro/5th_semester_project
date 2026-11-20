@@ -1,0 +1,87 @@
+name: laprizza
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: laprizza_backend
+    environment:
+      DB_HOST: postgres
+      DB_NAME: laprizza_db
+      DB_PASSWORD: [REDACTED]
+      DB_PORT: "5432"
+      DB_USER: laprizza_user
+      JWT_SECRET: [REDACTED]
+      KITCHEN_ASSET_BASE_URL: http://frontend:8080
+      NODE_ENV: production
+      PORT: "3000"
+      PROLOG_URL: http://prolog:8080/api/v1/plan
+      SEED_DATABASE: "true"
+    networks:
+      laprizza-network: null
+    ports:
+      - mode: ingress
+        target: 3000
+        published: "3000"
+        protocol: tcp
+    restart: unless-stopped
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    networks:
+      laprizza-network: null
+    ports:
+      - host_ip: 127.0.0.1
+        mode: ingress
+        target: 80
+        published: "80"
+        protocol: tcp
+      - host_ip: 127.0.0.1
+        mode: ingress
+        target: 443
+        published: "443"
+        protocol: tcp
+    restart: unless-stopped
+    volumes:
+      - type: bind
+        source: ./certs
+        target: /etc/nginx/certs
+        read_only: true
+  postgres:
+    environment:
+      POSTGRES_DB: laprizza_db
+      POSTGRES_PASSWORD: [REDACTED]
+      POSTGRES_USER: laprizza_user
+    image: postgres:16-alpine
+    networks:
+      laprizza-network: null
+    ports:
+      - mode: ingress
+        target: 5432
+        published: "5432"
+        protocol: tcp
+    restart: unless-stopped
+    volumes:
+      - type: volume
+        source: postgres_data
+        target: /var/lib/postgresql/data
+  prolog:
+    build:
+      context: ./prolog
+      dockerfile: Dockerfile
+    container_name: laprizza_prolog
+    networks:
+      laprizza-network: null
+    ports:
+      - mode: ingress
+        target: 8080
+        published: "8081"
+        protocol: tcp
+    restart: unless-stopped
+networks:
+  laprizza-network:
+    name: laprizza_laprizza-network
+volumes:
+  postgres_data:
+    name: laprizza_postgres_data

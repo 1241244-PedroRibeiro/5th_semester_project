@@ -1,0 +1,19 @@
+:host {
+	display: block;
+	min-width: 0;
+}
+
+.resource-toolbar {
+	background: color-mix(in srgb, var(--background) 55%, var(--surface));
+}
+
+.resource-search {
+	flex: 0 1 34rem;
+	max-width: 100%;
+}
+
+@media (max-width: 540px) {
+	.resource-search {
+		flex-basis: 100%;
+	}
+}

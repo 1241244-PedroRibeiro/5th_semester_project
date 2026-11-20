@@ -1,0 +1,129 @@
+{
+  "schemaVersion": "1.0",
+  "metadata": {
+    "name": "Standard Layout",
+    "description": "Default LaPrizza kitchen layout with wood-fired oven on the right, receiving platform and main preparation counter on the left, conveyor belt connecting the two, articulated robotic arm and cheese dispenser above the counter.",
+    "author": "LaPrizza Manager",
+    "createdAt": "2026-11-11T09:00:00Z"
+  },
+  "dimensions": {
+    "x": 10.0,
+    "y": 3.5,
+    "z": 8.0
+  },
+  "equipment": [
+    {
+      "id": "receiving-platform",
+      "label": "Receiving Platform",
+      "category": "receiving_platform",
+      "modelUrl": "/assets/3d/models/ReceivingPlatform.glb",
+      "position": [0.75, 0.9, 2.0],
+      "rotation": [0, 0, 0],
+      "scale": [1, 1, 1]
+    },
+    {
+      "id": "counter-main",
+      "label": "Main Preparation Counter",
+      "category": "counter",
+      "modelUrl": "/assets/3d/models/counter.glb",
+      "position": [3.5, 0, 2.0],
+      "rotation": [0, 0, 0],
+      "scale": [1, 1, 1]
+    },
+    {
+      "id": "conveyor-main",
+      "label": "Main Conveyor Belt",
+      "category": "conveyor",
+      "modelUrl": "/assets/3d/models/MainConveyor.glb",
+      "position": [4.0, 1.1, 2.0],
+      "rotation": [0, 0, 0],
+      "scale": [1, 1, 1]
+    },
+    {
+      "id": "arm-pizza-01",
+      "label": "Pizza Assembly Arm",
+      "category": "robot_arm",
+      "modelUrl": "/assets/3d/models/RobotArm_01.glb",
+      "position": [5.5, 1.8, 2.0],
+      "rotation": [0, 0, 0],
+      "scale": [1, 1, 1]
+    },
+    {
+      "id": "dispenser-cheese",
+      "label": "Cheese Dispenser",
+      "category": "dispenser",
+      "modelUrl": "/assets/3d/models/CheeseDispenser.glb",
+      "position": [5.5, 2.5, 2.0],
+      "rotation": [0, 0, 0],
+      "scale": [1, 1, 1]
+    },
+    {
+      "id": "oven-main",
+      "label": "Wood-fired Oven",
+      "category": "oven",
+      "modelUrl": "/assets/3d/models/WoodFiredOven.glb",
+      "position": [8.5, 0, 4.0],
+      "rotation": [0, -1.5708, 0],
+      "scale": [1, 1, 1]
+    }
+  ],
+
+
+
+
+"lights": [
+    {
+        "type": "ambient",
+        "color": "#ffffff",
+        "intensity": 0.3
+    },
+      { "type": "directional", "color": "#FFFFFF", "position": [6, 9, 8], "target": [6, 0, 5], "intensity": 3, "castShadow": true }
+,
+    {
+        "type": "spot",
+        "color": "#ffe0b0",
+        "intensity": 2.0,
+        "position": [4.0, 3.4, 3.5],
+        "target": [4.0, 0.8, 2.0],
+        "angle": 0.75,
+        "penumbra": 0.55,
+        "decay": 1.5,
+        "distance": 12.0,
+        "castShadow": false
+    },
+    {
+        "type": "point",
+        "color": "#ff963f",
+        "intensity": 0.4,
+        "position": [8.5, 1.8, 4.0],
+        "decay": 2.0,
+        "distance": 4.0
+    }
+],
+  "animationTriggers": [
+    {
+      "id": "conveyor-belt-run",
+      "name": "Conveyor Belt Running",
+      "targetEquipmentId": "conveyor-main",
+      "action": "loop",
+      "loop": true,
+      "delay": 0.0
+    },
+    {
+      "id": "arm-pick-place",
+      "name": "Arm Pick and Place",
+      "targetEquipmentId": "arm-pizza-01",
+      "action": "loop",
+      "loop": true,
+      "delay": 0.5
+    },
+    {
+      "id": "cheese-dispense",
+      "name": "Cheese Dispenser Pulse",
+      "targetEquipmentId": "dispenser-cheese",
+      "action": "pulse",
+      "loop": false,
+      "delay": 1.2
+    }
+  ]
+}

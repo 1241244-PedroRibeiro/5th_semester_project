@@ -1,0 +1,26 @@
+info:
+  name: 05 - Get Catalogue Item Not Found
+  type: http
+  seq: 6
+http:
+  method: GET
+  url: '{{baseUrl}}/catalogue/PRD-TEST-COLA'
+  auth: inherit
+runtime:
+  scripts:
+    - type: tests
+      code: |-
+        test("returns HTTP 404", function () {
+        	expect(res.status).to.equal(404);
+        });
+
+        test("returns a catalogue product not found message", function () {
+        	expect(res.body.error.message).to.include("PRD-TEST-COLA");
+        	expect(res.body.error.message).to.include("was not found");
+        });
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: false

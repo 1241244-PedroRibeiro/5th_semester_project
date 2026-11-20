@@ -1,0 +1,32 @@
+<a class="customer-skip" href="#customer-content" (click)="skip($event)">{{
+	'Skip to content' | translate
+}}</a>
+<header class="shop-header">
+	<a routerLink="/" [attr.aria-label]="'LaPrizza home' | translate" class="home-link"
+		><app-storefront-brand
+	/></a>
+	<nav [attr.aria-label]="'Main navigation' | translate">
+		<a routerLink="/menu" routerLinkActive="active" ariaCurrentWhenActive="page">{{
+			'Menu' | translate
+		}}</a
+		><a routerLink="/account" routerLinkActive="active" ariaCurrentWhenActive="page">{{
+			'My account' | translate
+		}}</a
+		><a routerLink="/order" routerLinkActive="active" ariaCurrentWhenActive="page">{{
+			'Order' | translate
+		}}</a
+		><a
+			routerLink="/order"
+			class="basket"
+			[attr.aria-label]="
+				('Your order, ' | translate) + cart.count() + (' items' | translate) | translate
+			"
+			><app-icon name="bag" /><span>{{ cart.count() }}</span></a
+		>
+	</nav>
+</header>
+@if (auth.logoutError()) {
+	<p role="alert">{{ auth.logoutError() | translate }}</p>
+}
+<main id="customer-content" tabindex="-1"><router-outlet /></main>
+<app-storefront-footer />

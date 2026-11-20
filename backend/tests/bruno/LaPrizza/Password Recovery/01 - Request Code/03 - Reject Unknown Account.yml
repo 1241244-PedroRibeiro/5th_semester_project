@@ -1,0 +1,30 @@
+info:
+  name: 03 - Reject Unknown Account
+  type: http
+  seq: 3
+http:
+  method: POST
+  url: '{{baseUrl}}/password-recovery'
+  body:
+    type: json
+    data: |-
+      {
+        "email": "{{recoveryUnknownEmail}}"
+      }
+runtime:
+  scripts:
+    - type: before-request
+      code: |-
+        bru.setVar("recoveryUnknownEmail", "unknown-recovery-" + Date.now() + "-" + Math.random().toString(36).slice(2) + "@example.test");
+    - type: tests
+      code: |-
+        test("Returns HTTP 404", function() {
+          expect(res.getStatus()).to.equal(404);
+        });
+        test("Returns a confirmation or explanation without recovery credentials", function() {
+          const data = res.getBody();
+          expect(data.error.message).to.be.a("string").and.not.empty;
+          expect(data).not.to.have.property("recovery_code");
+          expect(data).not.to.have.property("new_password");
+          expect(data).not.to.have.property("passwordHash");
+        });

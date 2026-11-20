@@ -1,0 +1,338 @@
+<app-page-header
+	[title]="'Product Management' | translate"
+	[description]="(auth.manager() ? 'Your products, prices and stock, all in one place.' : 'Review products and their current status.') | translate"
+/>
+@if (success()) {
+	<p class="notice success" role="status">{{ success() | translate: successParams() }}</p>
+}
+<app-panel [title]="'Products' | translate" [count]="loading() || error() ? null : items().length"
+	>@if (auth.manager()) {<button panel-actions class="button" (click)="open()">
+		<app-icon name="plus" />{{ 'Add product' | translate }}
+	</button>}
+	<app-tabs [tabs]="tabs()" [active]="tab()" (changed)="setTab($event)" />
+	<div class="toolbar">
+		<label class="search"
+			><span class="sr-only">{{ 'Search products' | translate }}</span
+			><app-icon name="search" /><input
+				type="search"
+				[placeholder]="'Search by SKU, name or description…' | translate"
+				[ngModel]="query()"
+				(ngModelChange)="query.set($event); page.set(1)" /></label
+		><select
+			[attr.aria-label]="'Filter by category' | translate"
+			[ngModel]="category()"
+			(ngModelChange)="category.set($event); page.set(1)"
+		>
+			<option value="">{{ 'All categories' | translate }}</option>
+			@for (c of categories(); track c.name) {
+				<option [value]="c.name">{{ c.name }}</option>
+			}</select
+		><select [attr.aria-label]="'Filter by allergen' | translate" [ngModel]="allergenFilter()"
+			(ngModelChange)="allergenFilter.set($event); page.set(1)">
+			<option value="">{{ 'All allergens' | translate }}</option>
+			@for (allergen of allergenOptions(); track allergen) { <option [value]="allergen">{{ allergen }}</option> }
+		</select
+		><select [attr.aria-label]="'Filter by component type' | translate" [ngModel]="componentTypeFilter()"
+			(ngModelChange)="componentTypeFilter.set($event); page.set(1)">
+			<option value="">{{ 'All component types' | translate }}</option>
+			@for (type of types(); track type.name) { <option [value]="type.name">{{ type.name }}</option> }
+		</select
+		><button
+			class="icon-button"
+			[attr.aria-label]="'Refresh products' | translate"
+			[disabled]="loading()"
+			(click)="load()"
+		>
+			<app-icon name="refresh" />
+		</button>
+	</div>
+	@if (loading()) {
+		<app-feedback kind="loading" [title]="'Loading products' | translate" />
+	} @else if (error()) {
+		<app-feedback
+			kind="error"
+			[title]="'Couldn\'t load products' | translate"
+			[message]="error() | translate"
+			[retryable]="true"
+			(retry)="load()"
+		/>
+	} @else {
+		@if (stockError()) {
+			<p class="notice" role="status">
+				{{ 'Stock is unavailable:' | translate }} {{ stockError() | translate }}
+			</p>
+		}
+		@if (!filtered().length) {
+			<app-feedback
+				[title]="'No products found' | translate"
+				[message]="(auth.manager() ? 'Add your first product or adjust your filters.' : 'Adjust your filters to find a product.') | translate"
+			/>
+		} @else {
+			<app-data-table
+				[label]="'Products' | translate"
+				[columns]="columns()"
+				[rows]="rows()"
+				trackKey="sku"
+				><ng-template let-product let-column="column">
+					@switch (column) {
+						@case ('sku') {
+							<span class="sku">{{ product.sku }}</span>
+						}
+						@case ('name') {
+							<span class="cell-title">{{ product.name }}</span>
+							@if (product.isPizzaComponent) {
+								<small class="cell-subtitle">{{ product.componentTypeName }}</small>
+							}
+						}
+						@case ('description') {
+							<span class="description">{{ product.description || '—' }}</span>
+						}
+						@case ('status') {
+							<app-badge [tone]="product.active ? 'teal' : 'neutral'">{{
+								product.active ? ('Active' | translate) : ('Disabled' | translate)
+							}}</app-badge>
+						}
+						@case ('categoryName') {
+							<app-badge tone="yellow">{{ product.categoryName }}</app-badge>
+						}
+						@case ('price') {
+							<span class="cell-title">{{
+								product.directSellingPrice === null
+									? '—'
+									: (product.directSellingPrice | localCurrency: 'EUR')
+							}}</span>
+						}
+						@case ('stock') {
+							<span>{{
+								product.isStockControlled
+									? (units(product.sku) ?? ('Unavailable' | translate))
+									: ('Not tracked' | translate)
+							}}</span>
+						}
+						@case ('actions') {
+							@if (auth.manager()) {
+							<div class="row-actions">
+								<button
+									class="button small"
+									(click)="open(product)"
+									[attr.aria-label]="'Update ' + product.name"
+								>
+									{{ 'Update' | translate }}</button
+								><button
+									class="button small"
+									[class.danger]="product.active"
+									(click)="askToggle(product)"
+									[attr.aria-label]="(product.active ? 'Disable ' : 'Activate ') + product.name"
+								>
+									{{ product.active ? ('Disable' | translate) : ('Activate' | translate) }}
+								</button>
+							</div>
+							}
+						}
+					}
+				</ng-template></app-data-table
+			>
+		}
+		<app-pagination
+			[page]="page()"
+			[pageSize]="pageSize"
+			[total]="filtered().length"
+			[label]="'products' | translate"
+			(changed)="page.set($event)"
+		/>
+	}
+</app-panel>
+@if (auth.manager() && editing()) {
+	<app-modal
+		[title]="
+			(selected() ? ('Update product' | translate) : ('Add product' | translate)) | translate
+		"
+		[description]="'Manage stock, pricing and product details.' | translate"
+		[busy]="saving() || allergensBusy()"
+		(closed)="editing.set(false)"
+		><form id="product-form" #form="ngForm" (ngSubmit)="form.valid && save()">
+			<fieldset class="stack" [disabled]="saving()">
+				@if (selected(); as product) {
+					<div class="summary">
+						<app-icon name="box" />
+						<div>
+							<strong>{{ product.name }}</strong
+							><small>SKU {{ product.sku }}</small>
+						</div>
+						<app-badge [tone]="product.active ? 'teal' : 'neutral'">{{
+							product.active ? ('Active' | translate) : ('Disabled' | translate)
+						}}</app-badge>
+					</div>
+				}
+				@if (lookupError()) {
+					<div class="notice error" role="alert">
+						{{ 'Form options could not load:' | translate }} {{ lookupError() | translate }}
+						<button type="button" class="inline-link" (click)="loadLookups()">
+							{{ 'Retry' | translate }}
+						</button>
+					</div>
+				}
+				<div class="form-grid">
+					<label
+						>SKU<input
+							name="sku"
+							[(ngModel)]="draft.sku"
+							required
+							[readonly]="!!selected()"
+							maxlength="40"
+							[placeholder]="'e.g. WATER-01' | translate" /></label
+					><label
+						>{{ 'Product name' | translate
+						}}<input name="name" [(ngModel)]="draft.name" required maxlength="100" /></label
+					><label
+						>{{ 'Category' | translate
+						}}<select name="categoryName" [(ngModel)]="draft.categoryName" required>
+							<option value="" disabled>{{ 'Select a category' | translate }}</option>
+							@for (c of categories(); track c.name) {
+								<option [value]="c.name">{{ c.name }}</option>
+							}
+						</select></label
+					><label
+						>{{ 'Price · EUR' | translate
+						}}<input
+							type="number"
+							name="price"
+							[(ngModel)]="draft.directSellingPrice"
+							[required]="draft.isSellable"
+							[disabled]="!draft.isSellable"
+							min="0"
+							step="0.01"
+					/></label>
+				</div>
+				<fieldset>
+					<legend>{{ 'Product roles' | translate }}</legend>
+					<div class="check-list">
+						<label class="check-label"
+							><input type="checkbox" name="sellable" [(ngModel)]="draft.isSellable" />{{
+								'Sellable' | translate
+							}}</label
+						><label class="check-label"
+							><input type="checkbox" name="component" [(ngModel)]="draft.isPizzaComponent" />{{
+								'Pizza component' | translate
+							}}</label
+						><label class="check-label"
+							><input type="checkbox" name="tracked" [(ngModel)]="draft.isStockControlled" />{{
+								'Track stock' | translate
+							}}</label
+						>
+					</div>
+				</fieldset>
+				@if (draft.isPizzaComponent) {
+					<label
+						>{{ 'Component type' | translate
+						}}<select name="componentType" [(ngModel)]="draft.componentTypeName" required>
+							<option [ngValue]="null" disabled>{{ 'Select a component type' | translate }}</option>
+							@for (t of types(); track t.name) {
+								<option [value]="t.name">{{ t.name }}</option>
+							}
+						</select></label
+					>
+				}
+				@if (draft.isStockControlled && selected()) {
+					<label
+						>{{ 'Increase stock quantity' | translate
+						}}<input
+							type="number"
+							name="increase"
+							[(ngModel)]="stockIncrease"
+							min="0"
+							step="1"
+							pattern="[0-9]+"
+						/><small
+							>{{ units(draft.sku) ?? ('Unknown' | translate) }} {{ 'in stock ·' | translate }}
+							{{ stockIncrease || 0 }} {{ 'units to add after saving' | translate }}</small
+						></label
+					>
+				}
+				<label class="image-field"
+					>{{ 'Picture' | translate
+					}}<input
+						type="file"
+						name="image"
+						accept="image/jpeg,image/png,image/webp,image/gif"
+						(change)="imageSelected($event)"
+					/><small>{{
+						(selected()
+							? 'Optional · choose a new picture to replace the current one (JPEG, PNG, WEBP or GIF, max 5 MB).'
+							: 'Required · JPEG, PNG, WEBP or GIF, max 5 MB.'
+						) | translate
+					}}</small></label
+				>
+				@if (imagePreview(); as preview) {
+					<img class="image-preview" [src]="preview" [alt]="draft.name" width="160" height="160" />
+				}
+				<label
+					>{{ 'Description' | translate
+					}}<textarea
+						name="description"
+						[(ngModel)]="draft.description"
+						maxlength="2000"
+						rows="3"
+					></textarea
+					><small>{{
+						'This description appears on the product listing.' | translate
+					}}</small></label
+				>
+				@if (selected(); as product) {
+					<app-product-allergen-editor
+						[product]="product"
+						(updated)="allergensUpdated($event)"
+						(busyChanged)="allergensBusy.set($event)"
+					/>
+				}
+				@if (formError()) {
+					<div class="notice error" role="alert">
+						{{ formError() | translate: { reason: (errorReason() | translate) } }}
+					</div>
+				}
+			</fieldset>
+		</form>
+		<div modal-actions class="row-actions">
+			<button class="button" [disabled]="saving() || allergensBusy()" (click)="editing.set(false)">
+				{{ 'Cancel' | translate }}</button
+			><button
+				class="button primary"
+				type="submit"
+				form="product-form"
+				[disabled]="saving() || allergensBusy() || form.invalid || !!lookupError()"
+			>
+				{{ saving() ? ('Saving…' | translate) : ('Save changes' | translate) }}
+			</button>
+		</div></app-modal
+	>
+}
+@if (auth.manager() && confirm(); as product) {
+	<app-modal
+		[title]="
+			(product.active ? ('Disable ' | translate) : ('Activate ' | translate)) + product.name + '?'
+				| translate
+		"
+		[description]="'You can change the product status again at any time.' | translate"
+		[busy]="saving()"
+		(closed)="confirm.set(null)"
+		><p>
+			{{
+				product.active
+					? ('This product will no longer be active in the catalogue.' | translate)
+					: ('This product will become active in the catalogue.' | translate)
+			}}
+		</p>
+		@if (formError()) {
+			<p class="notice error" role="alert">
+				{{ formError() | translate: { reason: (errorReason() | translate) } }}
+			</p>
+		}
+		<div modal-actions class="row-actions">
+			<button class="button" [disabled]="saving()" (click)="confirm.set(null)">
+				{{ 'Cancel' | translate }}</button
+			><button class="button primary" [disabled]="saving()" (click)="toggle()">
+				{{ saving() ? ('Saving…' | translate) : ('Confirm' | translate) }}
+			</button>
+		</div></app-modal
+	>
+}

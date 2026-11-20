@@ -1,0 +1,20 @@
+<dialog #dialog (cancel)="cancel($event)">
+	<app-language-switcher />
+	<header>
+		<div>
+			<h2>{{ title() }}</h2>
+			<p>{{ description() }}</p>
+		</div>
+		<button
+			class="icon-button"
+			type="button"
+			[attr.aria-label]="'Close dialog' | translate"
+			[disabled]="busy()"
+			(click)="closed.emit()"
+		>
+			<app-icon name="close" />
+		</button>
+	</header>
+	<div class="body"><ng-content /></div>
+	<footer><ng-content select="[modal-actions]" /></footer>
+</dialog>

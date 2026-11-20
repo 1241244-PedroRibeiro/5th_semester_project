@@ -1,0 +1,25 @@
+info:
+  name: 06 - PUT Allergen Not Found
+  type: http
+  seq: 6
+
+http:
+  method: PUT
+  url: "{{baseUrl}}/allergens/WEB04%20Nonexistent"
+  body:
+    type: json
+    data: |-
+      {
+        "name": "WEB04 Nonexistent",
+        "description": "Teste de alergénio inexistente"
+      }
+  auth:
+    type: bearer
+    token: "{{managerToken}}"
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: false

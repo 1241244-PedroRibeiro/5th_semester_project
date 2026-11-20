@@ -1,0 +1,32 @@
+info:
+  name: ADJUST-STOCK-INCREASE-INACTIVE
+  type: http
+  seq: 11
+http:
+  method: POST
+  url: '{{baseUrl}}/stock/{{inactiveStockProductSku}}/adjustments'
+  body:
+    type: json
+    data: |-
+      {
+      	"adjustmentType": "INCREASE",
+      	"amount": 5,
+      	"reason": "Teste de ajuste no Bruno"
+      }
+  auth:
+    type: bearer
+    token: '{{managerToken}}'
+runtime:
+  scripts:
+    - type: tests
+      code: |-
+        test("Matches the current API contract", function() {
+        	expect(res.getStatus()).to.equal(200);
+        	expect(res.getBody().productSku).to.equal(bru.getVar("inactiveStockProductSku"));
+        });
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: false

@@ -1,0 +1,19 @@
+info:
+  name: 19 - Delete Allergen as Customer (Forbidden)
+  type: http
+  seq: 18
+http:
+  method: DELETE
+  url: '{{baseUrl}}/allergens/{{createdAllergenName}}'
+  body: none
+  auth:
+    type: bearer
+    token: '{{customerToken}}'
+runtime:
+  scripts:
+    - type: tests
+      code: |-
+        test("Customer cannot delete allergen (403 Forbidden)", function() {
+        	expect(res.getStatus()).to.equal(403);
+        	expect(res.getBody().error.message).to.equal("You do not have permission to do this.");
+        });

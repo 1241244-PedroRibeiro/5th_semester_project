@@ -1,0 +1,28 @@
+info:
+  name: 30 - Login Pending Manager
+  type: http
+  seq: 30
+http:
+  method: POST
+  url: '{{baseUrl}}/auth/login'
+  body:
+    type: json
+    data: |-
+      {
+      	"email": "pending-manager@laprizza.test",
+      	"password": "Manager123!"
+      }
+runtime:
+  scripts:
+    - type: tests
+      code: |-
+        test("Status code is 400", function() {
+        	expect(res.getStatus()).to.equal(400);
+        });
+
+        test("Rejects login without exposing credentials", function() {
+        	const data = res.getBody();
+        	expect(data.error.message).to.equal("Registration is pending. Please complete your registration via the invitation link.");
+        	expect(data).not.to.have.property("token");
+        	expect(data).not.to.have.property("user");
+        });

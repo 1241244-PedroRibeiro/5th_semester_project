@@ -1,0 +1,29 @@
+info:
+  name: 01 - Happy Path - Sufficient Stock
+  type: http
+  seq: 2
+http:
+  method: POST
+  url: "{{baseUrl}}/planning/executions"
+  body:
+    type: json
+    data: |-
+      { "forecastName": "Week-45", "scenarioName": "Autumn-Scenario", "referenceDate": "2026-11-05" }
+  auth:
+    type: bearer
+    token: "{{managerToken}}"
+runtime:
+  scripts:
+    - type: tests
+      code: |-
+        test("Status is 201", function() { expect(res.getStatus()).to.equal(201); });
+        test("Has requirements", function() { expect(res.getBody().requirements).to.be.an('array').that.is.not.empty; });
+        test("Returns unmet needs as an array", function() {
+          expect(res.getBody().unmetNeeds).to.be.an('array');
+        });
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: false

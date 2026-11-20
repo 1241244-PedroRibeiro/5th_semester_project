@@ -1,0 +1,39 @@
+info:
+  name: 06b - Create Priced Pizza Component
+  type: http
+  seq: 9
+http:
+  method: POST
+  url: '{{baseUrl}}/products'
+  body:
+    type: json
+    data: |-
+      {
+      	"name": "{{componentProductName}}",
+      	"description": "Fresh wholemeal dough base",
+      	"categoryName": "Ingredients",
+      	"isSellable": false,
+      	"isPizzaComponent": true,
+      	"isStockControlled": true,
+      	"componentTypeName": "Base Dough",
+      	"sku": "{{componentProductSku}}",
+      	"directSellingPrice": 2
+      }
+  auth:
+    type: bearer
+    token: '{{managerToken}}'
+runtime:
+  scripts:
+    - type: before-request
+      code: |-
+        const suffix = Date.now() + "-" + Math.random().toString(36).slice(2, 8);
+        bru.setVar("componentProductSku", "PRD-PRICED-DOUGH-" + suffix);
+        bru.setVar("componentProductName", "Wholemeal Dough " + suffix);
+    - type: tests
+      code: |-
+        test("Matches the current API contract", function() {
+        	expect(res.getStatus()).to.equal(201);
+        	expect(res.getBody().sku).to.equal(bru.getVar("componentProductSku"));
+        	expect(res.getBody().directSellingPrice).to.equal(2);
+        	bru.setVar("componentProductSku", res.getBody().sku);
+        });

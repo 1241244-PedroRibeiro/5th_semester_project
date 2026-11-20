@@ -1,0 +1,140 @@
+<main class="ai-page">
+	<header class="page-heading">
+		<div>
+			<p class="eyebrow">{{ 'AI planning workspace' | translate }}</p>
+			<h1>{{ 'Forecasts & suppliers' | translate }}</h1>
+			<p>{{ 'Prepare trusted business data, inspect supplier scenarios and run read-only daily planning.' | translate }}</p>
+		</div>
+		<button class="secondary" type="button" (click)="exportProducts()">{{ 'Export catalogue JSON' | translate }}</button>
+	</header>
+
+	@if (errors().length) { <div class="feedback error" role="alert"><strong>{{ 'Please correct the following issues:' | translate }}</strong><ul>@for (message of errors(); track message) { <li>{{ message }}</li> }</ul></div> }
+	@if (notice()) { <p class="feedback success" role="status">{{ notice() }}</p> }
+
+	<nav class="tabs" aria-label="AI planning sections">
+		<button [class.active]="tab() === 'forecasts'" (click)="tab.set('forecasts')">{{ 'Consumption forecasts' | translate }}</button>
+		<button [class.active]="tab() === 'scenarios'" (click)="tab.set('scenarios')">{{ 'Supplier scenarios' | translate }}</button>
+		<button [class.active]="tab() === 'execute'" (click)="tab.set('execute'); loadHistory()">{{ 'Run planning' | translate }}</button>
+	</nav>
+
+	@if (tab() === 'forecasts') {
+		<section class="workspace-grid">
+			<article class="panel">
+				<div class="panel-heading"><div><p class="eyebrow">{{ 'Manager data' | translate }}</p><h2>{{ (editingForecast() ? 'Edit forecast' : 'New forecast') | translate }}</h2></div><button class="text-button" (click)="newForecast()">{{ 'Clear' | translate }}</button></div>
+				<div class="form-grid">
+					<label>{{ 'Name' | translate }} <input [ngModel]="forecast().name" (ngModelChange)="forecast.set({ ...forecast(), name: $event })" name="forecastName" [disabled]="!!editingForecast()" [placeholder]="'Week-45' | translate"></label>
+					<label>{{ 'Start date' | translate }} <input [ngModel]="forecast().startDate" (ngModelChange)="forecast.set({ ...forecast(), startDate: $event })" name="startDate" type="date"></label>
+					<label>{{ 'End date' | translate }} <input [ngModel]="forecast().endDate" (ngModelChange)="forecast.set({ ...forecast(), endDate: $event })" name="endDate" type="date"></label>
+				</div>
+				<p class="hint">{{ 'Only explicit rows are stored. Omitted product/date combinations mean zero consumption.' | translate }}</p>
+				<div class="table-wrap">
+					<table>
+						<thead><tr><th>{{ 'Date' | translate }}</th><th>{{ 'Sellable product' | translate }}</th><th>{{ 'Pizza size' | translate }}</th><th>{{ 'Quantity' | translate }}</th><th></th></tr></thead>
+						<tbody>
+							@for (entry of forecast().entries; track $index) {
+								<tr>
+									<td><input type="date" [attr.value]="entry.date" (change)="updateEntry($index, { date: $any($event.target).value })"></td>
+									<td><select [ngModel]="entry.productSku" (ngModelChange)="updateEntry($index, { productSku: $event })"><option value="">{{ 'Select product' | translate }}</option>@for (product of products(); track product.sku) { @if (product.isSellable && (product.isActive || product.sku === entry.productSku)) { <option [value]="product.sku">{{ product.sku }} · {{ product.name }}{{ product.isActive ? '' : ' (' + ('inactive' | translate) + ')' }}</option> } }@if (entry.productSku && !hasProduct(entry.productSku)) { <option [value]="entry.productSku">{{ entry.productSku }}</option> }</select></td>
+									<td><select [ngModel]="entry.pizzaSize || ''" (ngModelChange)="updateEntry($index, { pizzaSize: $event || null })"><option value="">{{ 'Non-pizza' | translate }}</option>@for (size of pizzaSizes(); track size) { <option [value]="size">{{ size }}</option> }</select></td>
+									<td><input type="number" min="0" step="1" [ngModel]="entry.quantity" (ngModelChange)="updateEntry($index, { quantity: +$event })"></td>
+									<td><button class="icon-button" type="button" (click)="removeEntry($index)" [attr.aria-label]="'Remove entry' | translate">×</button></td>
+								</tr>
+							}
+						</tbody>
+					</table>
+				</div>
+				<div class="actions"><button class="secondary" type="button" (click)="addEntry()">{{ 'Add consumption row' | translate }}</button><button type="button" (click)="saveForecast()" [disabled]="busy()">{{ (busy() ? 'Saving…' : 'Save forecast') | translate }}</button></div>
+			</article>
+			<article class="panel list-panel">
+				<div class="panel-heading"><div><p class="eyebrow">{{ 'Saved versions' | translate }}</p><h2>{{ 'Forecast library' | translate }}</h2></div></div>
+				@if (!forecasts().length) { <p class="empty">{{ 'No forecasts created yet.' | translate }}</p> }
+				@for (value of forecasts(); track value.name) {
+					<div class="list-row"><div><strong>{{ value.name }}</strong><span>{{ value.startDate }} → {{ value.endDate }} · {{ value.entries.length }} {{ 'rows' | translate }}</span></div><div class="row-actions"><button class="text-button" (click)="editForecast(value)">{{ 'Edit' | translate }}</button><button class="text-button danger" (click)="deleteForecast(value)">{{ 'Delete' | translate }}</button></div></div>
+				}
+			</article>
+		</section>
+	}
+
+	@if (tab() === 'scenarios') {
+		<section class="workspace-grid">
+			<article class="panel">
+				<div class="panel-heading"><div><p class="eyebrow">{{ 'Supplier input' | translate }}</p><h2>{{ (editingScenario() ? 'Edit scenario' : 'Import or create scenario') | translate }}</h2></div><button class="text-button" (click)="newScenario()">{{ 'Clear' | translate }}</button></div>
+				<label>{{ 'Scenario name' | translate }} <input [ngModel]="scenario().name" (ngModelChange)="updateScenarioField('name', $event)" name="scenarioName" [disabled]="!!editingScenario()" [placeholder]="'Autumn suppliers' | translate"></label>
+				<label class="check"><input type="checkbox" [ngModel]="scenario().isSimulated" (ngModelChange)="updateScenarioField('isSimulated', $event)" name="simulated"> {{ 'Mark offers as simulated' | translate }}</label>
+				<label class="file-input">{{ 'Import supplier JSON for inspection' | translate }} <input type="file" accept="application/json,.json" (change)="importScenario($event)"></label>
+				<div class="inline-editor"><input [ngModel]="newSupplierCode()" (ngModelChange)="newSupplierCode.set($event)" [placeholder]="'Supplier code' | translate"><button class="secondary" type="button" (click)="addSupplier()">{{ 'Add supplier' | translate }}</button></div>
+				<div class="chips">@for (supplier of scenario().suppliers; track supplier.supplierCode) { <span>{{ supplier.supplierCode }} <button type="button" (click)="removeSupplier(supplier.supplierCode)">×</button></span> }</div>
+				<div class="offer-editor">
+					<select [ngModel]="newOffer().supplierCode" (ngModelChange)="newOffer.set({ ...newOffer(), supplierCode: $event })"><option value="">{{ 'Supplier' | translate }}</option>@for (supplier of scenario().suppliers; track supplier.supplierCode) { <option [value]="supplier.supplierCode">{{ supplier.supplierCode }}</option> }</select>
+					<select [ngModel]="newOffer().productSku" (ngModelChange)="newOffer.set({ ...newOffer(), productSku: $event })"><option value="">{{ 'Product' | translate }}</option>@for (product of products(); track product.sku) { <option [value]="product.sku">{{ product.sku }}</option> }</select>
+					<input type="number" min="0" step=".01" [ngModel]="newOffer().priceEur" (ngModelChange)="newOffer.set({ ...newOffer(), priceEur: +$event })" placeholder="EUR">
+					<input type="number" min="1" step="1" [ngModel]="newOffer().stockUnitQuantity" (ngModelChange)="newOffer.set({ ...newOffer(), stockUnitQuantity: +$event })" placeholder="Units">
+					<input type="number" min="0" step="1" [ngModel]="newOffer().leadTimeDays" (ngModelChange)="newOffer.set({ ...newOffer(), leadTimeDays: +$event })" placeholder="Lead days">
+					<button class="secondary" type="button" (click)="addOffer()">{{ 'Add offer' | translate }}</button>
+				</div>
+				<div class="chips">@for (offer of scenario().offers; track offer.supplierCode + offer.productSku; let index = $index) { <span>{{ offer.supplierCode }} · {{ offer.productSku }} · €{{ offer.priceEur }} <button type="button" (click)="removeOffer(index)">×</button></span> }</div>
+				@if (importPreview(); as preview) {
+					<div class="preview"><strong>{{ 'Inspection preview' | translate }}</strong><span>{{ preview.suppliers.length }} {{ 'suppliers' | translate }} · {{ preview.offers.length }} {{ 'offers' | translate }}</span>@for (issue of importErrors(); track issue) { <p class="error">{{ issue }}</p> }<button type="button" (click)="confirmImport()" [disabled]="!!importErrors().length">{{ 'Confirm import' | translate }}</button></div>
+				}
+				<p class="hint">{{ 'A scenario is not available to the planning engine until it is explicitly confirmed.' | translate }}</p>
+				<div class="actions"><button type="button" (click)="saveScenario()" [disabled]="busy()">{{ 'Save scenario' | translate }}</button></div>
+			</article>
+			<article class="panel list-panel">
+				<div class="panel-heading"><div><p class="eyebrow">{{ 'Confirmed inputs' | translate }}</p><h2>{{ 'Scenario library' | translate }}</h2></div></div>
+				@if (!scenarios().length) { <p class="empty">{{ 'No supplier scenarios created yet.' | translate }}</p> }
+				@for (value of scenarios(); track value.name) {
+					<div class="list-row"><div><strong>{{ value.name }} @if (value.isSimulated) { <em>{{ 'simulated' | translate }}</em> }</strong><span>{{ value.suppliers.length }} {{ 'suppliers' | translate }} · {{ value.offers.length }} {{ 'offers' | translate }}</span></div><div class="row-actions">@if (!value.confirmedAt) { <button class="text-button" (click)="confirmScenario(value)">{{ 'Confirm' | translate }}</button> } @else { <span class="confirmed">{{ 'Confirmed' | translate }}</span> }<button class="text-button" (click)="editScenario(value)">{{ 'Edit' | translate }}</button>@if (!value.confirmedAt) { <button class="text-button danger" (click)="deleteScenario(value)">{{ 'Delete' | translate }}</button> }</div></div>
+				}
+			</article>
+		</section>
+	}
+
+	@if (tab() === 'execute') {
+		<section class="workspace-grid execute-grid">
+			<article class="panel">
+				<div class="panel-heading"><div><p class="eyebrow">{{ 'Read-only calculation' | translate }}</p><h2>{{ 'Run daily planning' | translate }}</h2></div></div>
+				<label>{{ 'Forecast' | translate }} <select [ngModel]="selectedForecast()" (ngModelChange)="selectedForecast.set($event)" name="runForecast"><option value="">{{ 'Select forecast' | translate }}</option>@for (value of forecasts(); track value.name) { <option [value]="value.name">{{ value.name }}</option> }</select></label>
+				<label>{{ 'Confirmed supplier scenario' | translate }} <select [ngModel]="selectedScenario()" (ngModelChange)="selectedScenario.set($event)" name="runScenario"><option value="">{{ 'Select scenario' | translate }}</option>@for (value of scenarios(); track value.name) { @if (value.confirmedAt) { <option [value]="value.name">{{ value.name }}</option> } }</select></label>
+				<label>{{ 'Reference date' | translate }} <input [ngModel]="referenceDate()" (ngModelChange)="referenceDate.set($event)" name="referenceDate" type="date"></label>
+				<p class="hint">{{ 'Planning never mutates stock. Results retain immutable forecast, supplier and stock snapshots.' | translate }}</p>
+				<button type="button" (click)="execute()" [disabled]="busy() || !selectedForecast() || !selectedScenario()">{{ (busy() ? 'Calculating…' : 'Execute planning') | translate }}</button>
+				@if (result(); as execution) { <div class="result-summary"><strong>{{ 'Execution' | translate }} #{{ execution.executionId }}</strong><span>{{ execution.requirements.length }} {{ 'requirements' | translate }} · {{ execution.proposals.length }} {{ 'proposals' | translate }} · {{ execution.unmetNeeds.length }} {{ 'unmet needs' | translate }}</span>@if (execution.isSimulated) { <em>{{ 'simulated' | translate }}</em> } @if (execution.isReplay) { <em>{{ 'replay' | translate }}</em> }</div> }
+			</article>
+			<article class="panel list-panel"><div class="panel-heading"><div><p class="eyebrow">{{ 'Immutable history' | translate }}</p><h2>{{ 'Previous executions' | translate }}</h2></div></div>@if (!history().length) { <p class="empty">{{ 'No executions yet.' | translate }}</p> } @for (execution of history(); track execution.executionId) { <div class="list-row"><div><strong>#{{ execution.executionId }} · {{ execution.forecastName }}</strong><span>{{ execution.scenarioName }} · {{ execution.referenceDate }}</span></div><button class="text-button" (click)="result.set(execution)">{{ 'View' | translate }}</button><button class="text-button" (click)="replay(execution)">{{ 'Replay' | translate }}</button></div> }</article>
+		</section>
+		@if (result(); as execution) {
+			<section class="panel result-panel">
+				<div class="panel-heading"><div><p class="eyebrow">{{ 'Planning result' | translate }}</p><h2>{{ 'Daily requirements and supplier proposals' | translate }}</h2></div><span class="badge">{{ (execution.isSimulated ? 'SIMULATED' : 'CONFIRMED') | translate }} · {{ (execution.isReplay ? 'REPLAY' : 'ORIGINAL') | translate }}</span></div>
+				<p class="result-help">{{ 'This view translates the planning calculation into operational information. Requirements show what is needed, proposals show suggested supplier orders, and unmet needs show what could not be covered.' | translate }}</p>
+				<div class="result-grid">
+					<div class="result-section"><h3>{{ 'What needs to be prepared' | translate }}</h3><table class="result-table"><thead><tr><th>{{ 'Date' | translate }}</th><th>{{ 'Product' | translate }}</th><th>{{ 'Required' | translate }}</th><th>{{ 'Available' | translate }}</th><th>{{ 'To replenish' | translate }}</th></tr></thead><tbody>@for (item of execution.requirements; track $index) { <tr><td>{{ item.date || '—' }}</td><td><strong>{{ item.productSku }}</strong></td><td>{{ item.requiredUnits }}</td><td>{{ item.availableUnits }}</td><td>{{ item.replenishmentUnits }}</td></tr> }</tbody></table></div>
+					<div class="result-section"><h3>{{ 'Suggested supplier orders' | translate }}</h3>@if (execution.proposals.length) { <table class="result-table"><thead><tr><th>{{ 'Supplier' | translate }}</th><th>{{ 'Product' | translate }}</th><th>{{ 'Quantity' | translate }}</th><th>{{ 'Delivery' | translate }}</th><th>{{ 'Estimated cost' | translate }}</th></tr></thead><tbody>@for (item of execution.proposals; track $index) { <tr><td>{{ item.supplierCode }}</td><td><strong>{{ item.productSku }}</strong></td><td>{{ item.quantity }}</td><td>{{ item.expectedDelivery }}</td><td>{{ item.priceEur | number:'1.2-2' }} €</td></tr> }</tbody></table> } @else { <p class="empty">{{ 'No supplier order is needed.' | translate }}</p> }</div>
+					<div class="result-section"><h3>{{ 'Needs not covered' | translate }}</h3>@if (execution.unmetNeeds.length) { <table class="result-table"><thead><tr><th>{{ 'Date' | translate }}</th><th>{{ 'Product' | translate }}</th><th>{{ 'Reason' | translate }}</th></tr></thead><tbody>@for (item of execution.unmetNeeds; track $index) { <tr><td>{{ item.date || '—' }}</td><td><strong>{{ item.productSku }}</strong></td><td>{{ item.reason }}{{ item.detail ? ' — ' + item.detail : '' }}</td></tr> }</tbody></table> } @else { <p class="empty">{{ 'All identified needs are covered.' | translate }}</p> }</div>
+				</div>
+				<p class="hint">{{ 'This result reflects the forecast version and stock at execution time. It is a recommendation and does not change stock automatically.' | translate }}</p>
+			</section>
+		}
+
+	}
+	@if (pendingDeletion(); as deletion) {
+		<app-modal
+			[title]="'Delete item?' | translate"
+			[description]="'This action cannot be undone.' | translate"
+			[busy]="busy()"
+			(closed)="pendingDeletion.set(null)"
+		>
+			<p>
+				{{ 'Are you sure you want to delete' | translate }}
+				<strong>{{ deletion.name }}</strong>?
+			</p>
+			<div modal-actions class="actions">
+				<button class="secondary" type="button" [disabled]="busy()" (click)="pendingDeletion.set(null)">
+					{{ 'Cancel' | translate }}
+				</button>
+				<button class="danger" type="button" [disabled]="busy()" (click)="confirmDeletion()">
+					{{ busy() ? ('Deleting…' | translate) : ('Delete' | translate) }}
+				</button>
+			</div>
+		</app-modal>
+	}
+</main>

@@ -1,0 +1,28 @@
+info:
+  name: 18 - Delete Category in Use by Products (Conflict AC5)
+  type: http
+  seq: 18
+http:
+  method: DELETE
+  url: '{{baseUrl}}/categories/{{referencedCategoryName}}'
+  body: none
+  auth:
+    type: bearer
+    token: '{{managerToken}}'
+runtime:
+  scripts:
+    - type: before-request
+      code: |-
+        const list = bru.getVar("categoryList") || bru.getEnvVar("categoryList");
+        if (Array.isArray(list)) {
+        	const ingr = list.find(c => c.name === "Ingredients");
+        	if (ingr) {
+        		bru.setVar("referencedCategoryName", ingr.name);
+        	}
+        }
+    - type: tests
+      code: |-
+        test("Category referenced by products returns 409 Conflict (AC5)", function() {
+        	expect(res.getStatus()).to.equal(409);
+        	expect(res.getBody().error.message).to.equal("Category is referenced by existing products and cannot be deleted");
+        });

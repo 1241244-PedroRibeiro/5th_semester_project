@@ -1,0 +1,16 @@
+### AI02 missing forecast
+POST http://localhost:3000/planning/executions
+Authorization: Bearer {{managerToken}}
+Content-Type: application/json
+
+{
+  "forecastName": "Forecast-Does-Not-Exist",
+  "scenarioName": "Autumn-Scenario"
+}
+
+### Expected response (404)
+{
+  "error": {
+    "message": "Forecast 'Forecast-Does-Not-Exist' not found"
+  }
+}

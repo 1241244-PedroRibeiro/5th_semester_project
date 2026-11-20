@@ -1,0 +1,34 @@
+info:
+  name: 03 - Create Product Without Token (Unauthorized)
+  type: http
+  seq: 5
+http:
+  method: POST
+  url: '{{baseUrl}}/products'
+  body:
+    type: json
+    data: |-
+      {
+      	"name": "Anonymous Drink",
+      	"description": "Unauthorized attempt",
+      	"categoryName": "Beverages",
+      	"isSellable": true,
+      	"isPizzaComponent": false,
+      	"isStockControlled": true,
+      	"directSellingPrice": 2.5,
+      	"sku": "PRD-ANON"
+      }
+runtime:
+  scripts:
+    - type: tests
+      code: |-
+        test("Rejects creation without token with 401 Unauthorized", function() {
+        	expect(res.getStatus()).to.equal(401);
+        	expect(res.getBody().error.message).to.equal("Authentication required.");
+        });
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: true

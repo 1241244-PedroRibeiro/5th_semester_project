@@ -1,0 +1,50 @@
+<app-modal
+	[title]="'Edit allergies' | translate"
+	[description]="'Add allergies to your account.' | translate"
+	[busy]="busy()"
+	(closed)="closed.emit()"
+	><div class="stack">
+		@if (loading()) {
+			<p role="status">{{ 'Loading allergens…' | translate }}</p>
+		} @else {
+			<div>
+				<h3>{{ 'Your selected allergies' | translate }}</h3>
+				<app-allergen-chips [names]="selected()" />
+				@if (!selected().length) {
+					<p class="shop-muted">{{ 'No allergies selected.' | translate }}</p>
+				}
+			</div>
+			<div>
+				<h3>{{ 'All allergens' | translate }}</h3>
+				<app-allergen-chips
+					[names]="names()"
+					[selectable]="!busy()"
+					[selected]="selected()"
+					[locked]="initial()"
+					(toggled)="toggle($event)"
+				/>
+			</div>
+			<p class="shop-muted">
+				{{
+					'Saved allergies stay selected. Removing existing allergies is not supported yet.'
+						| translate
+				}}
+			</p>
+		}
+		@if (error()) {
+			<div class="shop-notice error" role="alert">
+				{{ error() | translate }}
+				@if (!names().length) {
+					<button class="shop-link" (click)="load()">{{ 'Try again' | translate }}</button>
+				}
+			</div>
+		}
+	</div>
+	<div modal-actions class="row-actions">
+		<button shopButton tone="secondary" [disabled]="busy()" (click)="closed.emit()">
+			{{ 'Cancel' | translate }}</button
+		><button shopButton [disabled]="busy() || loading() || !additions().length" (click)="save()">
+			{{ busy() ? ('Saving…' | translate) : ('Save allergies' | translate) }}
+		</button>
+	</div></app-modal
+>

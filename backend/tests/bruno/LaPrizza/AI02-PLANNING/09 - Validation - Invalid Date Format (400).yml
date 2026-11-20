@@ -1,0 +1,25 @@
+info:
+  name: 09 - Validation - Invalid Date Format
+  type: http
+  seq: 10
+http:
+  method: POST
+  url: "{{baseUrl}}/planning/executions"
+  body:
+    type: json
+    data: |-
+      { "forecastName": "Week-45", "scenarioName": "Autumn-Scenario", "referenceDate": "05-11-2026" }
+  auth:
+    type: bearer
+    token: "{{managerToken}}"
+runtime:
+  scripts:
+    - type: tests
+      code: |-
+        test("Status is 400", function() { expect(res.getStatus()).to.equal(400); });
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: false

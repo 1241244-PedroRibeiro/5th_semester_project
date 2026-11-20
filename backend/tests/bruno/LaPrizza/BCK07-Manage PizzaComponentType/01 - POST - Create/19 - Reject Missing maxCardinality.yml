@@ -1,0 +1,31 @@
+info:
+  name: 19 - Reject Missing maxCardinality
+  type: http
+  seq: 19
+http:
+  method: POST
+  url: '{{baseUrl}}/pizza-component-types'
+  body:
+    type: json
+    data: |-
+      {
+        "name": "{{bck07ValidationName}}",
+        "assemblyOrder": {{bck07Order}},
+        "minCardinality": 0
+      }
+  auth:
+    type: bearer
+    token: '{{bck07ManagerToken}}'
+settings:
+  encodeUrl: true
+runtime:
+  scripts:
+    - type: tests
+      code: |-
+        test("Reject Missing maxCardinality", function() {
+          expect(res.getStatus()).to.equal(400);
+          expect(typeof res.getBody().error.message).to.equal("string");
+          expect(res.getBody().error.message.length > 0).to.equal(true);
+        });
+    - type: before-request
+      code: 'bru.setVar("bck07ValidationName", "Bruno validation " + Date.now() + "-" + Math.random().toString(36).slice(2));'

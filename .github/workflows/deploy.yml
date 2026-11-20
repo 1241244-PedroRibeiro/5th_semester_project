@@ -1,0 +1,58 @@
+name: Automated Deployment & Validation (CD) - LaPrizza
+
+on:
+  push:
+    branches:
+      - main
+  schedule:
+    # Sourced from config/deploy-schedule.yml (nightly at 03:00 UTC)
+    - cron: '0 3 * * *'
+  workflow_dispatch:
+    inputs:
+      target_env:
+        description: 'Target deployment environment'
+        required: true
+        default: 'staging'
+        type: choice
+        options:
+          - staging
+          - production
+
+jobs:
+  deploy-and-validate:
+    name: Deploy Stack & Validate
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Source Code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Prepare Deployment Environment
+        run: |
+          mkdir -p certs logs shared
+          # Generate self-signed TLS certs for Nginx if missing in CI runner
+          if [ ! -f certs/site.crt ]; then
+            openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
+              -keyout certs/site.key -out certs/site.crt \
+              -subj "/C=PT/ST=Porto/L=Porto/O=LaPrizza/CN=localhost"
+          fi
+          # Create CI-only configuration from the published names-only template.
+          cp .env.example .env
+          sed -i "s/JWT_SECRET=/JWT_SECRET=$(openssl rand -hex 32)/" .env
+          sed -i "s/DB_PASSWORD=/DB_PASSWORD=$(openssl rand -hex 24)/" .env
+
+      - name: Execute Automated Deployment Pipeline
+        run: |
+          chmod +x ./scripts/*.sh
+          ./scripts/deploy.sh
+
+      - name: Archive Deployment Logs & Validation Results (AC3.3)
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: deployment-logs-and-evidence
+          path: logs/deploy-*/
+          retention-days: 90

@@ -1,0 +1,35 @@
+info:
+  name: 20 - Update Product Details (Manager Success)
+  type: http
+  seq: 23
+http:
+  method: PUT
+  url: '{{baseUrl}}/products/{{sellableProductSku}}'
+  body:
+    type: json
+    data: |-
+      {
+          "name": "{{sellableProductName}} Premium",
+          "description": "Updated premium organic sparkling lemonade",
+          "categoryName": "Beverages",
+          "isSellable": true,
+          "isPizzaComponent": false,
+          "isStockControlled": true,
+          "directSellingPrice": 3.2
+      }
+  auth:
+    type: bearer
+    token: '{{managerToken}}'
+runtime:
+  scripts:
+    - type: tests
+      code: |-
+        test("Manager updates product returning 200 OK", function() {
+            expect(res.getStatus()).to.equal(200);
+        });
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: true

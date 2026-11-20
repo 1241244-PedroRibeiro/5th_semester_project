@@ -1,0 +1,8 @@
+=== MFA SUCCESS AND CLEANUP ===
+Nov 14 17:05:16 debian sshd(pam_google_authenticator)[672977]: Accepted google_authenticator for laprizza-admin-pedro
+Nov 14 17:05:16 debian sshd[672957]: Accepted keyboard-interactive/pam for laprizza-admin-pedro from 10.8.127.225 port 51481 ssh2
+Nov 14 17:22:08 debian sshd(pam_google_authenticator)[681570]: Accepted google_authenticator for laprizza-admin-pedro
+Nov 14 17:22:08 debian sshd[681550]: Accepted keyboard-interactive/pam for laprizza-admin-pedro from 10.8.127.225 port 62405 ssh2
+
+{}
+MFA override absent after successful TOTP: 0

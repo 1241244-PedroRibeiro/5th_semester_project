@@ -1,0 +1,25 @@
+info:
+  name: 00b - Setup Customer Token Fixture
+  type: http
+  seq: 2
+http:
+  method: POST
+  url: '{{baseUrl}}/auth/login'
+  body:
+    type: json
+    data: |-
+      {
+        "email": "customer@laprizza.test",
+        "password": "Manager123!"
+      }
+runtime:
+  scripts:
+    - type: tests
+      code: |-
+        test("Authenticates predefined customer for BCK03 suite", function() {
+          expect(res.getStatus()).to.equal(200);
+          const data = res.getBody();
+          expect(data.token).to.be.a("string").and.not.empty;
+          bru.setVar("customerToken", data.token);
+          bru.setEnvVar("customerToken", data.token);
+        });

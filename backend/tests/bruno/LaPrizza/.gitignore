@@ -1,0 +1,12 @@
+# Secrets
+.env*
+
+# Dependencies
+node_modules
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Local status-test sessions
+environments/Local-status-tests.yml

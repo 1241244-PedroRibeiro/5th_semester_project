@@ -1,0 +1,7 @@
+info:
+  name: AI02-Planning
+  type: folder
+  seq: 19
+
+request:
+  auth: inherit

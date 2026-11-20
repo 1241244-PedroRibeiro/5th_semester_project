@@ -1,0 +1,26 @@
+info:
+  name: 03 - Error - Unconfirmed Scenario
+  type: http
+  seq: 4
+http:
+  method: POST
+  url: "{{baseUrl}}/planning/executions"
+  body:
+    type: json
+    data: |-
+      { "forecastName": "Week-45", "scenarioName": "Unconfirmed-Scenario" }
+  auth:
+    type: bearer
+    token: "{{managerToken}}"
+runtime:
+  scripts:
+    - type: tests
+      code: |-
+        test("Status is 409", function() { expect(res.getStatus()).to.equal(409); });
+        test("Message mentions confirmed", function() { expect(res.getBody().error.message).to.include("confirmed"); });
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: false

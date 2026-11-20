@@ -1,0 +1,24 @@
+info:
+  name: 13 - Get Created Product by SKU (Public)
+  type: http
+  seq: 16
+http:
+  method: GET
+  url: '{{baseUrl}}/products/{{sellableProductSku}}'
+runtime:
+  scripts:
+    - type: tests
+      code: |-
+        test("Retrieves product by valid code with 200 OK", function() {
+        	expect(res.getStatus()).to.equal(200);
+        	const data = res.getBody();
+        	expect(data.sku).to.equal(bru.getVar("sellableProductSku"));
+        	expect(data.name).to.equal(bru.getVar("sellableProductName"));
+        });
+        const data = res.getBody();
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: true

@@ -1,0 +1,24 @@
+info:
+  name: 14 - Update Pizza Size as Customer (Forbidden)
+  type: http
+  seq: 16
+http:
+  method: PUT
+  url: '{{baseUrl}}/pizza-sizes/{{createdSizeName}}'
+  body:
+    type: json
+    data: |-
+      {
+      	"name": "Customer Modification"
+      }
+  auth:
+    type: bearer
+    token: '{{customerToken}}'
+runtime:
+  scripts:
+    - type: tests
+      code: |-
+        test("Customer cannot update pizza size (403 Forbidden)", function() {
+        	expect(res.getStatus()).to.equal(403);
+        	expect(res.getBody().error.message).to.equal("You do not have permission to do this.");
+        });

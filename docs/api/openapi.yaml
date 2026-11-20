@@ -1,0 +1,5144 @@
+# yaml-language-server: $schema=https://spec.openapis.org/oas/3.0/schema/2021-09-28
+openapi: 3.0.3
+info:
+  title: LaPrizza Information System — Back-End REST API
+  description: |
+    Formal OpenAPI 3.0.3 machine-readable contract for the LaPrizza REST API
+    (Modular Monolith — NestJS + PostgreSQL 16). This is the MERGED contract
+    combining Sprint 1 (BCK01–BCK11 baseline) and Sprint 2 baseline.
+
+    Sprint 2 architectural decisions bound by this contract:
+      • Clean/Onion + Hexagonal Ports & Adapters (ADR-001).
+      • Business Keys as PK/FK (authentication sessions use UUIDs) — username, email, sku, name, supplier_code (§16.2).
+      • JWT (RFC 7519) with PostgreSQL session revocation, Argon2id and proposed OIDC (ADR-004, ADR-004.2, ADR-010).
+      • Richardson Level 2 (ADR-005).
+      • Prolog AI engine invoked over HTTP/REST only (ADR-012).
+      • PlanningResult is strictly read-only with deep snapshots (ADR-013).
+      • KitchenConfiguration is opaque JSONB with single-active partial unique index (ADR-011).
+      • 3D assets delivered as GLB (ADR-014) and referenced by the active configuration.
+
+    Authenticated requests rejected with HTTP 403 are audited in PostgreSQL
+    with the verified username, database timestamp, and HTTP method/route pattern
+    (ADR-015). Anonymous/invalid-token 401 responses are excluded. Audit failures
+    preserve the forbidden response. Query strings and request contents are not logged.
+
+    Backward compatibility with Sprint 1:
+      • Self-service user endpoints (/user/me/*) preserved as documented.
+      • /categories is a functional alias of /product-categories.
+      • Sprint 1 field names (productCode, categoryCode, code, id, availableSizes, pizzaSku)
+        are accepted as optional aliases alongside Sprint 2 canonical names.
+
+    Error envelope is uniform:
+      { timestamp, status, error, message, details? }
+  version: 2.2.0
+  contact:
+    name: LEI Integrative Project — 5th Semester (Team 3DJ-05)
+    email: support@laprizza.local
+  license:
+    name: Academic Prototype — ISEP LEI 2026/2027
+
+servers:
+  - url: http://localhost:3000/api/v1
+    description: Local Development (Node.js / NestJS)
+  - url: https://api.laprizza.local/api/v1
+    description: Staging / Testing (Nginx reverse-proxied)
+
+tags:
+  - name: Diagnostics
+    description: Liveness and readiness probes (SYS02).
+  - name: Authentication
+    description: Local credentials, external OIDC, activation flow (AA01, AA02, AA06, AA07).
+  - name: Users
+    description: User provisioning, lifecycle, role administration, audit and self-service (BCK01, AA06).
+  - name: Customers
+    description: Commercial customer profiles and dietary restrictions (BCK02).
+  - name: Product Categories
+    description: Catalogue taxonomy (BCK03). Served under both /product-categories and /categories.
+  - name: Allergens
+    description: EU-14 seed catalogue (BCK04).
+  - name: Products
+    description: Master catalogue, product types, and export for planning KB (BCK05, AI06).
+  - name: Pizza Taxonomy
+    description: Sizes and component types (BCK06, BCK07).
+  - name: Component Configurations
+    description: Per-size price and abstract stock consumption (BCK08).
+  - name: Stock
+    description: Abstract integer stock with pessimistic locking (BCK09, ADR-008b).
+  - name: Predefined Pizzas
+    description: Recipes and dynamic component-derived pricing (BCK10).
+  - name: Catalogue Query
+    description: Composite read model for public catalogue (BCK11).
+  - name: Item Pictures
+    description: Product and predefined-pizza pictures stored in the laprizza-pictures volume (ADR-018, ADR-005.2).
+  - name: Kitchen Configurations
+    description: Opaque JSONB layouts with single-active invariant (WEB06, ADR-011).
+  - name: Consumption Forecasts
+    description: Aggregate-root daily consumption forecasts (WEB07).
+  - name: Supplier Scenarios
+    description: Aggregate-root confirmed supplier scenarios (WEB07).
+  - name: AI Planning
+    description: BOM + Requirements Planning orchestrated through Prolog (AI01, AI02, AI05, AI06).
+  - name: Shared Documents
+    description: Authenticated operational documents and project reports (SYS04).
+
+paths:
+
+  # =========================================================================
+  # 0. DIAGNOSTICS
+  # =========================================================================
+  /health:
+    get:
+      tags: [Diagnostics]
+      summary: Liveness/readiness probe
+      operationId: getHealth
+      security: []
+      responses:
+        '200':
+          description: Service operational.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [status, version, timestamp]
+                properties:
+                  status:
+                    type: string
+                    enum: [ok, degraded, down]
+                    example: ok
+                  version:
+                    type: string
+                    example: '2.0.0'
+                  timestamp:
+                    type: string
+                    format: date-time
+                  dependencies:
+                    type: object
+                    properties:
+                      postgres:
+                        type: string
+                        enum: [up, down]
+                      prolog:
+                        type: string
+                        enum: [up, down, unconfigured]
+                      idp:
+                        type: string
+                        enum: [up, down, unconfigured]
+        '503':
+          $ref: '#/components/responses/503ServiceUnavailable'
+
+  # =========================================================================
+  # 1. AUTHENTICATION (BCK01, AA01, AA02, AA06, AA07)
+  # =========================================================================
+  /password-recovery:
+    post:
+      tags: [Authentication]
+      summary: Email a password recovery code for an active account
+      operationId: requestPasswordRecovery
+      security: []
+      description: |
+        Public for all roles, including users without a current login.
+        Sends a one-use 5-minute code from laprizzag05@gmail.com, stores its
+        SHA-256 digest as PENDING, and enforces a 30-minute cooldown even after use.
+        A failed SMTP submission rolls back the record. Codes are never returned.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PasswordRecoveryRequestDTO'
+      responses:
+        '200':
+          description: Recovery email submitted. Cache-Control is no-store.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PasswordRecoveryConfirmationDTO'
+        '400':
+          description: Invalid email or body fields.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseDTO'
+        '404':
+          description: No registered ACTIVE account for this email.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseDTO'
+        '429':
+          description: A code was requested within the last 30 minutes.
+          headers:
+            Retry-After:
+              description: Seconds until another request is allowed.
+              schema:
+                type: integer
+                minimum: 1
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseDTO'
+        '503':
+          description: SMTP is unconfigured or email submission failed.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseDTO'
+
+  /password-recovery/new_pass:
+    post:
+      tags: [Authentication]
+      summary: Consume a recovery code and update the password
+      operationId: resetRecoveredPassword
+      security: []
+      description: |
+        Requires an ACTIVE account and a PENDING, unexpired code.
+        Atomically updates the Argon2id password hash, marks the code USED,
+        and revokes all existing sessions for the recovered account.
+        Codes expire exactly five minutes after generation. No automatic login.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PasswordRecoveryResetDTO'
+      responses:
+        '200':
+          description: Password updated. Sign in again. Cache-Control is no-store.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PasswordRecoveryConfirmationDTO'
+        '400':
+          description: Malformed code, weak password, or invalid fields.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseDTO'
+        '401':
+          description: Unknown recovery code.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseDTO'
+        '404':
+          description: The account is no longer ACTIVE.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseDTO'
+        '409':
+          description: Recovery code has already been used.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseDTO'
+        '410':
+          description: Recovery code has expired.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseDTO'
+
+  /auth/login:
+    post:
+      tags: [Authentication]
+      summary: Authenticate credentials; issue internal JWT
+      description: |
+        Authenticates an active local account, persists a new session, and returns
+        a bearer JWT with sid, sub, email, roles, status, iat, and exp (15 minutes).
+        Returns the same 401 for unknown-email and wrong-password.
+        Pending registration returns 400; deactivated accounts return 403.
+      operationId: loginUser
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequestDTO'
+      responses:
+        '200':
+          description: Authentication successful; JWT issued.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginResponseDTO'
+        '400':
+          $ref: '#/components/responses/400BadRequest'
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+        '403':
+          description: Account DEACTIVATED.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseDTO'
+
+  /auth/register:
+    post:
+      tags: [Authentication]
+      summary: Public customer self-registration (AA07)
+      description: |
+        Creates an active CUSTOMER user or completes a pending registration.
+        Persists a new authentication session and returns a bearer JWT and user summary.
+      operationId: registerCustomer
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterCustomerRequestDTO'
+      responses:
+        '201':
+          description: Registration complete; session persisted and JWT issued.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginResponseDTO'
+        '400':
+          $ref: '#/components/responses/400BadRequest'
+        '409':
+          $ref: '#/components/responses/409Conflict'
+        '503':
+          $ref: '#/components/responses/503ServiceUnavailable'
+
+  /auth/logout:
+    post:
+      tags: [Authentication]
+      summary: Revoke the current authenticated session
+      description: |
+        Revokes only the session identified by the authenticated JWT sid.
+        Returns success only after PostgreSQL records revocation. Subsequent
+        protected reads and writes with that credential return 401.
+        Other login sessions remain active. Requests authenticated before
+        revocation may finish. No role or active-account status is required.
+      operationId: logoutUser
+      security:
+        - BearerAuth: []
+      responses:
+        '204':
+          description: Current session revoked; no response body.
+        '401':
+          description: Missing, invalid, expired, unknown, or already revoked credential.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseDTO'
+        '500':
+          description: Session lookup or revocation failed; logout is not confirmed.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseDTO'
+
+  /auth/refresh:
+    post:
+      tags: [Authentication]
+      summary: Rotate a persisted refresh token
+      operationId: refreshAuthSession
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RefreshTokenRequestDTO'
+      responses:
+        '200':
+          description: New JWT and one-time refresh token.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RefreshTokenResponseDTO'
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+
+  /user/{username}/reactivate:
+    post:
+      tags: [Users]
+      summary: Reactivate a deactivated account
+      description: |
+        ACTIVE ADMINISTRATOR only. Changes a DEACTIVATED target to ACTIVE without
+        changing roles or password. Rejects ACTIVE and PENDING_REGISTRATION targets.
+        Does not issue a session or restore expired/revoked sessions.
+      operationId: reactivateUser
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: username
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: Account reactivated.
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+        '403':
+          $ref: '#/components/responses/403Forbidden'
+        '404':
+          $ref: '#/components/responses/404NotFound'
+        '409':
+          $ref: '#/components/responses/409Conflict'
+
+  /user/{username}/roles:
+    put:
+      tags: [Users]
+      summary: Replace a user's assigned roles
+      description: |
+        ACTIVE ADMINISTRATOR only. Accepts the full desired nonempty role list;
+        add multiple roles or omit existing roles to remove them. Duplicates are
+        collapsed. Preserves account status; pending invitations remain pending.
+        DEACTIVATED targets return 409 and require reactivation first.
+        The acting administrator must retain their own ADMINISTRATOR
+        role. Subsequent protected requests read current roles from the database.
+      operationId: setUserRoles
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: username
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [roles]
+              properties:
+                roles:
+                  type: array
+                  minItems: 1
+                  items:
+                    type: string
+                    enum: [ADMINISTRATOR, MANAGER, EMPLOYEE, CUSTOMER]
+      responses:
+        '200':
+          description: Roles persisted; updated public user summary.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserResponseDTO'
+        '400':
+          $ref: '#/components/responses/400BadRequest'
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+        '403':
+          $ref: '#/components/responses/403Forbidden'
+        '409':
+          $ref: '#/components/responses/409Conflict'
+        '404':
+          $ref: '#/components/responses/404NotFound'
+
+  /auth/invite:
+    post:
+      tags: [Authentication]
+      summary: Invite a user or replace the role of a pending invitation
+      description: |
+        ACTIVE ADMINISTRATOR or MANAGER only. Creates a PENDING_REGISTRATION
+        account with the selected role, or replaces the role of an existing pending
+        account. Registered/deactivated accounts return 409. Sends instructions from
+        laprizzag05@gmail.com to use the normal Register button with the same email.
+        Normal registration sets the person's own name and password and retains the
+        latest invited role. SMTP failure returns 503; the pending invitation remains
+        saved and can be retried. No invitation token or additional table is used.
+      operationId: inviteUser
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, roleName]
+              properties:
+                email:
+                  type: string
+                  format: email
+                roleName:
+                  type: string
+                  enum: [ADMINISTRATOR, MANAGER, EMPLOYEE, CUSTOMER]
+      responses:
+        '201':
+          description: Pending invitation saved and email accepted by SMTP.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserResponseDTO'
+        '400':
+          $ref: '#/components/responses/400BadRequest'
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+        '403':
+          $ref: '#/components/responses/403Forbidden'
+        '409':
+          $ref: '#/components/responses/409Conflict'
+        '503':
+          $ref: '#/components/responses/503ServiceUnavailable'
+
+  /auth/pre_register:
+    post:
+      tags: [Authentication]
+      summary: Administrator pre-registers staff (legacy flow)
+      description: |
+        ACTIVE ADMINISTRATOR only. Creates a PENDING_REGISTRATION account
+        with one staff role. Duplicate email returns 409. This legacy endpoint
+        does not send email; use /auth/invite for emailed, updateable invitations.
+      operationId: preRegisterStaff
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PreRegisterStaffRequestDTO'
+      responses:
+        '201':
+          description: Staff pre-registered; no email dispatched.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserResponseDTO'
+        '400':
+          $ref: '#/components/responses/400BadRequest'
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+        '403':
+          $ref: '#/components/responses/403Forbidden'
+        '409':
+          $ref: '#/components/responses/409Conflict'
+        '503':
+          $ref: '#/components/responses/503ServiceUnavailable'
+
+  /auth/external/login:
+    get:
+      tags: [Authentication]
+      summary: Initiate OIDC Authorization Code + PKCE (AA02)
+      description: |
+        Generates state, nonce and PKCE code_verifier, stores them in the
+        server-side session (short-lived), and 302-redirects the browser
+        to the configured external IdP. The client_secret never leaves
+        the backend (ADR-010).
+      operationId: initiateExternalLogin
+      security: []
+      parameters:
+        - name: returnTo
+          in: query
+          required: false
+          schema:
+            type: string
+            maxLength: 200
+            example: /kitchen
+      responses:
+        '302':
+          description: Redirect to the external IdP authorization endpoint.
+          headers:
+            Location:
+              schema:
+                type: string
+                format: uri
+        '503':
+          $ref: '#/components/responses/503ServiceUnavailable'
+
+  /auth/external/callback:
+    get:
+      tags: [Authentication]
+      summary: OIDC callback; JIT-provision if new; issue JWT (AA02)
+      description: |
+        Validates ID Token (issuer, audience, signature, exp, nonce),
+        extracts sub → external_idp_subject. JIT provision per
+        Clarification #27: creates User (ACTIVE, CUSTOMER, password_hash
+        NULL, external_idp_subject set) + Customer. If an account exists
+        with the same verified email but WITHOUT external_idp_subject,
+        the login is rejected (prevents takeover).
+      operationId: externalCallback
+      security: []
+      parameters:
+        - name: code
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: state
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: error
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [access_denied, invalid_request, server_error, temporarily_unavailable]
+      responses:
+        '302':
+          description: Redirect to SPA with short-lived bootstrap token (state-validated).
+          headers:
+            Location:
+              schema:
+                type: string
+                format: uri
+        '400':
+          $ref: '#/components/responses/400BadRequest'
+        '409':
+          description: Verified email collision without external_idp_subject; account-linking required.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseDTO'
+        '503':
+          $ref: '#/components/responses/503ServiceUnavailable'
+
+  /auth/external/exchange:
+    post:
+      tags: [Authentication]
+      summary: Exchange a short-lived code for an internal JWT (AA02)
+      operationId: exchangeExternalCode
+      security: []
+      description: |
+        Consumes a single-use, short-lived code obtained from the OIDC callback
+        and issues the internal JWT. This prevents the JWT from appearing in
+        the browser URL history or HTTP logs (AA04 security constraint).
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ExchangeCodeRequestDTO'
+      responses:
+        '200':
+          description: Authentication successful; JWT issued.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginResponseDTO'
+        '401':
+          description: Invalid, expired, or already used exchange code.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseDTO'
+
+  /auth/invitation/{token}:
+    get:
+      tags: [Authentication]
+      summary: Inspect an account activation invitation (AA07)
+      operationId: inspectActivationInvitation
+      security: []
+      parameters:
+        - name: token
+          in: path
+          required: true
+          schema:
+            type: string
+            minLength: 32
+      responses:
+        '200':
+          description: Valid invitation summary.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InvitationInfoResponseDTO'
+        '404':
+          $ref: '#/components/responses/404NotFound'
+        '410':
+          description: Invitation expired, revoked, or already used.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseDTO'
+
+  /auth/activate:
+    post:
+      tags: [Authentication]
+      summary: Consume activation invitation; complete account setup (AA06, AA07)
+      operationId: consumeActivationInvitation
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ActivateInvitationRequestDTO'
+      responses:
+        '200':
+          description: Invitation consumed; account ACTIVE.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ActivationResponseDTO'
+        '400':
+          $ref: '#/components/responses/400BadRequest'
+        '404':
+          $ref: '#/components/responses/404NotFound'
+        '409':
+          $ref: '#/components/responses/409Conflict'
+        '410':
+          description: Invitation expired, revoked, or already used.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseDTO'
+        '422':
+          $ref: '#/components/responses/422Unprocessable'
+
+  # =========================================================================
+  # 2. USERS & ROLES (BCK01 + AA06) + SELF-SERVICE (Sprint 1 preserved)
+  # =========================================================================
+  /admin/unauthorized-attempts:
+    get:
+      tags: [Administration]
+      summary: List application authorization failures
+      description: ACTIVE ADMINISTRATOR only. Infrastructure logs are outside this endpoint.
+      operationId: listUnauthorizedAttempts
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+        - name: pageSize
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+      responses:
+        '200':
+          description: Paginated application authorization failures.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UnauthorizedAttemptsPageDTO'
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+        '403':
+          $ref: '#/components/responses/403Forbidden'
+
+  /users:
+    get:
+      tags: [Users]
+      summary: List users (paginated)
+      description: ACTIVE ADMINISTRATOR or MANAGER only; returns a paginated user list.
+      operationId: listUsers
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/PageSize'
+        - $ref: '#/components/parameters/PageStartIndex'
+      responses:
+        '200':
+          description: Paginated list of users.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedUsersDTO'
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+        '403':
+          $ref: '#/components/responses/403Forbidden'
+    post:
+      tags: [Users]
+      summary: Create a system user with designated roles (Manager only)
+      operationId: createUser
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateUserRequestDTO'
+      responses:
+        '201':
+          description: User created.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserResponseDTO'
+        '400':
+          $ref: '#/components/responses/400BadRequest'
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+        '403':
+          $ref: '#/components/responses/403Forbidden'
+        '409':
+          $ref: '#/components/responses/409Conflict'
+
+  /users/filter/creation-date/{date}:
+    get:
+      tags: [Users]
+      summary: Filter users by registration date
+      description: ACTIVE ADMINISTRATOR or MANAGER only; returns a paginated user list.
+      operationId: filterUsersByCreationDate
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: date
+          in: path
+          required: true
+          schema:
+            type: string
+            format: date
+      responses:
+        '200':
+          description: Users registered on the date.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/UserResponseDTO'
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+        '403':
+          $ref: '#/components/responses/403Forbidden'
+
+  /users/filter/role/{role}:
+    get:
+      tags: [Users]
+      summary: Filter users by role
+      description: ACTIVE ADMINISTRATOR or MANAGER only; returns a paginated user list.
+      operationId: filterUsersByRole
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/UserRoleParam'
+      responses:
+        '200':
+          description: Users holding the role.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/UserResponseDTO'
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+        '403':
+          $ref: '#/components/responses/403Forbidden'
+
+  /users/filter/status/{status}:
+    get:
+      tags: [Users]
+      summary: Filter users by status
+      description: ACTIVE ADMINISTRATOR or MANAGER only; returns a paginated user list.
+      operationId: filterUsersByStatus
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: status
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/UserStatus'
+      responses:
+        '200':
+          description: Users in the status.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/UserResponseDTO'
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+        '403':
+          $ref: '#/components/responses/403Forbidden'
+
+  /user/{username}:
+    get:
+      tags: [Users]
+      summary: Retrieve user by username
+      operationId: getUserByUsername
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/UsernameParam'
+      responses:
+        '200':
+          description: User record.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserResponseDTO'
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+        '403':
+          $ref: '#/components/responses/403Forbidden'
+        '404':
+          $ref: '#/components/responses/404NotFound'
+    delete:
+      tags: [Users]
+      summary: Deactivate user (Manager or self)
+      description: |
+        Sets status to DEACTIVATED. Referential integrity via
+        ON DELETE CASCADE (roles, dietary, invitations) and
+        ON DELETE SET NULL (customers.username).
+      operationId: deactivateUser
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/UsernameParam'
+      responses:
+        '204':
+          description: User deactivated.
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+        '403':
+          $ref: '#/components/responses/403Forbidden'
+        '404':
+          $ref: '#/components/responses/404NotFound'
+        '409':
+          description: Cannot deactivate the last active MANAGER.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseDTO'
+
+  /users/{username}/role-history:
+    get:
+      tags: [Users]
+      summary: Read role-change audit trail (AA06)
+      operationId: getUserRoleHistory
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/UsernameParam'
+      responses:
+        '200':
+          description: Ordered list of role-change log entries.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedRoleChangeLogDTO'
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+        '403':
+          $ref: '#/components/responses/403Forbidden'
+        '404':
+          $ref: '#/components/responses/404NotFound'
+
+  /users/{username}/roles:
+    put:
+      tags: [Users]
+      summary: Replace a user's role set (AA06)
+      description: |
+        Manager-only. Replaces the user's entire role set. Emits a
+        RoleChangeLog entry (Clarification #24 §1.4). Enforces ≥1 active
+        MANAGER invariant (Clarification #24 §1.2). Takes immediate
+        effect because JwtAuthGuard re-reads roles from the repository
+        (ADR-004). If the new set includes CUSTOMER, an associated
+        Customer record must exist or be atomically created
+        (Clarification #27; 422 on missing mandatory data).
+      operationId: replaceUserRoles
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/UsernameParam'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReplaceUserRolesRequestDTO'
+      responses:
+        '200':
+          description: Roles replaced; RoleChangeLog entry persisted.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserResponseDTO'
+        '400':
+          $ref: '#/components/responses/400BadRequest'
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+        '403':
+          $ref: '#/components/responses/403Forbidden'
+        '404':
+          $ref: '#/components/responses/404NotFound'
+        '409':
+          description: Would leave zero active MANAGERs.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseDTO'
+        '422':
+          description: CUSTOMER role requires a valid Customer record.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseDTO'
+
+  /user/me/address:
+    put:
+      tags: [Users]
+      summary: Update own address (self-service)
+      operationId: updateOwnAddress
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DeliveryAddressDTO'
+      responses:
+        '200':
+          description: Address updated.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserResponseDTO'
+        '400':
+          $ref: '#/components/responses/400BadRequest'
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+
+  /user/me/phone-number:
+    put:
+      tags: [Users]
+      summary: Update own phone number (self-service)
+      operationId: updateOwnPhoneNumber
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [phoneNumber]
+              properties:
+                phoneNumber:
+                  type: string
+                  pattern: '^[0-9+ ]{9,15}$'
+                  example: '+351912345678'
+      responses:
+        '200':
+          description: Phone updated.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserResponseDTO'
+        '400':
+          $ref: '#/components/responses/400BadRequest'
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+
+  # -------------------------------------------------------------------------
+  # Sprint 1 self-service endpoints preserved
+  # -------------------------------------------------------------------------
+  /user/me/contact-details:
+    get:
+      tags: [Users]
+      summary: Read the authenticated user's persisted contact details (Sprint 1)
+      description: |
+        Available to active customers, managers and employees. Identity is
+        derived exclusively from the token. Address and phoneNumber are
+        omitted when not set. Returns Cache-Control no-store.
+      operationId: getOwnContactDetails
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Public identity + optional private contact fields.
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+                example: no-store
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SelfServiceContactResponse'
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+        '403':
+          description: Account is not ACTIVE.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseDTO'
+        '404':
+          $ref: '#/components/responses/404NotFound'
+
+  /user/me/name:
+    put:
+      tags: [Users]
+      summary: Update the authenticated user's name (Sprint 1)
+      description: |
+        Active accounts of any role update only themselves. Identity from
+        the token; body identifiers, roles and status are rejected.
+      operationId: setOwnName
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [firstName, lastName]
+              properties:
+                firstName:
+                  type: string
+                  minLength: 1
+                  maxLength: 75
+                lastName:
+                  type: string
+                  minLength: 1
+                  maxLength: 75
+      responses:
+        '200':
+          description: Updated user summary.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserResponseDTO'
+        '400':
+          $ref: '#/components/responses/400BadRequest'
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+        '403':
+          description: Inactive account.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseDTO'
+        '404':
+          $ref: '#/components/responses/404NotFound'
+
+  /user/me/email:
+    put:
+      tags: [Users]
+      summary: Update the authenticated user's email (Sprint 1)
+      description: |
+        Active accounts of any role update only themselves. Identity from
+        the token; body identifiers, roles and status are rejected.
+        Current password must be verified; incorrect password returns 403.
+      operationId: setOwnEmail
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [email, currentPassword]
+              properties:
+                email:
+                  type: string
+                  format: email
+                currentPassword:
+                  type: string
+                  format: password
+                  writeOnly: true
+                  minLength: 1
+      responses:
+        '200':
+          description: Updated user summary.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserResponseDTO'
+        '400':
+          $ref: '#/components/responses/400BadRequest'
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+        '403':
+          description: Inactive account or incorrect current password.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseDTO'
+        '404':
+          $ref: '#/components/responses/404NotFound'
+        '409':
+          $ref: '#/components/responses/409Conflict'
+
+  /user/me/password:
+    put:
+      tags: [Users]
+      summary: Update the authenticated user's password (Sprint 1)
+      description: |
+        Active accounts of any role update only themselves. Identity from
+        the token; body identifiers, roles and status are rejected.
+        Current password must be verified; incorrect password returns 403.
+      operationId: setOwnPassword
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [currentPassword, newPassword]
+              properties:
+                currentPassword:
+                  type: string
+                  format: password
+                  writeOnly: true
+                  minLength: 1
+                newPassword:
+                  type: string
+                  format: password
+                  writeOnly: true
+                  minLength: 8
+                  description: |
+                    Requires uppercase, lowercase, numeric and non-whitespace
+                    special characters.
+      responses:
+        '200':
+          description: Updated user summary.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserResponseDTO'
+        '400':
+          $ref: '#/components/responses/400BadRequest'
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+        '403':
+          description: Inactive account or incorrect current password.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseDTO'
+        '404':
+          $ref: '#/components/responses/404NotFound'
+
+  # =========================================================================
+  # 3. CUSTOMERS (BCK02)
+  # =========================================================================
+  /customers:
+    post:
+      tags: [Customers]
+      summary: Register a new business customer (Manager)
+      operationId: createCustomer
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateCustomerRequestDTO'
+      responses:
+        '201':
+          description: Customer created.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CustomerResponseDTO'
+        '400':
+          $ref: '#/components/responses/400BadRequest'
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+        '403':
+          $ref: '#/components/responses/403Forbidden'
+        '409':
+          $ref: '#/components/responses/409Conflict'
+    get:
+      tags: [Customers]
+      summary: Search customers
+      operationId: listCustomers
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: search
+          in: query
+          required: false
+          schema:
+            type: string
+            maxLength: 100
+          description: Case-insensitive substring match on first/last name, email, phone, or VAT number.
+        - name: page
+          in: query
+          required: false
+          schema: { type: integer, minimum: 1, default: 1 }
+        - name: pageSize
+          in: query
+          required: false
+          schema: { type: integer, minimum: 1, maximum: 100, default: 12 }
+      responses:
+        '200':
+          description: Matching customers.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CustomerPageDTO'
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+        '403':
+          $ref: '#/components/responses/403Forbidden'
+
+  /customers/{id}:
+    get:
+      tags: [Customers]
+      summary: Retrieve customer by UUID
+      operationId: getCustomerById
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        '200':
+          description: Customer record.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CustomerResponseDTO'
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+        '403':
+          $ref: '#/components/responses/403Forbidden'
+        '404':
+          $ref: '#/components/responses/404NotFound'
+    put:
+      tags: [Customers]
+      summary: Update customer profile
+      operationId: updateCustomer
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateCustomerRequestDTO'
+      responses:
+        '200':
+          description: Customer updated.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CustomerResponseDTO'
+        '400':
+          $ref: '#/components/responses/400BadRequest'
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+        '403':
+          $ref: '#/components/responses/403Forbidden'
+        '404':
+          $ref: '#/components/responses/404NotFound'
+    delete:
+      tags: [Customers]
+      summary: Delete customer (Manager)
+      description: |
+        Deletion is prevented while historical orders reference the customer.
+      operationId: deleteCustomer
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        '204':
+          description: Customer deleted.
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+        '403':
+          $ref: '#/components/responses/403Forbidden'
+        '404':
+          $ref: '#/components/responses/404NotFound'
+        '409':
+          $ref: '#/components/responses/409Conflict'
+
+  /customers/{id}/dietary-restrictions:
+    put:
+      tags: [Customers]
+      summary: Replace commercial customer's dietary restrictions (Manager)
+      operationId: replaceDietaryRestrictions
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CustomerDietaryRestrictionsInputDTO'
+      responses:
+        '200':
+          description: Restrictions replaced.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CustomerResponseDTO'
+        '400':
+          $ref: '#/components/responses/400BadRequest'
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+        '403':
+          $ref: '#/components/responses/403Forbidden'
+        '404':
+          $ref: '#/components/responses/404NotFound'
+
+  /customers/{id}/user:
+    put:
+      tags: [Customers]
+      summary: Link or unlink a matching User account (Manager)
+      operationId: setCustomerUserLink
+      security: [{ BearerAuth: [] }]
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [username]
+              properties:
+                username: { type: string, nullable: true }
+      responses:
+        '200':
+          description: Customer link updated.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/CustomerResponseDTO' }
+        '400': { $ref: '#/components/responses/400BadRequest' }
+        '401': { $ref: '#/components/responses/401Unauthorized' }
+        '403': { $ref: '#/components/responses/403Forbidden' }
+        '404': { $ref: '#/components/responses/404NotFound' }
+        '409': { $ref: '#/components/responses/409Conflict' }
+
+  /customers/{id}/addresses:
+    post:
+      tags: [Customers]
+      summary: Add a delivery address (Manager)
+      operationId: addCustomerAddress
+      security: [{ BearerAuth: [] }]
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/CustomerAddressInputDTO' }
+      responses:
+        '200':
+          description: Customer with address.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/CustomerResponseDTO' }
+        '400': { $ref: '#/components/responses/400BadRequest' }
+        '401': { $ref: '#/components/responses/401Unauthorized' }
+        '403': { $ref: '#/components/responses/403Forbidden' }
+        '404': { $ref: '#/components/responses/404NotFound' }
+
+  /customers/{id}/addresses/{addressId}:
+    parameters:
+      - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+      - { name: addressId, in: path, required: true, schema: { type: string, format: uuid } }
+    put:
+      tags: [Customers]
+      summary: Update a delivery address (Manager)
+      operationId: updateCustomerAddress
+      security: [{ BearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/CustomerAddressInputDTO' }
+      responses:
+        '200':
+          description: Customer with updated address.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/CustomerResponseDTO' }
+        '400': { $ref: '#/components/responses/400BadRequest' }
+        '401': { $ref: '#/components/responses/401Unauthorized' }
+        '403': { $ref: '#/components/responses/403Forbidden' }
+        '404': { $ref: '#/components/responses/404NotFound' }
+    delete:
+      tags: [Customers]
+      summary: Remove a delivery address (Manager)
+      operationId: removeCustomerAddress
+      security: [{ BearerAuth: [] }]
+      responses:
+        '200':
+          description: Customer with address removed.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/CustomerResponseDTO' }
+        '400': { $ref: '#/components/responses/400BadRequest' }
+        '401': { $ref: '#/components/responses/401Unauthorized' }
+        '403': { $ref: '#/components/responses/403Forbidden' }
+        '404': { $ref: '#/components/responses/404NotFound' }
+
+  /customers/{id}/addresses/{addressId}/default:
+    put:
+      tags: [Customers]
+      summary: Set default delivery address (Manager)
+      operationId: setDefaultCustomerAddress
+      security: [{ BearerAuth: [] }]
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+        - { name: addressId, in: path, required: true, schema: { type: string, format: uuid } }
+      responses:
+        '200':
+          description: Customer with selected default address.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/CustomerResponseDTO' }
+        '400': { $ref: '#/components/responses/400BadRequest' }
+        '401': { $ref: '#/components/responses/401Unauthorized' }
+        '403': { $ref: '#/components/responses/403Forbidden' }
+        '404': { $ref: '#/components/responses/404NotFound' }
+
+  # =========================================================================
+  # 4. PRODUCT CATEGORIES (BCK03) — canonical /product-categories path
+  # =========================================================================
+  /product-categories:
+    post:
+      tags: [Product Categories]
+      summary: Create product category
+      operationId: createProductCategory
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateCategoryRequestDTO'
+      responses:
+        '201':
+          description: Category created.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CategoryResponseDTO'
+        '400':
+          $ref: '#/components/responses/400BadRequest'
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+        '403':
+          $ref: '#/components/responses/403Forbidden'
+        '409':
+          $ref: '#/components/responses/409Conflict'
+    get:
+      tags: [Product Categories]
+      summary: List/search product categories
+      description: |
+        When page/pageSize are omitted, returns a plain array (Sprint 2
+        contract). When at least one is provided, returns a CategoryPage
+        (Sprint 1 contract). Search is applied before pagination.
+      operationId: listProductCategories
+      security: []
+      parameters:
+        - name: search
+          in: query
+          schema:
+            type: string
+        - name: page
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+        - name: pageSize
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+      responses:
+        '200':
+          description: |
+            Plain array (pagination not requested) or CategoryPage (requested).
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - type: array
+                    items:
+                      $ref: '#/components/schemas/CategoryResponseDTO'
+                  - $ref: '#/components/schemas/CategoryPage'
+        '400':
+          $ref: '#/components/responses/400BadRequest'
+
+  /product-categories/{name}:
+    parameters:
+      - $ref: '#/components/parameters/NamePathParam'
+    get:
+      tags: [Product Categories]
+      summary: Read category by name
+      operationId: getProductCategory
+      security: []
+      responses:
+        '200':
+          description: Category.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CategoryResponseDTO'
+        '400':
+          $ref: '#/components/responses/400BadRequest'
+        '404':
+          $ref: '#/components/responses/404NotFound'
+    put:
+      tags: [Product Categories]
+      summary: Update category (Manager)
+      description: |
+        Original update contract (Sprint 1): both name and description
+        required. Renaming a referenced category returns 400; duplicate
+        names return 409.
+      operationId: updateProductCategory
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateCategoryRequestDTO'
+      responses:
+        '200':
+          description: Category updated.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CategoryResponseDTO'
+        '400':
+          $ref: '#/components/responses/400BadRequest'
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+        '403':
+          $ref: '#/components/responses/403Forbidden'
+        '404':
+          $ref: '#/components/responses/404NotFound'
+        '409':
+          $ref: '#/components/responses/409Conflict'
+    delete:
+      tags: [Product Categories]
+      summary: Delete an unreferenced category (Manager)
+      description: |
+        ON DELETE RESTRICT at the DB layer guarantees BCK03 AC5. The
+        service layer detects references upfront and returns 409 with
+        details listing dependent product SKUs (Clarification #23 §1.2).
+      operationId: deleteProductCategory
+      security:
+        - BearerAuth: []
+      responses:
+        '204':
+          description: Category deleted.
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+        '403':
+          $ref: '#/components/responses/403Forbidden'
+        '404':
+          $ref: '#/components/responses/404NotFound'
+        '409':
+          $ref: '#/components/responses/409Conflict'
+
+  # -------------------------------------------------------------------------
+  # Sprint 1 alias path /categories (functional duplicate of /product-categories)
+  # -------------------------------------------------------------------------
+  /categories:
+    get:
+      tags: [Product Categories]
+      summary: List/search product categories (Sprint 1 alias)
+      description: |
+        Functional alias of /product-categories. Same pagination and search
+        semantics as the canonical path.
+      operationId: listCategoriesAlias
+      security: []
+      parameters:
+        - name: search
+          in: query
+          schema:
+            type: string
+        - name: page
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+        - name: pageSize
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+      responses:
+        '200':
+          description: Plain array or CategoryPage.
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - type: array
+                    items:
+                      $ref: '#/components/schemas/CategoryResponseDTO'
+                  - $ref: '#/components/schemas/CategoryPage'
+        '400':
+          $ref: '#/components/responses/400BadRequest'
+    post:
+      tags: [Product Categories]
+      summary: Create product category (Sprint 1 alias)
+      operationId: createCategoryAlias
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateCategoryRequestDTO'
+      responses:
+        '201':
+          description: Category created.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CategoryResponseDTO'
+        '400':
+          $ref: '#/components/responses/400BadRequest'
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+        '403':
+          $ref: '#/components/responses/403Forbidden'
+        '409':
+          $ref: '#/components/responses/409Conflict'
+
+  /categories/{name}:
+    parameters:
+      - $ref: '#/components/parameters/NamePathParam'
+    get:
+      tags: [Product Categories]
+      summary: Read category by name (Sprint 1 alias)
+      operationId: getCategoryAlias
+      security: []
+      responses:
+        '200':
+          description: Category.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CategoryResponseDTO'
+        '400':
+          $ref: '#/components/responses/400BadRequest'
+        '404':
+          $ref: '#/components/responses/404NotFound'
+    put:
+      tags: [Product Categories]
+      summary: Update category (Sprint 1 alias)
+      operationId: updateCategoryAlias
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateCategoryRequestDTO'
+      responses:
+        '200':
+          description: Category updated.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CategoryResponseDTO'
+        '400':
+          $ref: '#/components/responses/400BadRequest'
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+        '403':
+          $ref: '#/components/responses/403Forbidden'
+        '404':
+          $ref: '#/components/responses/404NotFound'
+        '409':
+          $ref: '#/components/responses/409Conflict'
+    delete:
+      tags: [Product Categories]
+      summary: Delete an unreferenced category (Sprint 1 alias)
+      operationId: deleteCategoryAlias
+      security:
+        - BearerAuth: []
+      responses:
+        '204':
+          description: Category deleted.
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+        '403':
+          $ref: '#/components/responses/403Forbidden'
+        '404':
+          $ref: '#/components/responses/404NotFound'
+        '409':
+          $ref: '#/components/responses/409Conflict'
+
+  # =========================================================================
+  # 5. ALLERGENS (BCK04)
+  # =========================================================================
+  /allergens:
+    post:
+      tags: [Allergens]
+      summary: Register an allergen
+      operationId: createAllergen
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateAllergenRequestDTO'
+      responses:
+        '201':
+          description: Allergen registered.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AllergenResponseDTO'
+        '400':
+          $ref: '#/components/responses/400BadRequest'
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+        '403':
+          $ref: '#/components/responses/403Forbidden'
+        '409':
+          $ref: '#/components/responses/409Conflict'
+    get:
+      tags: [Allergens]
+      summary: List allergens
+      operationId: listAllergens
+      security: []
+      responses:
+        '200':
+          description: Allergens.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/AllergenResponseDTO'
+
+  /allergens/{name}:
+    delete:
+      tags: [Allergens]
+      summary: Delete an unreferenced allergen
+      description: |
+        Path param {name} accepts either the canonical name (e.g., "Gluten")
+        or the Sprint 1 code (e.g., "ALL-GLUTEN"). The server resolves
+        either, mapping the code to the canonical name.
+      operationId: deleteAllergen
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/NameOrCodePathParam'
+      responses:
+        '204':
+          description: Allergen deleted.
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+        '403':
+          $ref: '#/components/responses/403Forbidden'
+        '404':
+          $ref: '#/components/responses/404NotFound'
+        '409':
+          $ref: '#/components/responses/409Conflict'
+
+  # =========================================================================
+  # 6. PRODUCTS (BCK05 + AI06 export)
+  # =========================================================================
+  /products:
+    post:
+      tags: [Products]
+      summary: Create product (enforces type invariants)
+      description: |
+        Enforces (isSellable ∨ isPizzaComponent) === TRUE (Clarification #06).
+        If isPizzaComponent, componentTypeName is mandatory. If isSellable,
+        directSellingPrice is mandatory (≥ 0.00). If isStockControlled AND
+        isSellable, stockUnitsPerSale must be provided (Clarification #28 §2).
+      operationId: createProduct
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateProductRequestDTO'
+      responses:
+        '201':
+          description: Product created.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProductResponseDTO'
+        '400':
+          $ref: '#/components/responses/400BadRequest'
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+        '403':
+          $ref: '#/components/responses/403Forbidden'
+        '409':
+          $ref: '#/components/responses/409Conflict'
+        '422':
+          $ref: '#/components/responses/422Unprocessable'
+    get:
+      tags: [Products]
+      summary: List/filter products
+      operationId: listProducts
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: categoryName
+          in: query
+          schema:
+            type: string
+        - name: categoryCode
+          in: query
+          description: Sprint 1 alias for categoryName.
+          schema:
+            type: string
+        - name: isSellable
+          in: query
+          schema:
+            type: boolean
+        - name: isPizzaComponent
+          in: query
+          schema:
+            type: boolean
+        - name: isStockControlled
+          in: query
+          schema:
+            type: boolean
+        - name: active
+          in: query
+          schema:
+            type: boolean
+      responses:
+        '200':
+          description: Products.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ProductResponseDTO'
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+        '403':
+          $ref: '#/components/responses/403Forbidden'
+
+  /products/{sku}:
+    get:
+      tags: [Products]
+      summary: Retrieve product by SKU
+      operationId: getProductBySku
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/SkuPathParam'
+      responses:
+        '200':
+          description: Product.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProductResponseDTO'
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+        '404':
+          $ref: '#/components/responses/404NotFound'
+    put:
+      tags: [Products]
+      summary: Update product
+      operationId: updateProduct
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/SkuPathParam'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateProductRequestDTO'
+      responses:
+        '200':
+          description: Product updated.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProductResponseDTO'
+        '400':
+          $ref: '#/components/responses/400BadRequest'
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+        '403':
+          $ref: '#/components/responses/403Forbidden'
+        '404':
+          $ref: '#/components/responses/404NotFound'
+        '409':
+          $ref: '#/components/responses/409Conflict'
+        '422':
+          $ref: '#/components/responses/422Unprocessable'
+    delete:
+      tags: [Products]
+      summary: Deactivate or delete product
+      operationId: deleteProduct
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/SkuPathParam'
+      responses:
+        '204':
+          description: Product deactivated or deleted.
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+        '403':
+          $ref: '#/components/responses/403Forbidden'
+        '404':
+          $ref: '#/components/responses/404NotFound'
+        '409':
+          description: |
+            Referenced by recipes, size configurations, stock, forecasts
+            or supplier offers — prefer deactivate().
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseDTO'
+
+  /products/export:
+    get:
+      tags: [Products]
+      summary: Export full product/BOM catalogue for Prolog KB (AI06)
+      description: |
+        Returns a comprehensive business-key-only JSON payload with
+        products, stockUnitsPerSale, component types, BOM definitions
+        (recipes), size-dependent stock consumption and current stock — used to construct the Prolog KB
+        per execution (ADR-012).
+      operationId: exportProductsForPlanning
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Full knowledge-base payload.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProductExportDTO'
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+        '403':
+          $ref: '#/components/responses/403Forbidden'
+
+  # =========================================================================
+  # 7. PIZZA TAXONOMY (BCK06, BCK07)
+  # =========================================================================
+  /pizza-sizes:
+    post:
+      tags: [Pizza Taxonomy]
+      summary: Create a pizza size
+      operationId: createPizzaSize
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreatePizzaSizeRequestDTO'
+      responses:
+        '201':
+          description: Size created.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PizzaSizeResponseDTO'
+        '400':
+          $ref: '#/components/responses/400BadRequest'
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+        '403':
+          $ref: '#/components/responses/403Forbidden'
+        '409':
+          $ref: '#/components/responses/409Conflict'
+    get:
+      tags: [Pizza Taxonomy]
+      summary: List pizza sizes
+      operationId: listPizzaSizes
+      security: []
+      responses:
+        '200':
+          description: Pizza sizes.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/PizzaSizeResponseDTO'
+
+  /pizza-sizes/{name}:
+    delete:
+      tags: [Pizza Taxonomy]
+      summary: Delete an unreferenced pizza size
+      operationId: deletePizzaSize
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/NameOrIdPathParam'
+      responses:
+        '204':
+          description: Size deleted.
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+        '403':
+          $ref: '#/components/responses/403Forbidden'
+        '404':
+          $ref: '#/components/responses/404NotFound'
+        '409':
+          $ref: '#/components/responses/409Conflict'
+
+  /pizza-component-types:
+    post:
+      tags: [Pizza Taxonomy]
+      summary: Register a component type
+      description: |
+        Enforces UNIQUE assembly_order. The 4 base types (Base Dough, Base
+        Sauce, Cheese, Topping) are immutable (Clarification #18).
+      operationId: createPizzaComponentType
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateComponentTypeRequestDTO'
+      responses:
+        '201':
+          description: Component type created.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ComponentTypeResponseDTO'
+        '400':
+          $ref: '#/components/responses/400BadRequest'
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+        '403':
+          $ref: '#/components/responses/403Forbidden'
+        '409':
+          $ref: '#/components/responses/409Conflict'
+    get:
+      tags: [Pizza Taxonomy]
+      summary: List component types ordered by assembly order
+      operationId: listPizzaComponentTypes
+      security: []
+      responses:
+        '200':
+          description: Component types.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ComponentTypeResponseDTO'
+
+  /pizza-component-types/{name}:
+    get:
+      tags: [Pizza Taxonomy]
+      summary: Retrieve a component type
+      operationId: getPizzaComponentType
+      security: []
+      parameters:
+        - $ref: '#/components/parameters/NameOrCodePathParam'
+      responses:
+        '200':
+          description: Component type.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ComponentTypeResponseDTO'
+        '404':
+          $ref: '#/components/responses/404NotFound'
+    put:
+      tags: [Pizza Taxonomy]
+      summary: Update component type (Manager)
+      description: |
+        Base types immutable (Clarification #18). Cardinality changes do
+        not invalidate existing recipes (they are re-validated on next
+        write or on reactivation).
+      operationId: updatePizzaComponentType
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/NameOrCodePathParam'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateComponentTypeRequestDTO'
+      responses:
+        '200':
+          description: Component type updated.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ComponentTypeResponseDTO'
+        '400':
+          $ref: '#/components/responses/400BadRequest'
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+        '403':
+          $ref: '#/components/responses/403Forbidden'
+        '404':
+          $ref: '#/components/responses/404NotFound'
+        '409':
+          $ref: '#/components/responses/409Conflict'
+        '422':
+          $ref: '#/components/responses/422Unprocessable'
+    delete:
+      tags: [Pizza Taxonomy]
+      summary: Delete component type (Manager)
+      operationId: deletePizzaComponentType
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/NameOrCodePathParam'
+      responses:
+        '204':
+          description: Component type deleted.
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+        '403':
+          $ref: '#/components/responses/403Forbidden'
+        '404':
+          $ref: '#/components/responses/404NotFound'
+        '409':
+          $ref: '#/components/responses/409Conflict'
+
+  # =========================================================================
+  # 8. COMPONENT SIZE CONFIGURATIONS (BCK08)
+  # =========================================================================
+  /products/{sku}/size-configurations:
+    post:
+      tags: [Component Configurations]
+      summary: Configure per-size price and abstract stock consumption
+      operationId: createComponentSizeConfiguration
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/SkuPathParam'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateSizeConfigRequestDTO'
+      responses:
+        '201':
+          description: Configuration created.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SizeConfigResponseDTO'
+        '400':
+          $ref: '#/components/responses/400BadRequest'
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+        '403':
+          $ref: '#/components/responses/403Forbidden'
+        '404':
+          $ref: '#/components/responses/404NotFound'
+        '409':
+          $ref: '#/components/responses/409Conflict'
+    get:
+      tags: [Component Configurations]
+      summary: List size configurations for a component
+      operationId: listComponentSizeConfigurations
+      security: []
+      parameters:
+        - $ref: '#/components/parameters/SkuPathParam'
+      responses:
+        '200':
+          description: Size configurations.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/SizeConfigResponseDTO'
+        '404':
+          $ref: '#/components/responses/404NotFound'
+
+  # =========================================================================
+  # 9. STOCK (BCK09, ADR-008b)
+  # =========================================================================
+  /stock:
+    get:
+      tags: [Stock]
+      summary: List current stock balances
+      operationId: listStockItems
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Stock items.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/StockItemResponseDTO'
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+        '403':
+          $ref: '#/components/responses/403Forbidden'
+
+  /stock/{sku}:
+    get:
+      tags: [Stock]
+      summary: Retrieve stock balance by SKU
+      operationId: getStockBalance
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/SkuPathParam'
+      responses:
+        '200':
+          description: Stock balance.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StockItemResponseDTO'
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+        '404':
+          $ref: '#/components/responses/404NotFound'
+
+  /stock/{sku}/adjustments:
+    post:
+      tags: [Stock]
+      summary: Atomic replenishment or consumption (pessimistic locking)
+      description: |
+        Uses SELECT ... FOR UPDATE inside a transaction (ADR-008b). If the
+        operation would result in a negative balance, rolls back and
+        returns 422 Unprocessable Entity.
+      operationId: adjustStock
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/SkuPathParam'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StockAdjustmentRequestDTO'
+      responses:
+        '200':
+          description: Balance after adjustment.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StockItemResponseDTO'
+        '400':
+          $ref: '#/components/responses/400BadRequest'
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+        '403':
+          $ref: '#/components/responses/403Forbidden'
+        '404':
+          $ref: '#/components/responses/404NotFound'
+        '409':
+          description: Concurrent conflict (optimistic path, future).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseDTO'
+        '422':
+          $ref: '#/components/responses/422Unprocessable'
+
+  # =========================================================================
+  # 10. PREDEFINED PIZZAS (BCK10)
+  # =========================================================================
+  /predefined-pizzas:
+    post:
+      tags: [Predefined Pizzas]
+      summary: Create a predefined pizza recipe
+      operationId: createPredefinedPizza
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreatePredefinedPizzaRequestDTO'
+      responses:
+        '201':
+          description: Recipe created.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PredefinedPizzaResponseDTO'
+        '400':
+          $ref: '#/components/responses/400BadRequest'
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+        '403':
+          $ref: '#/components/responses/403Forbidden'
+        '409':
+          $ref: '#/components/responses/409Conflict'
+        '422':
+          $ref: '#/components/responses/422Unprocessable'
+    get:
+      tags: [Predefined Pizzas]
+      summary: List predefined pizzas
+      operationId: listPredefinedPizzas
+      security: []
+      responses:
+        '200':
+          description: Recipes.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/PredefinedPizzaResponseDTO'
+
+  /predefined-pizzas/{sku}:
+    parameters:
+      - $ref: '#/components/parameters/SkuPathParam'
+    get:
+      tags: [Predefined Pizzas]
+      summary: Retrieve recipe by SKU
+      description: |
+        Optional pizzaSize query parameter restricts the response to one
+        size variant (Sprint 1 contract).
+      operationId: getPredefinedPizza
+      security: []
+      parameters:
+        - name: pizzaSize
+          in: query
+          required: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Recipe.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PredefinedPizzaResponseDTO'
+        '404':
+          $ref: '#/components/responses/404NotFound'
+    put:
+      tags: [Predefined Pizzas]
+      summary: Replace a predefined pizza recipe and its available sizes (Manager only)
+      description: |
+        Replaces the shared default recipe and the complete set of
+        available sizes atomically. Every ingredient must be active and
+        configured for every selected active size. Assembly cardinality
+        rules are enforced. The SKU is immutable.
+      operationId: updatePredefinedPizza
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdatePredefinedPizzaRequestDTO'
+      responses:
+        '200':
+          description: Recipe and sizes updated.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PredefinedPizzaResponseDTO'
+        '400':
+          $ref: '#/components/responses/400BadRequest'
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+        '403':
+          $ref: '#/components/responses/403Forbidden'
+        '404':
+          $ref: '#/components/responses/404NotFound'
+        '422':
+          description: Ingredients, size configurations or cardinality rules are invalid.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseDTO'
+
+  # =========================================================================
+  # ITEM PICTURES (ADR-018)
+  # =========================================================================
+  /images/{identifier}:
+    parameters:
+      - name: identifier
+        in: path
+        required: true
+        description: |
+          Product SKU, product name (case-insensitive) or predefined pizza
+          recipe name (case-insensitive), resolved in that order.
+        schema:
+          type: string
+          example: PIZ-MARGHERITA
+    get:
+      tags: [Item Pictures]
+      summary: Retrieve the picture of a product or pizza
+      description: |
+        Returns the stored picture in its native media type. When the item
+        does not exist or has no picture, returns 200 with a default SVG
+        picture stating that there is no image related to the item, flagged
+        by `X-Image-Placeholder: true` (ADR-005.2).
+      operationId: getItemPicture
+      security: []
+      responses:
+        '200':
+          description: Stored picture, or the default picture.
+          headers:
+            X-Image-Placeholder:
+              description: '`true` when the default picture is returned.'
+              schema:
+                type: string
+                enum: ['true', 'false']
+          content:
+            image/jpeg:
+              schema: { type: string, format: binary }
+            image/png:
+              schema: { type: string, format: binary }
+            image/webp:
+              schema: { type: string, format: binary }
+            image/gif:
+              schema: { type: string, format: binary }
+            image/svg+xml:
+              schema: { type: string, format: binary }
+        '400':
+          $ref: '#/components/responses/400BadRequest'
+    post:
+      tags: [Item Pictures]
+      summary: Upload or replace the picture of a product or pizza (Manager only)
+      description: |
+        Stores the picture as `<SKU>.<ext>`, replacing any previous picture
+        of the item. JPEG, PNG, WEBP or GIF up to 5 MB; the file content must
+        match its declared type. Sent by the back-office after creating or
+        editing a product or predefined pizza.
+      operationId: uploadItemPicture
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [image]
+              properties:
+                image:
+                  type: string
+                  format: binary
+      responses:
+        '201':
+          description: Picture stored.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  sku: { type: string, example: PIZ-MARGHERITA }
+                  fileName: { type: string, example: PIZ-MARGHERITA.jpg }
+                  contentType: { type: string, example: image/jpeg }
+                  size: { type: integer, example: 261232 }
+        '400':
+          $ref: '#/components/responses/400BadRequest'
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+        '403':
+          $ref: '#/components/responses/403Forbidden'
+        '404':
+          $ref: '#/components/responses/404NotFound'
+        '413':
+          description: File larger than 5 MB.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseDTO'
+
+  # =========================================================================
+  # 11. CATALOGUE QUERY (BCK11)
+  # =========================================================================
+  /catalogue:
+    get:
+      tags: [Catalogue Query]
+      summary: Public catalogue (sellable products, sizes, prices, availability)
+      operationId: getPublicCatalogue
+      security: []
+      parameters:
+        - name: categoryName
+          in: query
+          schema:
+            type: string
+        - name: categoryCode
+          in: query
+          description: Sprint 1 alias for categoryName.
+          schema:
+            type: string
+        - name: excludeAllergens
+          in: query
+          description: Comma-separated allergen names/codes to filter out.
+          schema:
+            type: string
+        - name: availableOnly
+          in: query
+          schema:
+            type: boolean
+            default: false
+      responses:
+        '200':
+          description: Catalogue entries.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CatalogueItemResponseDTO'
+
+  /catalogue/{sku}:
+    get:
+      tags: [Catalogue Query]
+      summary: Public catalogue item
+      operationId: getCatalogueItem
+      security: []
+      parameters:
+        - $ref: '#/components/parameters/SkuPathParam'
+      responses:
+        '200':
+          description: Catalogue item.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CatalogueItemResponseDTO'
+        '404':
+          $ref: '#/components/responses/404NotFound'
+
+  # =========================================================================
+  # 12. KITCHEN CONFIGURATIONS (WEB06, ADR-011)
+  # =========================================================================
+  
+/kitchen-configurations:
+  post:
+    tags: [Kitchen Configurations]
+    summary: Create a kitchen configuration
+    description: |
+      jsonContent is validated against the predefined schema (ADR-014)
+      by KitchenConfigValidationService before persisting. Returns 422
+      on invalid structure. The new configuration is NOT active by
+      default — activation is a separate explicit operation.
+    operationId: createKitchenConfiguration
+    security:
+      - BearerAuth: []
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/CreateKitchenConfigurationDTO'
+    responses:
+      '201':
+        description: Configuration created.
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/KitchenConfigurationResponseDTO'
+      '400':
+        $ref: '#/components/responses/400BadRequest'
+      '401':
+        $ref: '#/components/responses/401Unauthorized'
+      '403':
+        $ref: '#/components/responses/403Forbidden'
+      '409':
+        $ref: '#/components/responses/409Conflict'
+      '422':
+        $ref: '#/components/responses/422Unprocessable'
+  get:
+    tags: [Kitchen Configurations]
+    summary: List kitchen configurations (active flag included)
+    operationId: listKitchenConfigurations
+    security:
+      - BearerAuth: []
+    parameters:
+      - name: activeOnly
+        in: query
+        schema:
+          type: boolean
+          default: false
+    responses:
+      '200':
+        description: Configurations.
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: '#/components/schemas/KitchenConfigurationResponseDTO'
+      '401':
+        $ref: '#/components/responses/401Unauthorized'
+      '403':
+        $ref: '#/components/responses/403Forbidden'
+
+/kitchen-configurations/active:
+  get:
+    tags: [Kitchen Configurations]
+    summary: Retrieve the active kitchen configuration
+    operationId: getActiveKitchenConfiguration
+    security:
+      - BearerAuth: []
+    responses:
+      '200':
+        description: Active kitchen configuration.
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/KitchenConfigurationResponseDTO'
+      '401':
+        $ref: '#/components/responses/401Unauthorized'
+      '403':
+        $ref: '#/components/responses/403Forbidden'
+      '404':
+        $ref: '#/components/responses/404NotFound'
+
+/kitchen-configurations/{id}:
+  get:
+    tags: [Kitchen Configurations]
+    summary: Retrieve kitchen configuration
+    operationId: getKitchenConfiguration
+    security:
+      - BearerAuth: []
+    parameters:
+      - $ref: '#/components/parameters/NamePathParam'
+    responses:
+      '200':
+        description: Configuration.
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/KitchenConfigurationResponseDTO'
+      '401':
+        $ref: '#/components/responses/401Unauthorized'
+      '404':
+        $ref: '#/components/responses/404NotFound'
+  put:
+    tags: [Kitchen Configurations]
+    summary: Replace kitchen configuration JSON
+    description: |
+      Does NOT change is_active. To switch the active configuration, use
+      POST /kitchen-configurations/{name}/activate.
+    operationId: updateKitchenConfiguration
+    security:
+      - BearerAuth: []
+    parameters:
+      - $ref: '#/components/parameters/NamePathParam'
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/UpdateKitchenConfigurationDTO'
+    responses:
+      '200':
+        description: Configuration updated.
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/KitchenConfigurationResponseDTO'
+      '400':
+        $ref: '#/components/responses/400BadRequest'
+      '401':
+        $ref: '#/components/responses/401Unauthorized'
+      '403':
+        $ref: '#/components/responses/403Forbidden'
+      '404':
+        $ref: '#/components/responses/404NotFound'
+      '422':
+        $ref: '#/components/responses/422Unprocessable'
+  delete:
+    tags: [Kitchen Configurations]
+    summary: Delete an inactive kitchen configuration
+    description: |
+      Active configuration cannot be deleted; deactivate another first.
+    operationId: deleteKitchenConfiguration
+    security:
+      - BearerAuth: []
+    parameters:
+      - $ref: '#/components/parameters/NamePathParam'
+    responses:
+      '204':
+        description: Configuration deleted.
+      '401':
+        $ref: '#/components/responses/401Unauthorized'
+      '403':
+        $ref: '#/components/responses/403Forbidden'
+      '404':
+        $ref: '#/components/responses/404NotFound'
+      '409':
+        description: Cannot delete the currently active configuration.
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ErrorResponseDTO'
+
+/kitchen-configurations/{id}/activate:
+  post:
+    tags: [Kitchen Configurations]
+    summary: Activate a configuration (single-active invariant)
+    description: |
+      Executes UPDATE is_active = FALSE for all rows, then
+      UPDATE is_active = TRUE for {name}, inside one transaction.
+      The partial unique index uq_active_kitchen_configuration
+      guarantees at most one active row at the DB layer (ADR-011,
+      §18.3). Operation is idempotent.
+    operationId: activateKitchenConfiguration
+    security:
+      - BearerAuth: []
+    parameters:
+      - name: id
+        in: path
+        required: true
+        description: Unique kitchen configuration UUID.
+        schema:
+          type: string
+          format: uuid
+    responses:
+      '200':
+        description: Configuration activated.
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/KitchenConfigurationResponseDTO'
+      '401':
+        $ref: '#/components/responses/401Unauthorized'
+      '403':
+        $ref: '#/components/responses/403Forbidden'
+      '404':
+        $ref: '#/components/responses/404NotFound'
+      '409':
+        description: Concurrent activation conflict (retry-safe).
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ErrorResponseDTO'
+
+
+  # =========================================================================
+  # 13. CONSUMPTION FORECASTS (WEB07)
+  # =========================================================================
+  /consumption-forecasts:
+    post:
+      tags: [Consumption Forecasts]
+      summary: Create a consumption forecast
+      operationId: createConsumptionForecast
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ConsumptionForecastRequestDTO'
+      responses:
+        '201':
+          description: Forecast created.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConsumptionForecastResponseDTO'
+        '400':
+          $ref: '#/components/responses/400BadRequest'
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+        '403':
+          $ref: '#/components/responses/403Forbidden'
+        '409':
+          $ref: '#/components/responses/409Conflict'
+        '422':
+          $ref: '#/components/responses/422Unprocessable'
+    get:
+      tags: [Consumption Forecasts]
+      summary: List forecasts
+      operationId: listConsumptionForecasts
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Forecasts.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ConsumptionForecastResponseDTO'
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+        '403':
+          $ref: '#/components/responses/403Forbidden'
+
+  /consumption-forecasts/{name}:
+    get:
+      tags: [Consumption Forecasts]
+      summary: Retrieve a forecast
+      operationId: getConsumptionForecast
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/NamePathParam'
+      responses:
+        '200':
+          description: Forecast.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConsumptionForecastResponseDTO'
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+        '404':
+          $ref: '#/components/responses/404NotFound'
+    put:
+      tags: [Consumption Forecasts]
+      summary: Replace forecast content
+      operationId: updateConsumptionForecast
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/NamePathParam'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ConsumptionForecastRequestDTO'
+      responses:
+        '200':
+          description: Forecast updated.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConsumptionForecastResponseDTO'
+        '400':
+          $ref: '#/components/responses/400BadRequest'
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+        '403':
+          $ref: '#/components/responses/403Forbidden'
+        '404':
+          $ref: '#/components/responses/404NotFound'
+        '422':
+          $ref: '#/components/responses/422Unprocessable'
+    delete:
+      tags: [Consumption Forecasts]
+      summary: Delete a forecast (historical results preserved via SET NULL)
+      operationId: deleteConsumptionForecast
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/NamePathParam'
+      responses:
+        '204':
+          description: Forecast deleted; planning results retain snapshots.
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+        '403':
+          $ref: '#/components/responses/403Forbidden'
+        '404':
+          $ref: '#/components/responses/404NotFound'
+
+  # =========================================================================
+  # 14. SUPPLIER SCENARIOS (WEB07)
+  # =========================================================================
+  /supplier-scenarios:
+    post:
+      tags: [Supplier Scenarios]
+      summary: Create a supplier scenario
+      operationId: createSupplierScenario
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SupplierScenarioRequestDTO'
+      responses:
+        '201':
+          description: Scenario created.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SupplierScenarioResponseDTO'
+        '400':
+          $ref: '#/components/responses/400BadRequest'
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+        '403':
+          $ref: '#/components/responses/403Forbidden'
+        '409':
+          $ref: '#/components/responses/409Conflict'
+        '422':
+          $ref: '#/components/responses/422Unprocessable'
+    get:
+      tags: [Supplier Scenarios]
+      summary: List scenarios
+      operationId: listSupplierScenarios
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Scenarios.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/SupplierScenarioResponseDTO'
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+        '403':
+          $ref: '#/components/responses/403Forbidden'
+
+  /supplier-scenarios/{name}:
+    get:
+      tags: [Supplier Scenarios]
+      summary: Retrieve a scenario
+      operationId: getSupplierScenario
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/NamePathParam'
+      responses:
+        '200':
+          description: Scenario.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SupplierScenarioResponseDTO'
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+        '404':
+          $ref: '#/components/responses/404NotFound'
+    put:
+      tags: [Supplier Scenarios]
+      summary: Replace scenario content
+      operationId: updateSupplierScenario
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/NamePathParam'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SupplierScenarioRequestDTO'
+      responses:
+        '200':
+          description: Scenario updated.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SupplierScenarioResponseDTO'
+        '400':
+          $ref: '#/components/responses/400BadRequest'
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+        '403':
+          $ref: '#/components/responses/403Forbidden'
+        '404':
+          $ref: '#/components/responses/404NotFound'
+        '422':
+          $ref: '#/components/responses/422Unprocessable'
+    delete:
+      tags: [Supplier Scenarios]
+      summary: Delete a scenario (historical results preserved via SET NULL)
+      operationId: deleteSupplierScenario
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/NamePathParam'
+      responses:
+        '204':
+          description: Scenario deleted; planning results retain snapshots.
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+        '403':
+          $ref: '#/components/responses/403Forbidden'
+        '404':
+          $ref: '#/components/responses/404NotFound'
+
+  /supplier-scenarios/{name}/confirm:
+    post:
+      tags: [Supplier Scenarios]
+      summary: Confirm a scenario (ready for Prolog planning)
+      description: |
+        Explicit confirm() transitions confirmed_at. Only confirmed
+        scenarios can be used to execute BOM/Requirements Planning
+        (Clarification #28).
+      operationId: confirmSupplierScenario
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/NamePathParam'
+      responses:
+        '200':
+          description: Scenario confirmed.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SupplierScenarioResponseDTO'
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+        '403':
+          $ref: '#/components/responses/403Forbidden'
+        '404':
+          $ref: '#/components/responses/404NotFound'
+        '409':
+          description: Scenario already confirmed.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseDTO'
+        '422':
+          $ref: '#/components/responses/422Unprocessable'
+
+  # =========================================================================
+  # 15. AI PLANNING EXECUTIONS (AI01, AI02, AI05, AI06, ADR-012, ADR-013)
+  # =========================================================================
+  /planning/bom-executions:
+    post:
+      tags: [AI Planning]
+      summary: Execute Bill of Materials (BOM) and Stock Requirements (AI01)
+      description: |
+        Calculates the required raw materials and components for a list of ordered pizzas.
+        Uses available stock first, reporting hypothetical remaining units and replenishment needs.
+        This endpoint is strictly read-only (does not mutate stock).
+      operationId: executeBom
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BomExecutionRequestDTO'
+      responses:
+        '201':
+          description: BOM executed successfully; result persisted.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlanningResultResponseDTO'
+        '400':
+          $ref: '#/components/responses/400BadRequest'
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+        '403':
+          $ref: '#/components/responses/403Forbidden'
+        '422':
+          $ref: '#/components/responses/422Unprocessable'
+        '502':
+          $ref: '#/components/responses/502BadGateway'
+
+  /planning/executions:
+    post:
+      tags: [AI Planning]
+      summary: Execute Requirements Planning via Prolog (AI02)
+      description: |
+        Orchestration (ADR-012, ADR-013):
+          1. Load forecast + scenario + stock + BOM.
+          2. PlanningSnapshotDomainService captures deep JSON snapshots.
+          3. Validate all references are active (Clarification #28).
+          4. Call PrologHttpClient → 502 Bad Gateway if unavailable.
+          5. Persist immutable PlanningResult with snapshots and outputs.
+        Never mutates stock and never creates PurchaseOrders
+        (Clarification #26).
+      operationId: executePlanning
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PlanningExecutionRequestDTO'
+      responses:
+        '201':
+          description: Planning executed; read-only result persisted.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlanningResultResponseDTO'
+        '400':
+          $ref: '#/components/responses/400BadRequest'
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+        '403':
+          $ref: '#/components/responses/403Forbidden'
+        '404':
+          description: Forecast or scenario not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseDTO'
+        '409':
+          description: |
+            Scenario not confirmed, or reference became inactive since
+            creation (Clarification #28 follow-up).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseDTO'
+        '422':
+          description: |
+            Missing stockUnitsPerSale for a isStockControlled ∧ isSellable
+            product (Clarification #28 §2), or invalid BOM.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseDTO'
+        '502':
+          $ref: '#/components/responses/502BadGateway'
+    get:
+      tags: [AI Planning]
+      summary: List historical planning results
+      operationId: listPlanningExecutions
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: forecastName
+          in: query
+          schema:
+            type: string
+        - name: scenarioName
+          in: query
+          schema:
+            type: string
+        - $ref: '#/components/parameters/PageSize'
+        - $ref: '#/components/parameters/PageStartIndex'
+      responses:
+        '200':
+          description: Historical results (most recent first).
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/PlanningResultResponseDTO'
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+        '403':
+          $ref: '#/components/responses/403Forbidden'
+
+  /planning/executions/{executionId}:
+    get:
+      tags: [AI Planning]
+      summary: Retrieve a planning result (read-only)
+      operationId: getPlanningExecution
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/ExecutionIdParam'
+      responses:
+        '200':
+          description: Planning result.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlanningResultResponseDTO'
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+        '403':
+          $ref: '#/components/responses/403Forbidden'
+        '404':
+          $ref: '#/components/responses/404NotFound'
+
+  /planning/executions/{executionId}/replay:
+    post:
+      tags: [AI Planning]
+      summary: Replay a historical execution using its snapshots
+      description: |
+        Re-executes BOM/Requirements Planning using the original snapshots
+        (forecast_snapshot, scenario_snapshot, stock_snapshot) rather than
+        current data. Creates a new PlanningResult with is_replay = true
+        (ADR-013). Original result untouched.
+      operationId: replayPlanningExecution
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/ExecutionIdParam'
+      responses:
+        '201':
+          description: Replay executed; new PlanningResult persisted.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlanningResultResponseDTO'
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+        '403':
+          $ref: '#/components/responses/403Forbidden'
+        '404':
+          $ref: '#/components/responses/404NotFound'
+        '502':
+          $ref: '#/components/responses/502BadGateway'
+
+  /documents/{path}:
+    get:
+      tags: [Shared Documents]
+      summary: Read a shared document
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: path
+          in: path
+          required: true
+          description: Relative path below shared/documents (reports/... or operations/...).
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Document bytes.
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+        '400':
+          $ref: '#/components/responses/400BadRequest'
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+        '403':
+          $ref: '#/components/responses/403Forbidden'
+        '404':
+          $ref: '#/components/responses/404NotFound'
+    put:
+      tags: [Shared Documents]
+      summary: Create or replace a shared document
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: path
+          in: path
+          required: true
+          description: Relative path below shared/documents (reports/... or operations/...).
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/octet-stream:
+            schema:
+              type: string
+              format: binary
+      responses:
+        '200':
+          description: Document replaced.
+        '201':
+          description: Document created.
+        '400':
+          $ref: '#/components/responses/400BadRequest'
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+        '403':
+          $ref: '#/components/responses/403Forbidden'
+        '413':
+          description: Document exceeds the 10 MiB limit.
+    delete:
+      tags: [Shared Documents]
+      summary: Delete a shared document
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: path
+          in: path
+          required: true
+          description: Relative path below shared/documents (reports/... or operations/...).
+          schema:
+            type: string
+      responses:
+        '204':
+          description: Document deleted.
+        '400':
+          $ref: '#/components/responses/400BadRequest'
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+        '403':
+          $ref: '#/components/responses/403Forbidden'
+        '404':
+          $ref: '#/components/responses/404NotFound'
+
+# =========================================================================
+# COMPONENTS
+# =========================================================================
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: |
+        Bearer JWT issued by the implemented /auth/login and /auth/register.
+        Claims: sid (UUID session ID), sub (username), email, roles[], status,
+        iat, exp (15 minutes). Protected requests require an unrevoked,
+        unexpired PostgreSQL session belonging to sub. Guards also re-read
+        current roles and status. Tokens without sid require a new login (ADR-004.2).
+
+  parameters:
+    EntityId:
+      name: id
+      in: path
+      required: true
+      description: |
+        Generic entity identifier (string). Retained for Sprint 1
+        compatibility where callers may use "id" in the path.
+      schema:
+        type: string
+    UsernameParam:
+      name: username
+      in: path
+      required: true
+      description: Business key for a User (VARCHAR(30)).
+      schema:
+        type: string
+        minLength: 1
+        maxLength: 30
+        example: manager.01
+    EmailParam:
+      name: email
+      in: path
+      required: true
+      description: Business key for a Customer (VARCHAR(255)).
+      schema:
+        type: string
+        format: email
+        example: maria.silva@email.pt
+    SkuPathParam:
+      name: sku
+      in: path
+      required: true
+      description: Business key for a Product (VARCHAR(30)).
+      schema:
+        type: string
+        minLength: 1
+        maxLength: 30
+        example: PRD-MOZZ-01
+    NamePathParam:
+      name: name
+      in: path
+      required: true
+      description: |
+        Business key (VARCHAR) for Category / Allergen / PizzaSize /
+        ComponentType / KitchenConfiguration / ConsumptionForecast /
+        SupplierScenario. Matches DB PRIMARY KEY 'name'.
+      schema:
+        type: string
+        minLength: 1
+        maxLength: 150
+        example: 'Pizzas'
+    NameOrCodePathParam:
+      name: name
+      in: path
+      required: true
+      description: |
+        Business key that accepts either the canonical 'name' (Sprint 2)
+        or the legacy 'code'/'id' (Sprint 1). The server resolves both.
+      schema:
+        type: string
+        minLength: 1
+        maxLength: 150
+    NameOrIdPathParam:
+      name: name
+      in: path
+      required: true
+      description: |
+        Business key that accepts either the canonical 'name' (Sprint 2)
+        or the legacy 'id' (Sprint 1, e.g., 'SIZE-MED'). The server
+        resolves both.
+      schema:
+        type: string
+        minLength: 1
+        maxLength: 150
+    ProductCodeParam:
+      name: productCode
+      in: path
+      required: true
+      description: |
+        Sprint 1 alias for product SKU (Sprint 2). Same identifier space.
+      schema:
+        type: string
+        minLength: 1
+        maxLength: 30
+    UserRoleParam:
+      name: role
+      in: path
+      required: true
+      schema:
+        type: string
+        enum: [MANAGER, EMPLOYEE, CUSTOMER]
+    ExecutionIdParam:
+      name: executionId
+      in: path
+      required: true
+      description: SERIAL primary key of planning_results.
+      schema:
+        type: integer
+        minimum: 1
+    PageSize:
+      name: pageSize
+      in: query
+      required: false
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 100
+        default: 25
+    PageStartIndex:
+      name: pageStartIndex
+      in: query
+      required: false
+      schema:
+        type: integer
+        minimum: 0
+        default: 0
+
+  responses:
+    400BadRequest:
+      description: Structural/syntax validation failed on input.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponseDTO'
+    401Unauthorized:
+      description: Credentials missing, invalid, or expired.
+      headers:
+        WWW-Authenticate:
+          description: |
+            RFC 7235 §4.1 mandates that 401 responses advertise the
+            authentication scheme. Bearer with realm is the standard form
+            for JWT-based APIs.
+          schema:
+            type: string
+            example: 'Bearer realm="laprizza"'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponseDTO'
+    403Forbidden:
+      description: Insufficient role or account not ACTIVE.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponseDTO'
+    404NotFound:
+      description: Target entity not found.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponseDTO'
+    409Conflict:
+      description: Duplicate unique constraint or referential block.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponseDTO'
+    422Unprocessable:
+      description: Business domain invariant violated.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponseDTO'
+    502BadGateway:
+      description: Upstream unavailable (Prolog engine, IdP).
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponseDTO'
+    503ServiceUnavailable:
+      description: Service in maintenance or dependency unavailable (SMTP, IdP).
+      headers:
+        Retry-After:
+          schema:
+            type: integer
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponseDTO'
+
+  schemas:
+    PasswordRecoveryRequestDTO:
+      type: object
+      additionalProperties: false
+      required: [email]
+      properties:
+        email:
+          type: string
+          format: email
+    PasswordRecoveryResetDTO:
+      type: object
+      additionalProperties: false
+      required: [recovery_code, new_password]
+      properties:
+        recovery_code:
+          type: string
+          writeOnly: true
+          description: Complete emailed 64-character hexadecimal code.
+          pattern: '^[a-fA-F0-9]{64}$'
+        new_password:
+          type: string
+          writeOnly: true
+          minLength: 8
+          maxLength: 128
+          description: Must contain uppercase, lowercase, a number, and a symbol.
+    PasswordRecoveryConfirmationDTO:
+      type: object
+      required: [message]
+      properties:
+        message:
+          type: string
+
+    # ------------------------------------------------------------------
+    # Common
+    # ------------------------------------------------------------------
+    ErrorResponseDTO:
+      type: object
+      required: [timestamp, status, error, message]
+      properties:
+        timestamp:
+          type: string
+          format: date-time
+        status:
+          type: integer
+          example: 409
+        error:
+          type: string
+          example: Conflict
+        message:
+          type: string
+          example: "Cannot delete category 'Pizzas': actively referenced by 3 products."
+        details:
+          type: array
+          items:
+            type: string
+          example: ["Field 'email' must be a valid email address"]
+
+    MoneyDTO:
+      type: object
+      required: [amount, currency]
+      properties:
+        amount:
+          type: number
+          format: double
+          minimum: 0
+          example: 9.50
+        currency:
+          type: string
+          minLength: 3
+          maxLength: 3
+          example: EUR
+
+    # ------------------------------------------------------------------
+    # Authentication
+    # ------------------------------------------------------------------
+    LoginRequestDTO:
+      type: object
+      required: [email, password]
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          minLength: 8
+
+    LoginResponseDTO:
+      type: object
+      required: [token, refreshToken, user]
+      properties:
+        token:
+          type: string
+          description: Signed bearer JWT with a persisted session ID (sid); expires in 15 minutes.
+        refreshToken:
+          type: string
+          description: Opaque one-time token rotated on every refresh; never stored in plaintext.
+        user:
+          $ref: '#/components/schemas/UserResponseDTO'
+
+    ExchangeCodeRequestDTO:
+      type: object
+      required: [code]
+      properties:
+        code:
+          type: string
+          format: uuid
+          description: The short-lived exchange code received in the callback redirect.
+
+    RefreshTokenRequestDTO:
+      type: object
+      required: [refreshToken]
+      properties:
+        refreshToken:
+          type: string
+          minLength: 32
+
+    RefreshTokenResponseDTO:
+      type: object
+      required: [token, refreshToken]
+      properties:
+        token:
+          type: string
+        refreshToken:
+          type: string
+
+    RegisterCustomerRequestDTO:
+      type: object
+      required: [firstName, lastName, email, password]
+      properties:
+        firstName:
+          type: string
+          minLength: 1
+          maxLength: 75
+        lastName:
+          type: string
+          minLength: 1
+          maxLength: 75
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          minLength: 8
+        phoneNumber:
+          type: string
+          pattern: '^[0-9+ ]{9,15}$'
+        dietaryRestrictions:
+          type: array
+          items:
+            $ref: '#/components/schemas/DietaryRestrictionDTO'
+
+    PreRegisterStaffRequestDTO:
+      type: object
+      required: [firstName, lastName, email, roleName]
+      properties:
+        firstName:
+          type: string
+          minLength: 1
+          maxLength: 75
+        lastName:
+          type: string
+          minLength: 1
+          maxLength: 75
+        email:
+          type: string
+          format: email
+        roleName:
+          type: string
+          enum: [ADMINISTRATOR, MANAGER, EMPLOYEE]
+
+    ActivateInvitationRequestDTO:
+      type: object
+      required: [token, password]
+      properties:
+        token:
+          type: string
+          minLength: 32
+          description: Cryptographically secure invitation token.
+        password:
+          type: string
+          minLength: 8
+
+    ActivationResponseDTO:
+      type: object
+      required: [message]
+      properties:
+        message:
+          type: string
+          example: Account activated successfully.
+
+    InvitationInfoResponseDTO:
+      type: object
+      required: [purpose, maskedEmail, expiresAt, valid]
+      properties:
+        purpose:
+          type: string
+          enum: [LOCAL_ACCOUNT_ACTIVATION, EXTERNAL_IDP_MATCH]
+        maskedEmail:
+          type: string
+          example: m***a@laprizza.com
+        expiresAt:
+          type: string
+          format: date-time
+        valid:
+          type: boolean
+          example: true
+
+    # ------------------------------------------------------------------
+    # Users
+    # ------------------------------------------------------------------
+    UserStatus:
+      type: string
+      enum: [ACTIVE, DEACTIVATED, PENDING_REGISTRATION]
+
+    CreateUserRequestDTO:
+      type: object
+      required: [firstName, lastName, email, roles]
+      properties:
+        firstName:
+          type: string
+          minLength: 1
+          maxLength: 75
+        lastName:
+          type: string
+          minLength: 1
+          maxLength: 75
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          minLength: 8
+          description: Optional if user authenticates via external IdP only.
+          nullable: true
+        roles:
+          type: array
+          minItems: 1
+          items:
+            type: string
+            enum: [MANAGER, EMPLOYEE, CUSTOMER]
+
+    ReplaceUserRolesRequestDTO:
+      type: object
+      required: [roles]
+      properties:
+        roles:
+          type: array
+          minItems: 1
+          items:
+            type: string
+            enum: [MANAGER, EMPLOYEE, CUSTOMER]
+          description: |
+            The complete new role set. Array semantics are "replace", not
+            "merge". Include all desired roles explicitly.
+          example: [MANAGER, EMPLOYEE]
+        reason:
+          type: string
+          nullable: true
+          maxLength: 255
+          description: |
+            Optional free-text justification stored verbatim in
+            role_change_logs.reason (Clarification #24 §1.4).
+
+    UserResponseDTO:
+      type: object
+      required: [username, firstName, lastName, email, status, roles, createdAt, updatedAt]
+      properties:
+        username:
+          type: string
+          maxLength: 30
+        firstName:
+          type: string
+          maxLength: 75
+        lastName:
+          type: string
+          maxLength: 75
+        email:
+          type: string
+          format: email
+        status:
+          $ref: '#/components/schemas/UserStatus'
+        roles:
+          type: array
+          items:
+            type: string
+            enum: [MANAGER, EMPLOYEE, CUSTOMER]
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+        hasLocalPassword:
+          type: boolean
+          description: True when password_hash IS NOT NULL (ADR-010).
+        hasExternalIdp:
+          type: boolean
+          description: True when external_idp_subject IS NOT NULL (ADR-010).
+
+    SelfServiceContactResponse:
+      allOf:
+        - $ref: '#/components/schemas/UserResponseDTO'
+        - type: object
+          properties:
+            address:
+              $ref: '#/components/schemas/DeliveryAddressDTO'
+            phoneNumber:
+              type: string
+              pattern: '^[0-9+ ]{9,15}$'
+              example: '+351912345678'
+
+    PaginatedUsersDTO:
+      type: object
+      required: [items, total, pageSize, pageStartIndex]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/UserResponseDTO'
+        total:
+          type: integer
+        pageSize:
+          type: integer
+        pageStartIndex:
+          type: integer
+
+    RoleChangeLogResponseDTO:
+      type: object
+      required: [actorUsername, targetUsername, previousRoles, newRoles, changedAt]
+      properties:
+        actorUsername:
+          type: string
+        targetUsername:
+          type: string
+        previousRoles:
+          type: array
+          items:
+            type: string
+        newRoles:
+          type: array
+          items:
+            type: string
+        reason:
+          type: string
+          nullable: true
+        changedAt:
+          type: string
+          format: date-time
+
+    PaginatedRoleChangeLogDTO:
+      type: object
+      required: [items, total, page, pageSize, totalPages]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/RoleChangeLogResponseDTO'
+        total:
+          type: integer
+        page:
+          type: integer
+        pageSize:
+          type: integer
+        totalPages:
+          type: integer
+
+    DeliveryAddressDTO:
+      type: object
+      required: [street, postalCode, city]
+      properties:
+        street:
+          type: string
+        postalCode:
+          type: string
+        city:
+          type: string
+        extraDetails:
+          type: string
+          nullable: true
+
+    # ------------------------------------------------------------------
+    # Customers
+    # ------------------------------------------------------------------
+    DietaryRestrictionDTO:
+      type: object
+      required: [allergenName]
+      properties:
+        allergenName:
+          type: string
+        allergenCode:
+          type: string
+          description: |
+            Sprint 1 alias for allergenName. Accepts 'ALL-GLUTEN' etc.
+            The server resolves either form.
+        description:
+          type: string
+          nullable: true
+        recordedAt:
+          type: string
+          format: date-time
+          nullable: true
+
+    DietaryRestrictionsDTO:
+      type: object
+      required: [restrictions]
+      properties:
+        restrictions:
+          type: array
+          items:
+            $ref: '#/components/schemas/DietaryRestrictionDTO'
+
+    CreateCustomerRequestDTO:
+      type: object
+      required: [firstName, lastName, phone, email]
+      properties:
+        firstName: { type: string, minLength: 2, maxLength: 75 }
+        lastName: { type: string, minLength: 2, maxLength: 75 }
+        phone: { type: string, pattern: '^\\+[1-9][0-9]{7,14}$' }
+        email: { type: string, format: email, maxLength: 255 }
+        username: { type: string, nullable: true, description: Optional matching User account username. }
+        vatNumber: { type: string, nullable: true, maxLength: 20 }
+        marketingConsent: { type: boolean, default: false }
+        deliveryAddresses:
+          type: array
+          items: { $ref: '#/components/schemas/CustomerAddressInputDTO' }
+        dietaryRestrictions:
+          type: array
+          items: { $ref: '#/components/schemas/CustomerDietaryRestrictionInputDTO' }
+
+    UpdateCustomerRequestDTO:
+      type: object
+      required: [firstName, lastName, phone, email]
+      properties:
+        firstName: { type: string, minLength: 2, maxLength: 75 }
+        lastName: { type: string, minLength: 2, maxLength: 75 }
+        phone: { type: string, pattern: '^\\+[1-9][0-9]{7,14}$' }
+        email: { type: string, format: email, maxLength: 255 }
+        vatNumber: { type: string, nullable: true, maxLength: 20 }
+        marketingConsent: { type: boolean }
+
+    CustomerAddressInputDTO:
+      type: object
+      required: [street, postalCode, city]
+      properties:
+        street: { type: string, minLength: 1, maxLength: 255 }
+        postalCode: { type: string, minLength: 1, maxLength: 20 }
+        city: { type: string, minLength: 1, maxLength: 100 }
+        extraDetails: { type: string, maxLength: 500, default: '' }
+        isDefault: { type: boolean, default: false }
+
+    CustomerDietaryRestrictionInputDTO:
+      type: object
+      required: [allergenId]
+      properties:
+        allergenId: { type: string, description: Canonical allergen name key from the catalogue. }
+        description: { type: string, maxLength: 500, default: '' }
+
+    CustomerDietaryRestrictionsInputDTO:
+      type: object
+      required: [dietaryRestrictions]
+      properties:
+        dietaryRestrictions:
+          type: array
+          items: { $ref: '#/components/schemas/CustomerDietaryRestrictionInputDTO' }
+
+    CustomerPageDTO:
+      type: object
+      required: [items, total, page, pageSize, totalPages]
+      properties:
+        items: { type: array, items: { $ref: '#/components/schemas/CustomerListItemDTO' } }
+        total: { type: integer }
+        page: { type: integer }
+        pageSize: { type: integer }
+        totalPages: { type: integer }
+
+    CustomerListItemDTO:
+      type: object
+      required: [id, firstName, lastName, phone, email, vatNumber]
+      properties:
+        id: { type: string, format: uuid }
+        firstName: { type: string }
+        lastName: { type: string }
+        phone: { type: string }
+        email: { type: string, format: email }
+        vatNumber: { type: string, nullable: true }
+
+    CustomerResponseDTO:
+      type: object
+      required: [id, username, firstName, lastName, phone, email, vatNumber, marketingConsent, consentTimestamp, addresses, dietaryRestrictions, createdAt, updatedAt]
+      properties:
+        id: { type: string, format: uuid }
+        username: { type: string, nullable: true }
+        firstName: { type: string }
+        lastName: { type: string }
+        phone: { type: string }
+        email: { type: string, format: email }
+        vatNumber: { type: string, nullable: true }
+        marketingConsent: { type: boolean }
+        consentTimestamp: { type: string, format: date-time }
+        addresses: { type: array, items: { type: object, properties: { id: { type: string, format: uuid }, street: { type: string }, postalCode: { type: string }, city: { type: string }, extraDetails: { type: string }, isDefault: { type: boolean } } } }
+        dietaryRestrictions: { type: array, items: { type: object, properties: { allergenId: { type: string }, description: { type: string }, recordedAt: { type: string, format: date-time } } } }
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+
+    # ------------------------------------------------------------------
+    # Categories, Allergens, Products
+    # ------------------------------------------------------------------
+    CreateCategoryRequestDTO:
+      type: object
+      properties:
+        name:
+          type: string
+          maxLength: 100
+        categoryName:
+          type: string
+          maxLength: 100
+          description: |
+            Sprint 1 alias for name. At least one of name or categoryName
+            must be supplied. If both are supplied, name takes precedence.
+        description:
+          type: string
+          nullable: true
+      anyOf:
+        - required: [name]
+        - required: [categoryName]
+
+    UpdateCategoryRequestDTO:
+      type: object
+      required: [name, description]
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 100
+        description:
+          type: string
+          minLength: 1
+
+    CategoryResponseDTO:
+      type: object
+      required: [name]
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+          nullable: true
+
+    CategoryPage:
+      type: object
+      required: [items, total, page, pageSize, totalPages]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/CategoryResponseDTO'
+        total:
+          type: integer
+          minimum: 0
+        page:
+          type: integer
+          minimum: 1
+        pageSize:
+          type: integer
+          minimum: 1
+        totalPages:
+          type: integer
+          minimum: 0
+
+    UnauthorizedAttemptDTO:
+      type: object
+      required: [id, timestamp, endpoint]
+      properties:
+        id:
+          type: string
+        user:
+          type: string
+          nullable: true
+        timestamp:
+          type: string
+          format: date-time
+        endpoint:
+          type: string
+
+    UnauthorizedAttemptsPageDTO:
+      type: object
+      required: [items, total, page, pageSize, totalPages]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/UnauthorizedAttemptDTO'
+        total:
+          type: integer
+          minimum: 0
+        page:
+          type: integer
+          minimum: 1
+        pageSize:
+          type: integer
+          minimum: 1
+        totalPages:
+          type: integer
+          minimum: 0
+
+    CreatedCategoryResponseDTO:
+      type: object
+      required: [name]
+      properties:
+        name:
+          type: string
+          maxLength: 100
+
+    CreateAllergenRequestDTO:
+      type: object
+      properties:
+        name:
+          type: string
+          maxLength: 100
+        code:
+          type: string
+          maxLength: 100
+          description: |
+            Sprint 1 alias for name. At least one of name or code must be
+            supplied. If both are supplied, name takes precedence.
+        description:
+          type: string
+          nullable: true
+      anyOf:
+        - required: [name]
+        - required: [code]
+
+    AllergenResponseDTO:
+      type: object
+      required: [name]
+      properties:
+        name:
+          type: string
+        code:
+          type: string
+          description: |
+            Sprint 1 alias for name. Populated with the same value as name.
+        description:
+          type: string
+          nullable: true
+
+    CreateProductRequestDTO:
+      type: object
+      required: [sku, name, description, categoryName, isSellable, isPizzaComponent, isStockControlled]
+      properties:
+        sku:
+          type: string
+          maxLength: 30
+        name:
+          type: string
+          maxLength: 150
+        description:
+          type: string
+        categoryName:
+          type: string
+        categoryCode:
+          type: string
+          description: |
+            Sprint 1 alias for categoryName. If supplied without categoryName,
+            becomes the category. If both are supplied, categoryName takes
+            precedence.
+        isSellable:
+          type: boolean
+        isPizzaComponent:
+          type: boolean
+        isStockControlled:
+          type: boolean
+        componentTypeName:
+          type: string
+          nullable: true
+        componentTypeCode:
+          type: string
+          nullable: true
+          description: Sprint 1 alias for componentTypeName.
+        directSellingPrice:
+          $ref: '#/components/schemas/MoneyDTO'
+        stockUnitsPerSale:
+          type: integer
+          nullable: true
+          minimum: 0
+          description: Required when isStockControlled ∧ isSellable (Clarification #28 §2).
+        allergens:
+          type: array
+          items:
+            type: string
+
+    UpdateProductRequestDTO:
+      type: object
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        categoryName:
+          type: string
+        categoryCode:
+          type: string
+          description: Sprint 1 alias for categoryName.
+        directSellingPrice:
+          $ref: '#/components/schemas/MoneyDTO'
+        stockUnitsPerSale:
+          type: integer
+          nullable: true
+        allergens:
+          type: array
+          items:
+            type: string
+
+    ProductResponseDTO:
+      type: object
+      required: [sku, name, description, categoryName, isSellable, isPizzaComponent, isStockControlled, active]
+      properties:
+        sku:
+          type: string
+        productCode:
+          type: string
+          description: |
+            Sprint 1 alias for sku. Populated with the same value as sku.
+        name:
+          type: string
+        description:
+          type: string
+        categoryName:
+          type: string
+        categoryCode:
+          type: string
+          description: |
+            Sprint 1 alias for categoryName. Populated with the same value.
+        isSellable:
+          type: boolean
+        isPizzaComponent:
+          type: boolean
+        isStockControlled:
+          type: boolean
+        componentTypeName:
+          type: string
+          nullable: true
+        componentTypeCode:
+          type: string
+          nullable: true
+          description: Sprint 1 alias for componentTypeName.
+        directSellingPrice:
+          $ref: '#/components/schemas/MoneyDTO'
+        stockUnitsPerSale:
+          type: integer
+          nullable: true
+        isActive:
+          type: boolean
+        allergens:
+          type: array
+          items:
+            type: string
+
+    ProductExportDTO:
+      type: object
+      description: Full product catalogue export for AI06 Prolog KB construction.
+      required: [exportedAt, products, boms, componentSizeConfigurations]
+      properties:
+        exportedAt:
+          type: string
+          format: date-time
+        products:
+          type: array
+          items:
+            type: object
+            required: [sku, name, categoryName, isSellable, isPizzaComponent, isStockControlled, currentStock, isActive]
+            properties:
+              sku:
+                type: string
+              name:
+                type: string
+              categoryName:
+                type: string
+              isSellable:
+                type: boolean
+              isPizzaComponent:
+                type: boolean
+              isStockControlled:
+                type: boolean
+              componentTypeName:
+                type: string
+                nullable: true
+              stockUnitsPerSale:
+                type: integer
+                nullable: true
+              currentStock:
+                type: integer
+        boms:
+          type: array
+          items:
+            type: object
+            required: [pizzaSku, recipeName, availableSizes, lines]
+            properties:
+              pizzaSku:
+                type: string
+              recipeName:
+                type: string
+              availableSizes:
+                type: array
+                items:
+                  type: string
+              lines:
+                type: array
+                items:
+                  type: object
+                  required: [componentSku, defaultQuantity]
+                  properties:
+                    componentSku:
+                      type: string
+                    defaultQuantity:
+                      type: integer
+        componentSizeConfigurations:
+          type: array
+          items:
+            type: object
+            required: [componentSku, pizzaSize, stockUnitsConsumed]
+            properties:
+              componentSku:
+                type: string
+              pizzaSize:
+                type: string
+              stockUnitsConsumed:
+                type: integer
+
+    # ------------------------------------------------------------------
+    # Pizza Taxonomy
+    # ------------------------------------------------------------------
+    CreatePizzaSizeRequestDTO:
+      type: object
+      properties:
+        name:
+          type: string
+          maxLength: 50
+          description: Business identifier (PK in pizza_sizes).
+        id:
+          type: string
+          maxLength: 50
+          description: |
+            Sprint 1 alias for name. If supplied without name, becomes the
+            business identifier. If both are supplied, name takes precedence.
+      anyOf:
+        - required: [name]
+        - required: [id]
+
+    PizzaSizeResponseDTO:
+      type: object
+      required: [name, active]
+      properties:
+        name:
+          type: string
+        id:
+          type: string
+          description: |
+            Sprint 1 alias for name. Populated with the same value as name.
+        active:
+          type: boolean
+
+    CreateComponentTypeRequestDTO:
+      type: object
+      properties:
+        name:
+          type: string
+          maxLength: 100
+        code:
+          type: string
+          maxLength: 100
+          description: |
+            Sprint 1 alias for name. If supplied without name, becomes the
+            identifier. If both are supplied, name takes precedence.
+        assemblyOrder:
+          type: integer
+          minimum: 1
+        minimum:
+          type: integer
+          minimum: 0
+        maximum:
+          type: integer
+          nullable: true
+          description: Null = unbounded.
+      anyOf:
+        - required: [name]
+        - required: [code]
+
+    ComponentTypeResponseDTO:
+      type: object
+      required: [name, assemblyOrder, minimum]
+      properties:
+        name:
+          type: string
+        code:
+          type: string
+          description: |
+            Sprint 1 alias for name. Populated with the same value as name.
+        assemblyOrder:
+          type: integer
+        minimum:
+          type: integer
+        maximum:
+          type: integer
+          nullable: true
+
+    # ------------------------------------------------------------------
+    # Size Configurations
+    # ------------------------------------------------------------------
+    CreateSizeConfigRequestDTO:
+      type: object
+      required: [applicablePrice, stockUnitsConsumed]
+      properties:
+        pizzaSize:
+          type: string
+        pizzaSizeId:
+          type: string
+          description: |
+            Sprint 1 alias for pizzaSize. At least one of pizzaSize or
+            pizzaSizeId must be supplied. If both are supplied, pizzaSize
+            takes precedence.
+        applicablePrice:
+          $ref: '#/components/schemas/MoneyDTO'
+        stockUnitsConsumed:
+          type: integer
+          minimum: 0
+      anyOf:
+        - required: [pizzaSize]
+        - required: [pizzaSizeId]
+
+    SizeConfigResponseDTO:
+      type: object
+      required: [componentSku, pizzaSize, applicablePrice, stockUnitsConsumed]
+      properties:
+        componentSku:
+          type: string
+        componentProductCode:
+          type: string
+          description: |
+            Sprint 1 alias for componentSku. Populated with the same value.
+        pizzaSize:
+          type: string
+        pizzaSizeId:
+          type: string
+          description: |
+            Sprint 1 alias for pizzaSize. Populated with the same value.
+        applicablePrice:
+          $ref: '#/components/schemas/MoneyDTO'
+        stockUnitsConsumed:
+          type: integer
+
+    # ------------------------------------------------------------------
+    # Stock
+    # ------------------------------------------------------------------
+    StockAdjustmentRequestDTO:
+      type: object
+      required: [operation, units]
+      properties:
+        operation:
+          type: string
+          enum: [REPLENISH, CONSUME]
+        units:
+          type: integer
+          minimum: 1
+        reason:
+          type: string
+          nullable: true
+
+    StockItemResponseDTO:
+      type: object
+      required: [productSku, currentBalance]
+      properties:
+        productSku:
+          type: string
+        productCode:
+          type: string
+          description: |
+            Sprint 1 alias for productSku. Populated with the same value.
+        currentBalance:
+          type: integer
+          minimum: 0
+
+    # ------------------------------------------------------------------
+    # Predefined Pizzas
+    # ------------------------------------------------------------------
+    RecipeLineDTO:
+      type: object
+      required: [componentSku, defaultQuantity]
+      properties:
+        componentSku:
+          type: string
+        componentProductCode:
+          type: string
+          description: |
+            Sprint 1 alias for componentSku. Populated with the same value.
+        defaultQuantity:
+          type: integer
+          minimum: 1
+
+    UpdatePredefinedPizzaRequestDTO:
+      type: object
+      required: [recipeName, defaultRecipeLines]
+      properties:
+        recipeName:
+          type: string
+          minLength: 1
+          maxLength: 100
+        defaultRecipeLines:
+          type: array
+          minItems: 1
+          items:
+            $ref: '#/components/schemas/RecipeLineDTO'
+        availableSizes:
+          type: array
+          minItems: 1
+          uniqueItems: true
+          items:
+            type: string
+          description: |
+            Sprint 1 alias for availableSizeNames. At least one of
+            availableSizes or availableSizeNames must be supplied. If
+            both are supplied, availableSizeNames takes precedence.
+        availableSizeNames:
+          type: array
+          minItems: 1
+          uniqueItems: true
+          items:
+            type: string
+      anyOf:
+        - required: [availableSizes]
+        - required: [availableSizeNames]
+
+    CreatePredefinedPizzaRequestDTO:
+      type: object
+      required: [recipeName, defaultRecipeLines]
+      properties:
+        sellableProductSku:
+          type: string
+          description: SKU of the sellable product (Sprint 2 canonical).
+        pizzaSku:
+          type: string
+          description: |
+            Sprint 1 alias for sellableProductSku. If supplied without
+            sellableProductSku, becomes the SKU. If both are supplied,
+            sellableProductSku takes precedence.
+        recipeName:
+          type: string
+          minLength: 1
+          maxLength: 100
+        defaultRecipeLines:
+          type: array
+          minItems: 1
+          items:
+            $ref: '#/components/schemas/RecipeLineDTO'
+        availableSizeNames:
+          type: array
+          minItems: 1
+          uniqueItems: true
+          items:
+            type: string
+          description: Sprint 2 canonical field name.
+        availableSizes:
+          type: array
+          minItems: 1
+          uniqueItems: true
+          items:
+            type: string
+          description: |
+            Sprint 1 alias for availableSizeNames. At least one of
+            availableSizeNames or availableSizes must be supplied. If
+            both are supplied, availableSizeNames takes precedence.
+      allOf:
+        - anyOf:
+            - required: [sellableProductSku]
+            - required: [pizzaSku]
+        - anyOf:
+            - required: [availableSizeNames]
+            - required: [availableSizes]
+
+    PredefinedPizzaResponseDTO:
+      type: object
+      required: [sku, recipeName, defaultRecipeLines, availableSizeNames]
+      properties:
+        sku:
+          type: string
+        pizzaSku:
+          type: string
+          description: |
+            Sprint 1 alias for sku. Populated with the same value as sku.
+        recipeName:
+          type: string
+        defaultRecipeLines:
+          type: array
+          items:
+            $ref: '#/components/schemas/RecipeLineDTO'
+        availableSizeNames:
+          type: array
+          items:
+            type: string
+        supportedSizes:
+          type: array
+          items:
+            type: string
+          description: |
+            Sprint 1 alias for availableSizeNames. Populated with the same
+            values as availableSizeNames.
+        ids:
+          type: array
+          description: |
+            Sprint 1 derived view: one entry per (sku, sizeName) variant.
+            Populated by expanding availableSizeNames.
+          items:
+            type: object
+            required: [pizzaSku, pizzaSize]
+            properties:
+              pizzaSku:
+                type: string
+              pizzaSize:
+                type: string
+
+    # ------------------------------------------------------------------
+    # Catalogue
+    # ------------------------------------------------------------------
+    CatalogueItemResponseDTO:
+      type: object
+      required: [productSku, name, categoryName, allergens, isPredefinedPizza, isAvailable]
+      properties:
+        productSku:
+          type: string
+        productCode:
+          type: string
+          description: |
+            Sprint 1 alias for productSku. Populated with the same value.
+        name:
+          type: string
+        description:
+          type: string
+        categoryName:
+          type: string
+        categoryCode:
+          type: string
+          description: |
+            Sprint 1 alias for categoryName. Populated with the same value.
+        allergens:
+          type: array
+          items:
+            type: string
+        directPrice:
+          $ref: '#/components/schemas/MoneyDTO'
+        isPredefinedPizza:
+          type: boolean
+        isAvailable:
+          type: boolean
+        recipeName:
+          type: string
+          nullable: true
+        defaultRecipeLines:
+          type: array
+          items:
+            $ref: '#/components/schemas/RecipeLineDTO'
+        sizeVariants:
+          type: array
+          items:
+            type: object
+            required: [sizeName, computedPrice, isAvailable]
+            properties:
+              sizeId:
+                type: string
+                format: uuid
+                nullable: true
+                description: |
+                  Database identifier (Sprint 1 contract; may be null when
+                  the implementation uses size name only).
+              sizeName:
+                type: string
+              computedPrice:
+                $ref: '#/components/schemas/MoneyDTO'
+              isAvailable:
+                type: boolean
+
+    # ------------------------------------------------------------------
+    # Kitchen Configurations
+    # ------------------------------------------------------------------
+    CreateKitchenConfigurationDTO:
+      type: object
+      required: [name, jsonContent]
+      properties:
+        name:
+          type: string
+        jsonContent:
+          type: object
+          description: |
+            Opaque layout validated against the kitchen configuration schema.
+          additionalProperties: true
+
+    UpdateKitchenConfigurationDTO:
+      type: object
+      required: [name, jsonContent]
+      properties:
+        name:
+          type: string
+          maxLength: 100
+          description: Unique descriptive configuration name.
+        jsonContent:
+          type: object
+          additionalProperties: true
+    KitchenConfigurationResponseDTO:
+      type: object
+      required: [id, name, jsonContent, isActive, createdAt, updatedAt]
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+          description: Immutable technical identifier.
+        name:
+          type: string
+          maxLength: 100
+          description: Unique descriptive configuration name.
+        jsonContent:
+          type: object
+          additionalProperties: true
+        isActive:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    # ------------------------------------------------------------------
+    # Consumption Forecasts
+    # ------------------------------------------------------------------
+    ForecastEntryDTO:
+      type: object
+      required: [entryDate, productSku, pizzaSize, quantity]
+      properties:
+        entryDate:
+          type: string
+          format: date
+        productSku:
+          type: string
+        productCode:
+          type: string
+          description: Sprint 1 alias for productSku.
+        pizzaSize:
+          type: string
+          nullable: true
+          description: |
+            Null for non-pizza products (Clarification #28).
+        quantity:
+          type: integer
+          minimum: 0
+
+    ConsumptionForecastRequestDTO:
+      type: object
+      required: [name, startDate, endDate, entries]
+      properties:
+        name:
+          type: string
+          maxLength: 100
+        startDate:
+          type: string
+          format: date
+        endDate:
+          type: string
+          format: date
+        entries:
+          type: array
+          items:
+            $ref: '#/components/schemas/ForecastEntryDTO'
+
+    ConsumptionForecastResponseDTO:
+      type: object
+      required: [name, startDate, endDate, entries]
+      properties:
+        name:
+          type: string
+        startDate:
+          type: string
+          format: date
+        endDate:
+          type: string
+          format: date
+        entries:
+          type: array
+          items:
+            $ref: '#/components/schemas/ForecastEntryDTO'
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    # ------------------------------------------------------------------
+    # Supplier Scenarios
+    # ------------------------------------------------------------------
+    SupplierOfferDTO:
+      type: object
+      required: [supplierCode, productSku, price, stockUnitQuantity, leadTimeDays]
+      properties:
+        supplierCode:
+          type: string
+          maxLength: 30
+        productSku:
+          type: string
+        productCode:
+          type: string
+          description: Sprint 1 alias for productSku.
+        price:
+          $ref: '#/components/schemas/MoneyDTO'
+        stockUnitQuantity:
+          type: integer
+          minimum: 1
+        leadTimeDays:
+          type: integer
+          minimum: 0
+          description: Whole days (Clarification #28 §4).
+        dailySupplyLimit:
+          type: integer
+          nullable: true
+          minimum: 0
+          description: |
+            Applies per-offer per-day. Null = unlimited. 0 = never
+            supplies (distinct from unlimited, per Clarification #28).
+
+    SupplierDTO:
+      type: object
+      required: [supplierCode, name]
+      properties:
+        supplierCode:
+          type: string
+          maxLength: 30
+        name:
+          type: string
+          maxLength: 150
+
+    SupplierScenarioRequestDTO:
+      type: object
+      required: [name, suppliers, offers]
+      properties:
+        name:
+          type: string
+          maxLength: 100
+        isSimulated:
+          type: boolean
+          default: false
+          description: True if LLM-assisted or manually simulated.
+        suppliers:
+          type: array
+          minItems: 1
+          items:
+            $ref: '#/components/schemas/SupplierDTO'
+        offers:
+          type: array
+          minItems: 1
+          items:
+            $ref: '#/components/schemas/SupplierOfferDTO'
+
+    SupplierScenarioResponseDTO:
+      type: object
+      required: [name, isSimulated, suppliers, offers]
+      properties:
+        name:
+          type: string
+        isSimulated:
+          type: boolean
+        confirmedAt:
+          type: string
+          format: date-time
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+        suppliers:
+          type: array
+          items:
+            $ref: '#/components/schemas/SupplierDTO'
+        offers:
+          type: array
+          items:
+            $ref: '#/components/schemas/SupplierOfferDTO'
+
+    # ------------------------------------------------------------------
+    # Planning
+    # ------------------------------------------------------------------
+    BomOrderDTO:
+      type: object
+      required: [productSku, quantity]
+      properties:
+        productSku:
+          type: string
+          example: "PRD-PIZZA-MARG"
+        pizzaSize:
+          type: string
+          description: Required for pizza orders; omitted for directly sold stock-controlled products.
+          example: "Medium"
+        quantity:
+          type: integer
+          minimum: 1
+          example: 12
+
+    BomExecutionRequestDTO:
+      type: object
+      required: [orders, isSimulated, source]
+      properties:
+        orders:
+          type: array
+          minItems: 1
+          items:
+            $ref: '#/components/schemas/BomOrderDTO'
+        scenarioName:
+          type: string
+          nullable: true
+        referenceDate:
+          type: string
+          format: date
+          nullable: true
+        isSimulated:
+          type: boolean
+          example: true
+        source:
+          type: string
+          enum: [simulated, fromForecast]
+          example: "simulated"
+
+    PlanningExecutionRequestDTO:
+      type: object
+      required: [forecastName, scenarioName]
+      properties:
+        forecastName:
+          type: string
+        scenarioName:
+          type: string
+        referenceDate:
+          type: string
+          format: date
+          nullable: true
+          description: Defaults to today when omitted.
+        pendingDeliveries:
+          type: array
+          description: Deliveries expected to become available on their expected delivery date.
+          items:
+            type: object
+            required: [productSku, quantity, expectedDeliveryDate]
+            properties:
+              productSku:
+                type: string
+              quantity:
+                type: integer
+                minimum: 1
+              expectedDeliveryDate:
+                type: string
+                format: date
+
+    PlanningRequirementDTO:
+      type: object
+      required: [productSku, requiredUnits, availableUnits, hypotheticalRemainingUnits, replenishmentUnits]
+      properties:
+        productSku:
+          type: string
+        requiredUnits:
+          type: integer
+        availableUnits:
+          type: integer
+        hypotheticalRemainingUnits:
+          type: integer
+          description: Always >= 0. Never represents a negative shortfall (which is shown in replenishmentUnits).
+        replenishmentUnits:
+          type: integer
+
+    PurchaseProposalDTO:
+      type: object
+      required: [supplierCode, productSku, quantity, orderDate, expectedDelivery]
+      properties:
+        supplierCode:
+          type: string
+        productSku:
+          type: string
+        quantity:
+          type: integer
+        orderDate:
+          type: string
+          format: date
+        expectedDelivery:
+          type: string
+          format: date
+
+    UnmetNeedDTO:
+      type: object
+      required: [productSku, requiredUnits, shortfallUnits, reason]
+      properties:
+        productSku:
+          type: string
+        requiredUnits:
+          type: integer
+        shortfallUnits:
+          type: integer
+        reason:
+          type: string
+
+    PlanningResultResponseDTO:
+      type: object
+      required: [executionId, referenceDate, isReplay, isSimulated, executedAt, requirements, proposals, unmetNeeds]
+      properties:
+        executionId:
+          type: integer
+        forecastName:
+          type: string
+          nullable: true
+        scenarioName:
+          type: string
+          nullable: true
+        referenceDate:
+          type: string
+          format: date
+        isReplay:
+          type: boolean
+        isSimulated:
+          type: boolean
+        executedAt:
+          type: string
+          format: date-time
+        requirements:
+          type: array
+          items:
+            $ref: '#/components/schemas/PlanningRequirementDTO'
+        proposals:
+          type: array
+          items:
+            $ref: '#/components/schemas/PurchaseProposalDTO'
+        unmetNeeds:
+          type: array
+          items:
+            $ref: '#/components/schemas/UnmetNeedDTO'

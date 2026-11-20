@@ -1,0 +1,40 @@
+info:
+  name: 36 - Pre-register Active Customer (Forbidden)
+  type: http
+  seq: 36
+http:
+  method: POST
+  url: "{{baseUrl}}/auth/pre_register"
+  body:
+    type: json
+    data: |-
+      {
+      	"firstName": "Bruno",
+      	"lastName": "Staff",
+      	"email": "{{preRegisterEmail}}",
+      	"roleName": "EMPLOYEE"
+      }
+  auth:
+    type: bearer
+    token: "{{fixtureCustomerToken}}"
+runtime:
+  scripts:
+    - type: before-request
+      code: |-
+        if (!bru.getVar("fixtureCustomerToken")) {
+        	throw new Error("Set fixtureCustomerToken before running this request; see this folder's README.");
+        }
+        bru.setVar("preRegisterEmail", "bruno-staff-" + Date.now() + "-" + Math.random().toString(36).slice(2) + "@example.com");
+    - type: tests
+      code: |-
+        test("Status code is 403", function() {
+        	expect(res.getStatus()).to.equal(403);
+        });
+
+        test("Returns the expected error without exposing credentials", function() {
+        	const data = res.getBody();
+        	expect(data.error.message).to.equal("You do not have permission to do this.");
+        	expect(data).not.to.have.property("token");
+        	expect(data).not.to.have.property("password");
+        	expect(data).not.to.have.property("passwordHash");
+        });

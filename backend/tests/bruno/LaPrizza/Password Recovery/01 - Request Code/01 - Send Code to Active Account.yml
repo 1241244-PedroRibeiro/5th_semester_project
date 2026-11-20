@@ -1,0 +1,32 @@
+info:
+  name: 01 - Send Code to Active Account
+  type: http
+  seq: 1
+http:
+  method: POST
+  url: '{{baseUrl}}/password-recovery'
+  body:
+    type: json
+    data: |-
+      {
+        "email": "{{recoveryEmail}}"
+      }
+runtime:
+  scripts:
+    - type: before-request
+      code: |-
+        const email = bru.getEnvVar("recoveryEmail");
+        if (!email) throw new Error("Set recoveryEmail to a registered ACTIVE account with an inbox you control.");
+        bru.setVar("recoveryEmail", email);
+    - type: tests
+      code: |-
+        test("Returns HTTP 200", function() {
+          expect(res.getStatus()).to.equal(200);
+        });
+        test("Returns a confirmation or explanation without recovery credentials", function() {
+          const data = res.getBody();
+          expect(data.message).to.be.a("string").and.not.empty;
+          expect(data).not.to.have.property("recovery_code");
+          expect(data).not.to.have.property("new_password");
+          expect(data).not.to.have.property("passwordHash");
+        });

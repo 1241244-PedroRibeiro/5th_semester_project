@@ -1,0 +1,35 @@
+info:
+  name: 01 - Setup BCK10 Dough Component
+  type: http
+  seq: 2
+http:
+  method: POST
+  url: '{{baseUrl}}/products'
+  body:
+    type: json
+    data: |-
+      {
+        "name": "BCK10 Test Dough {{bck10DoughSuffix}}",
+        "description": "Dough component for BCK10 and BCK11 integration tests",
+        "categoryName": "Ingredients",
+        "isSellable": false,
+        "isPizzaComponent": true,
+        "isStockControlled": false,
+        "componentTypeName": "Base Dough",
+        "sku": "{{bck10DoughSku}}"
+      }
+  auth:
+    type: bearer
+    token: '{{managerToken}}'
+runtime:
+  scripts:
+    - type: before-request
+      code: |-
+        const suffix = Date.now().toString().slice(-6);
+        bru.setVar("bck10DoughSuffix", suffix);
+        bru.setVar("bck10DoughSku", "PRD-BCK10-DOUGH-" + suffix);
+    - type: tests
+      code: |-
+        test("Manager creates dough component successfully", function() {
+                expect(res.getStatus()).to.equal(201);
+        });

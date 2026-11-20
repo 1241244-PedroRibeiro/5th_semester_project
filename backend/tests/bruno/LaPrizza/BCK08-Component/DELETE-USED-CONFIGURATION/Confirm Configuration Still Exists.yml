@@ -1,0 +1,28 @@
+info:
+  name: 05 - Confirm Configuration Still Exists
+  type: http
+  seq: 6
+
+http:
+  method: GET
+  url: '{{baseUrl}}/component-size-configurations/{{deleteGuardConfigId}}'
+  auth:
+    type: bearer
+    token: '{{managerToken}}'
+
+runtime:
+  scripts:
+    - type: tests
+      code: |-
+        test("Configuration remains after rejected deletion", function () {
+          expect(res.getStatus()).to.equal(200);
+          expect(res.getBody().id).to.equal(
+            bru.getVar("deleteGuardConfigId")
+          );
+        });
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

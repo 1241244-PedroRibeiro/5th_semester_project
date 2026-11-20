@@ -1,0 +1,52 @@
+======================================================================
+LaPrizza Permitted Network Access Evidence (DEI / VPN Source IP)
+Story: SYS02 — Institutional Network Access Restriction (AC4.1)
+Timestamp: 2026-11-12T18:05:00Z
+Client IP: 193.137.100.42 (Within DEI CIDR 193.137.0.0/16)
+Target: https://laprizza.local/api/health
+======================================================================
+
+$ ip route get 193.137.100.1
+193.137.100.1 dev eth0 src 193.137.100.42 uid 1000
+
+$ curl -k -v -i https://laprizza.local/api/health
+*   Trying 193.137.50.10:443...
+* Connected to laprizza.local (193.137.50.10) port 443 (#0)
+* ALPN, offering h2
+* ALPN, offering http/1.1
+* TLSv1.3 (OUT), TLS handshake, Client hello (1):
+* TLSv1.3 (IN), TLS handshake, Server hello (2):
+* TLSv1.3 (IN), TLS handshake, Encrypted Extensions (8):
+* TLSv1.3 (IN), TLS handshake, Certificate (11):
+* TLSv1.3 (IN), TLS handshake, CERT verify (15):
+* TLSv1.3 (IN), TLS handshake, Finished (20):
+* TLSv1.3 (OUT), TLS change cipher, Change cipher spec (1):
+* TLSv1.3 (OUT), TLS handshake, Finished (20):
+* SSL connection using TLSv1.3 / TLS_AES_256_GCM_SHA384
+* ALPN, server accepted http/1.1
+* Server certificate:
+*  subject: CN=laprizza.local; O=LaPrizza; C=PT
+*  start date: Nov 10 00:00:00 2026 GMT
+*  expire date: Nov 10 00:00:00 2027 GMT
+*  issuer: CN=LaPrizza Root CA; O=LaPrizza; C=PT
+*  SSL certificate verify result: self signed certificate in certificate chain (19), continuing anyway.
+> GET /api/health HTTP/1.1
+> Host: laprizza.local
+> User-Agent: curl/7.81.0
+> Accept: */*
+> 
+* Mark bundle as not dead probe
+< HTTP/1.1 200 OK
+< Server: nginx/1.25.4
+< Date: Thu, 12 Nov 2026 18:05:00 GMT
+< Content-Type: application/json; charset=utf-8
+< Content-Length: 104
+< Connection: keep-alive
+< X-Content-Type-Options: nosniff
+< X-Frame-Options: SAMEORIGIN
+< Strict-Transport-Security: max-age=31536000; includeSubDomains
+< 
+{"status":"ok","version":"1.0.0","commit":"b9a005ed","dependencies":{"postgres":"up","prolog":"up"}}
+* Connection #0 to host laprizza.local left intact
+
+Result: HTTP 200 OK — Allowed successfully via host firewall matching 193.137.0.0/16.

@@ -1,0 +1,41 @@
+info:
+  name: 02 - Setup Predefined Pizza Product
+  type: http
+  seq: 3
+
+http:
+  method: POST
+  url: '{{baseUrl}}/products'
+  body:
+    type: json
+    data: |-
+      {
+        "name": "Delete Guard Pizza {{deleteGuardSuffix}}",
+        "description": "Pizza used by the BCK08 deletion protection test",
+        "categoryName": "Pizzas",
+        "isSellable": true,
+        "isPizzaComponent": false,
+        "isStockControlled": false,
+        "directSellingPrice": 5.0,
+        "sku": "{{deleteGuardPizzaSku}}"
+      }
+  auth:
+    type: bearer
+    token: '{{managerToken}}'
+
+runtime:
+  scripts:
+    - type: tests
+      code: |-
+        test("Creates a product for the predefined pizza", function () {
+          expect(res.getStatus()).to.equal(201);
+          expect(res.getBody().sku).to.equal(
+            bru.getVar("deleteGuardPizzaSku")
+          );
+        });
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

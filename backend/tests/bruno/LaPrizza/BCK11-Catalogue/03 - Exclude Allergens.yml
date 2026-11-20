@@ -1,0 +1,41 @@
+info:
+  name: 03 - Exclude Allergens
+  type: http
+  seq: 4
+http:
+  method: GET
+  url: '{{baseUrl}}/catalogue?excludeAllergens=Lactose'
+  params:
+    - name: excludeAllergens
+      value: Lactose
+      type: query
+  auth: inherit
+runtime:
+  scripts:
+    - type: tests
+      code: |-
+        test("returns HTTP 200", function () {
+        	expect(res.status).to.equal(200);
+        });
+
+        test("excludes products containing Lactose", function () {
+        	expect(res.body).to.be.an("array");
+
+        	const productSkus = res.body.map(
+        		product => product.productSku
+        	);
+
+        	expect(productSkus).to.not.include(bru.getVar("dualProductSku"));
+
+        	expect(
+        		res.body.every(
+        			product => !product.allergens.includes("Lactose")
+        		)
+        	).to.equal(true);
+        });
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: false

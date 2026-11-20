@@ -1,0 +1,5 @@
+# laprizza SYS08 - Auditd rule for backup directory access logging
+# Logs all read/write/attribute changes to /backups directory
+# Key: backups
+
+-w /backups -p rwa -k backups

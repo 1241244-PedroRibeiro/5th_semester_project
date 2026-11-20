@@ -1,0 +1,23 @@
+info:
+  name: 15 - Filter Products by Component Type (Public)
+  type: http
+  seq: 18
+http:
+  method: GET
+  url: '{{baseUrl}}/products?componentType=Base Dough'
+runtime:
+  scripts:
+    - type: tests
+      code: |-
+        test("Filter by component type returns 200 OK", function() {
+        	expect(res.getStatus()).to.equal(200);
+        	const data = res.getBody();
+        	expect(Array.isArray(data)).to.be.true;
+        	expect(data.some(p => p.componentTypeName === "Base Dough")).to.be.true;
+        });
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: true

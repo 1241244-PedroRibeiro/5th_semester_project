@@ -1,0 +1,11 @@
+# /etc/cron.d/laprizza-deploy
+# LaPrizza Scheduled Deployment & Log Retention Job (SYS01)
+# Schedule sourced from config/deploy-schedule.yml
+SHELL=/bin/bash
+PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
+
+# 1. Nightly automated staging deploy and smoke validation at 02:00 UTC
+0 2 * * * root cd /opt/laprizza && ./scripts/deploy.sh >> /var/log/laprizza/deploy-cron.log 2>&1
+
+# 2. Nightly log rotation / retention cleanup: purge logs older than 90 days (AC3.3)
+30 2 * * * root cd /opt/laprizza && find logs/ -type d -name "deploy-*" -mtime +90 -exec rm -rf {} +

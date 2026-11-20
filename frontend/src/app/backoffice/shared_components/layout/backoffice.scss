@@ -1,0 +1,306 @@
+:host {
+	display: block;
+	--sidebar-width: 14.5rem;
+}
+.skip-link {
+	position: fixed;
+	z-index: 100;
+	top: calc(var(--language-bar-height) + 0.5rem);
+	left: calc(var(--sidebar-width) + 1rem);
+	transform: translateY(-200%);
+	padding: 1rem;
+	background: var(--surface);
+}
+.skip-link:focus {
+	transform: none;
+}
+aside {
+	position: fixed;
+	inset: var(--language-bar-height) auto 0 0;
+	width: var(--sidebar-width);
+	padding: 2rem 1.2rem 1.2rem;
+	background: var(--sidebar);
+	display: flex;
+	flex-direction: column;
+	z-index: 40;
+	overflow-y: auto;
+}
+.sidebar-brand {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+}
+.sidebar-brand > a {
+	text-decoration: none;
+	color: var(--ink);
+}
+.location {
+	background: var(--surface);
+	border-radius: 0.55rem;
+	padding: 0.85rem 0.8rem;
+	margin: 2rem 0 1.8rem;
+}
+.location span {
+	display: block;
+	text-transform: uppercase;
+	font-size: 0.6rem;
+	color: var(--muted);
+	margin-bottom: 0.35rem;
+}
+.location strong {
+	font-size: 0.78rem;
+	font-weight: 550;
+}
+.nav-label {
+	font-size: 0.6rem;
+	text-transform: uppercase;
+	color: var(--teal);
+	margin: 0 0 0.5rem;
+}
+nav {
+	display: grid;
+	gap: 0.4rem;
+}
+nav > a {
+	display: flex;
+	align-items: center;
+	gap: 0.7rem;
+	padding: 0.8rem 0.75rem;
+	text-decoration: none;
+	font-size: 0.79rem;
+	border-radius: 0.5rem;
+	color: var(--ink);
+}
+nav > a app-icon {
+	font-size: 1.1rem;
+	color: var(--teal);
+}
+nav > a:hover {
+	background: #ffffff30;
+}
+nav > a.active {
+	background: var(--accent);
+	color: white;
+}
+nav > a.active app-icon {
+	color: white;
+}
+.sidebar-bottom {
+	margin-top: auto;
+	padding-top: 2rem;
+}
+.workspace-note {
+	padding: 1rem;
+	background: var(--yellow);
+	border-radius: 1rem;
+	font-size: 0.7rem;
+}
+.workspace-note > app-icon {
+	margin-right: 0.35rem;
+	color: var(--teal);
+}
+.workspace-note strong {
+	font-weight: 500;
+}
+.workspace-note p {
+	font-size: 0.7rem;
+	color: var(--teal);
+	line-height: 1.8;
+}
+.workspace-note a {
+	font-size: 0.7rem;
+	text-decoration: none;
+}
+.workspace {
+	margin-left: var(--sidebar-width);
+	min-width: 0;
+}
+.topbar {
+	min-height: 5.5rem;
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 1rem;
+	background: var(--surface);
+	border-bottom: 1px solid var(--border);
+	padding: 1rem 2rem;
+}
+.breadcrumbs {
+	display: flex;
+	align-items: center;
+	gap: 0.8rem;
+	font-size: 0.75rem;
+}
+.breadcrumbs > span {
+	color: var(--muted);
+}
+.breadcrumbs strong {
+	font-weight: 500;
+}
+.breadcrumbs app-icon {
+	font-size: 0.8rem;
+}
+.topbar-right {
+	display: flex;
+	align-items: center;
+	gap: 1.4rem;
+}
+.connection {
+	font-size: 0.7rem;
+	color: var(--teal);
+}
+main {
+	padding: 2rem;
+	max-width: 120rem;
+	margin: auto;
+}
+.open-menu,
+.close-menu,
+.scrim,
+.compact-service-status {
+	display: none;
+}
+@media (min-width: 1600px) {
+	:host {
+		--sidebar-width: 15rem;
+	}
+	main {
+		padding: 2.4rem;
+	}
+}
+@media (max-width: 1100px) {
+	:host {
+		--sidebar-width: 4.5rem;
+	}
+	aside {
+		padding: 1rem 0.5rem;
+		overscroll-behavior: contain;
+		scrollbar-width: thin;
+	}
+	aside > * {
+		flex-shrink: 0;
+	}
+	.sidebar-brand {
+		justify-content: center;
+		margin-bottom: 1.5rem;
+	}
+	.sidebar-brand > a {
+		display: inline-flex;
+		min-height: 2.75rem;
+	}
+	aside:not(.open) :is(.location, .nav-label, .nav-text, .workspace-note) {
+		display: none;
+	}
+	nav {
+		gap: 0.25rem;
+	}
+	nav > a {
+		min-height: 2.75rem;
+		justify-content: center;
+		padding: 0.65rem;
+	}
+	nav > a app-icon {
+		font-size: 1.3rem;
+	}
+	.sidebar-bottom {
+		padding-top: 1rem;
+	}
+	.open-menu,
+	.close-menu,
+	.compact-service-status {
+		min-width: 2.75rem;
+		min-height: 2.75rem;
+	}
+	.compact-service-status {
+		display: grid;
+		place-items: center;
+		border-radius: 0.5rem;
+	}
+	.compact-service-status:hover {
+		background: #ffffff30;
+	}
+	.open-menu {
+		display: inline-grid;
+	}
+	aside.open {
+		width: min(18rem, calc(100vw - 1rem));
+		padding: 1.25rem 1rem;
+		box-shadow: 0.75rem 0 2rem #223b3c26;
+	}
+	aside.open .sidebar-brand {
+		justify-content: space-between;
+		margin-bottom: 0;
+	}
+	aside.open nav > a {
+		justify-content: flex-start;
+	}
+	aside.open .compact-service-status {
+		display: none;
+	}
+	aside.open .close-menu {
+		display: inline-grid;
+	}
+	.scrim {
+		display: block;
+		position: fixed;
+		inset: 0;
+		z-index: 35;
+		background: #223b3c66;
+		border: 0;
+	}
+	.connection {
+		display: none;
+	}
+	.topbar {
+		padding: 1rem 1.5rem;
+	}
+	main {
+		padding: 1.5rem;
+	}
+}
+@media (max-width: 800px) {
+	.topbar {
+		padding: 0.75rem 1rem;
+		min-height: 4.5rem;
+	}
+	.breadcrumbs {
+		gap: 0.4rem;
+	}
+	.breadcrumbs > span {
+		display: none;
+	}
+	.topbar-right .button {
+		font-size: 0;
+		gap: 0;
+		min-width: 2.75rem;
+		min-height: 2.75rem;
+	}
+	.topbar-right app-icon {
+		font-size: 1rem;
+	}
+	main {
+		padding: 1.25rem 1rem;
+	}
+}
+@media (max-width: 540px) {
+	:host {
+		--sidebar-width: 4rem;
+	}
+	.topbar {
+		padding: 0.65rem;
+		gap: 0.35rem;
+	}
+	.breadcrumbs {
+		min-width: 0;
+		gap: 0.35rem;
+	}
+	.breadcrumbs > app-icon {
+		display: none;
+	}
+	.breadcrumbs strong {
+		overflow-wrap: anywhere;
+	}
+	main {
+		padding: 1rem 0.75rem;
+	}
+}

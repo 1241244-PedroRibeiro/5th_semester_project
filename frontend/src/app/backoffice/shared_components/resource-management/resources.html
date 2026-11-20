@@ -1,0 +1,220 @@
+<app-page-header [title]="config().title | translate" [description]="config().description | translate" />
+
+@if (success()) {
+<p class="notice success" role="status">
+	{{
+	success()
+	| translate
+	: {
+	resource: (successParams()['resource'] | translate),
+	name: successParams()['name']
+	}
+	}}
+</p>
+}
+
+<app-panel [title]="config().title | translate" [count]="loading() || error() ? null : total()">
+	@if (auth.manager()) {<button panel-actions class="button" (click)="open()" [disabled]="saving()">
+		<app-icon name="plus" />
+		{{ 'Add {{resource}}' | translate: { resource: (config().singular.toLowerCase() | translate) } }}
+	</button>}
+	@if (searchEnabled()) {
+		<div class="toolbar resource-toolbar"><label class="search resource-search">
+			<span class="sr-only">{{ 'Search' | translate }} {{ config().title | translate }}</span>
+			<input type="search" [placeholder]="'Search' | translate" [ngModel]="search()"
+				(ngModelChange)="searchChanged($event)" />
+		</label></div>
+	}
+
+	@if (loading()) {
+	<app-feedback kind="loading"
+		[title]="'Loading {{resource}}' | translate: { resource: (config().title.toLowerCase() | translate) }" />
+	} @else if (error()) {
+	<app-feedback kind="error" [title]="'Couldn\'t load records' | translate" [message]="error() | translate"
+		[retryable]="true" (retry)="load()" />
+	} @else {
+	@if (!items().length) {
+	<app-feedback [title]="'Nothing here yet' | translate"
+		[message]="(auth.manager() ? 'Add your first {{resource}} to get started.' : 'No records match the current view.') | translate: { resource: (config().singular.toLowerCase() | translate) }" />
+	} @else {
+	<app-data-table [label]="config().title | translate" [columns]="columns()" [rows]="items()">
+		<ng-template let-item let-column="column">
+			@switch (column) {
+			@case ('name') {
+			<span class="cell-title">{{ item.name }}</span>
+			}
+			@case ('status') {
+			<app-badge [tone]="item.active ? 'teal' : 'neutral'">
+				{{ item.active ? ('Active' | translate) : ('Disabled' | translate) }}
+			</app-badge>
+			}
+			@case ('maxCardinality') {
+			{{ item.maxCardinality === null ? ('Unlimited' | translate) : item.maxCardinality }}
+			}
+			@case ('actions') {
+			<div class="row-actions">
+				@if (config().editable) {
+				<button class="button small" (click)="open(item)" [disabled]="saving()"
+					[attr.aria-label]="'Update ' + item.name">
+					{{ 'Update' | translate }}
+				</button>
+				}
+				@if (auth.manager()) {<button class="button small danger" (click)="askRemove(item)" [disabled]="saving()"
+					[attr.aria-label]="'Remove ' + item.name">
+					{{ 'Remove' | translate }}
+				</button>}
+			</div>
+			}
+			@default {
+			{{ item[column] }}
+			}
+			}
+		</ng-template>
+	</app-data-table>
+	}
+
+	<app-pagination [page]="page()" [pageSize]="pageSize" [total]="total()"
+		[label]="config().title.toLowerCase() | translate" (changed)="paginate($event)" />
+	}
+</app-panel>
+
+@if (editing()) {
+<app-modal [title]="
+			(selected() ? 'Update {{resource}}' : 'Add {{resource}}')
+				| translate: { resource: (config().singular.toLowerCase() | translate) }
+		" [description]="config().description | translate" [busy]="saving()" (closed)="editing.set(false)">
+	<form id="resource-form" #form="ngForm" (ngSubmit)="form.valid && save()">
+		<fieldset class="stack" [disabled]="saving()">
+
+			<!-- Name -->
+			<label>
+				{{ 'Name' | translate }}
+				<input name="name" [(ngModel)]="draft.name" (ngModelChange)="clearFieldError('name')" required
+					maxlength="100" [readonly]="!!selected() && !!config().component"
+					[attr.aria-invalid]="!!fieldErrors()['name']"
+					[attr.aria-describedby]="fieldErrors()['name'] ? 'resource-name-error' : null" />
+			</label>
+			@if (fieldErrors()['name']) {
+			<p id="resource-name-error" class="notice error" role="alert">
+				{{ fieldErrors()['name'] | translate }}
+			</p>
+			}
+
+			<!-- Description -->
+			@if (config().descriptionField) {
+			<label>
+				{{ 'Description' | translate }}
+				<textarea name="description" [(ngModel)]="draft.description"
+					(ngModelChange)="clearFieldError('description')" [required]="!!selected()" rows="3"
+					[attr.aria-invalid]="!!fieldErrors()['description']"
+					[attr.aria-describedby]="fieldErrors()['description'] ? 'resource-description-error' : null"></textarea>
+			</label>
+			@if (fieldErrors()['description']) {
+			<p id="resource-description-error" class="notice error" role="alert">
+				{{ fieldErrors()['description'] | translate }}
+			</p>
+			}
+			}
+
+			<!-- Pizza component fields -->
+			@if (config().component) {
+			<label>
+				{{ 'Assembly order' | translate }}
+				<input type="number" name="assemblyOrder" [(ngModel)]="draft.assemblyOrder"
+					(ngModelChange)="clearFieldError('assemblyOrder')" required min="1" step="1" pattern="[0-9]+"
+					[attr.aria-invalid]="!!fieldErrors()['assemblyOrder']"
+					[attr.aria-describedby]="fieldErrors()['assemblyOrder'] ? 'resource-assembly-order-error' : null" />
+			</label>
+			@if (fieldErrors()['assemblyOrder']) {
+			<p id="resource-assembly-order-error" class="notice error" role="alert">
+				{{ fieldErrors()['assemblyOrder'] | translate }}
+			</p>
+			}
+
+			<div class="form-grid">
+				<div>
+					<label>
+						{{ 'Minimum components' | translate }}
+						<input type="number" name="minCardinality" [(ngModel)]="draft.minCardinality"
+							(ngModelChange)="clearFieldError('minCardinality')" required min="0" step="1"
+							pattern="[0-9]+" [attr.aria-invalid]="!!fieldErrors()['minCardinality']"
+							[attr.aria-describedby]="fieldErrors()['minCardinality'] ? 'resource-min-cardinality-error' : null" />
+					</label>
+					@if (fieldErrors()['minCardinality']) {
+					<p id="resource-min-cardinality-error" class="notice error" role="alert">
+						{{ fieldErrors()['minCardinality'] | translate }}
+					</p>
+					}
+				</div>
+
+				<div>
+					<label>
+						{{ 'Maximum components' | translate }}
+						<input type="number" name="maxCardinality" [(ngModel)]="draft.maxCardinality"
+							(ngModelChange)="clearFieldError('maxCardinality')" min="0" step="1" pattern="[0-9]+"
+							[placeholder]="'Unlimited' | translate"
+							[attr.aria-invalid]="!!fieldErrors()['maxCardinality']"
+							[attr.aria-describedby]="fieldErrors()['maxCardinality'] ? 'resource-max-cardinality-error' : null" />
+					</label>
+					@if (fieldErrors()['maxCardinality']) {
+					<p id="resource-max-cardinality-error" class="notice error" role="alert">
+						{{ fieldErrors()['maxCardinality'] | translate }}
+					</p>
+					}
+					<small>{{ 'Leave empty for no upper limit.' | translate }}</small>
+				</div>
+			</div>
+			}
+
+			<!-- Pizza size status -->
+			@if (config().path === 'pizza-sizes' && selected()) {
+			<label class="check-label">
+				<input type="checkbox" name="active" [(ngModel)]="draft.active" />
+				{{ 'Active size' | translate }}
+			</label>
+			}
+
+			<!-- API errors -->
+			@if (formError()) {
+			<p class="notice error" role="alert">
+				{{ formError() | translate }}
+			</p>
+			}
+		</fieldset>
+	</form>
+
+	<div modal-actions class="row-actions">
+		<button class="button" [disabled]="saving()" (click)="editing.set(false)">
+			{{ 'Cancel' | translate }}
+		</button>
+		<button class="button primary" type="submit" form="resource-form" [disabled]="saving() || form.invalid">
+			{{ saving() ? ('Saving…' | translate) : ('Save changes' | translate) }}
+		</button>
+	</div>
+</app-modal>
+}
+
+@if (removing(); as item) {
+<app-modal [title]="'Remove {{name}}?' | translate: { name: item.name }"
+	[description]="'Items referenced by existing records cannot be removed.' | translate" [busy]="saving()"
+	(closed)="removing.set(null)">
+	<p>
+		{{ 'This will remove {{name}}. This action cannot be undone.' | translate: { name: item.name } }}
+	</p>
+
+	@if (formError()) {
+	<p class="notice error" role="alert">
+		{{ formError() | translate }}
+	</p>
+	}
+
+	<div modal-actions class="row-actions">
+		<button class="button" [disabled]="saving()" (click)="removing.set(null)">
+			{{ 'Cancel' | translate }}
+		</button>
+		<button class="button danger" [disabled]="saving()" (click)="remove()">
+			{{ saving() ? ('Removing…' | translate) : ('Remove' | translate) }}
+		</button>
+	</div>
+</app-modal>
+}

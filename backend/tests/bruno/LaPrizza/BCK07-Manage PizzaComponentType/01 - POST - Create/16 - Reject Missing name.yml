@@ -1,0 +1,29 @@
+info:
+  name: 16 - Reject Missing name
+  type: http
+  seq: 16
+http:
+  method: POST
+  url: '{{baseUrl}}/pizza-component-types'
+  body:
+    type: json
+    data: |-
+      {
+        "assemblyOrder": {{bck07Order}},
+        "minCardinality": 0,
+        "maxCardinality": null
+      }
+  auth:
+    type: bearer
+    token: '{{bck07ManagerToken}}'
+settings:
+  encodeUrl: true
+runtime:
+  scripts:
+    - type: tests
+      code: |-
+        test("Reject Missing name", function() {
+          expect(res.getStatus()).to.equal(400);
+          expect(typeof res.getBody().error.message).to.equal("string");
+          expect(res.getBody().error.message.length > 0).to.equal(true);
+        });

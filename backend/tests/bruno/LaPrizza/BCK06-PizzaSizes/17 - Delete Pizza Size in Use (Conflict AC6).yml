@@ -1,0 +1,28 @@
+info:
+  name: 17 - Delete Pizza Size in Use (Conflict AC6)
+  type: http
+  seq: 19
+http:
+  method: DELETE
+  url: '{{baseUrl}}/pizza-sizes/{{inUseSizeName}}'
+  body: none
+  auth:
+    type: bearer
+    token: '{{managerToken}}'
+runtime:
+  scripts:
+    - type: before-request
+      code: |-
+        const list = bru.getVar("pizzaSizesList") || bru.getEnvVar("pizzaSizesList");
+        if (Array.isArray(list)) {
+        	const target = list.find(s => s.name === "Small") || list[0];
+        	if (target) {
+        		bru.setVar("inUseSizeName", target.name);
+        	}
+        }
+    - type: tests
+      code: |-
+        test("Pizza size in use returns 409 Conflict (AC6 Guard)", function() {
+        	expect(res.getStatus()).to.equal(409);
+        	expect(res.getBody().error.message).to.contain("referenced");
+        });

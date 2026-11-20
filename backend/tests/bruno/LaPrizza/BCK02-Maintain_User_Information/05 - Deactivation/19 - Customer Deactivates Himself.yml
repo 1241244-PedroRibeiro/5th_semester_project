@@ -1,0 +1,26 @@
+info:
+  name: 19 - Customer Deactivates Himself
+  type: http
+  seq: 19
+http:
+  method: DELETE
+  url: '{{baseUrl}}/user/{{bck02CustomerUsername}}'
+  auth:
+    type: bearer
+    token: '{{bck02CustomerToken}}'
+runtime:
+  scripts:
+    - type: before-request
+      code: |-
+        const value = name => bru.getVar(name) ?? bru.getEnvVar(name);
+        for (const name of ["bck02CustomerToken", "bck02CustomerUsername", "bck02ManagerUsername"]) {
+        	if (!value(name)) throw new Error("Set " + name + " before running this request.");
+        }
+        if (value("bck02CustomerUsername") === value("bck02ManagerUsername")) {
+        	throw new Error("Customer and manager usernames must be different.");
+        }
+    - type: tests
+      code: |-
+        test("Status code is 200", function() {
+        	expect(res.getStatus()).to.equal(200);
+        });

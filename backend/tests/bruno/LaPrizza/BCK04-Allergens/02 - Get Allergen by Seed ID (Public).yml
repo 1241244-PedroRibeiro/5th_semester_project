@@ -1,0 +1,17 @@
+info:
+  name: 02 - Get Allergen by Seed Name (Public)
+  type: http
+  seq: 4
+http:
+  method: GET
+  url: '{{baseUrl}}/allergens/{{seededAllergenName}}'
+  body: none
+runtime:
+  scripts:
+    - type: tests
+      code: |-
+        test("Returns seeded allergen details with 200 OK", function() {
+        	expect(res.getStatus()).to.equal(200);
+        	const data = res.getBody();
+        	expect(data).to.have.property("name");
+        });

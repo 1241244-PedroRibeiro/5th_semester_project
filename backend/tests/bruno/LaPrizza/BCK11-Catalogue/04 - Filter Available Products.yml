@@ -1,0 +1,46 @@
+info:
+  name: 04 - Filter Available Products
+  type: http
+  seq: 5
+http:
+  method: GET
+  url: '{{baseUrl}}/catalogue?availableOnly=true'
+  params:
+    - name: availableOnly
+      value: 'true'
+      type: query
+  auth: inherit
+runtime:
+  scripts:
+    - type: tests
+      code: |-
+        test("returns HTTP 200", function() {
+        	expect(res.getStatus()).to.equal(200);
+        });
+
+        test("returns only available products", function() {
+        	const products = res.getBody();
+
+        	expect(products.length).to.be.greaterThan(0);
+
+        	products.forEach(function(product) {
+        		expect(product.isAvailable).to.equal(true);
+        	});
+        });
+
+        test("includes the available test product", function() {
+        	const products = res.getBody();
+
+        	const product = products.find(function(item) {
+        		return item.productSku === bru.getVar("bck11ProductSku");
+        	});
+
+        	expect(product).to.exist;
+        	expect(product.isAvailable).to.equal(true);
+        });
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: false

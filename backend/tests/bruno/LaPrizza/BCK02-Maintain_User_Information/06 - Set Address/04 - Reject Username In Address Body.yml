@@ -1,0 +1,30 @@
+info:
+  name: 04 - Reject Username In Address Body
+  type: http
+  seq: 4
+http:
+  method: PUT
+  url: '{{baseUrl}}/user/me/address'
+  body:
+    type: json
+    data: |-
+      {
+        "street": "Rua Nova 10",
+        "postalCode": "1000-001",
+        "city": "Lisbon",
+        "extraDetails": "Floor 2",
+        "username": "another_user"
+      }
+  auth:
+    type: bearer
+    token: '{{bck02AddressToken}}'
+settings:
+  encodeUrl: true
+runtime:
+  scripts:
+    - type: tests
+      code: |-
+        test("Reject Username In Address Body", function() {
+          expect(res.getStatus()).to.equal(400);
+          expect(res.getBody()).to.deep.equal({ error: { message: "Contact details contain unsupported fields" } });
+        });

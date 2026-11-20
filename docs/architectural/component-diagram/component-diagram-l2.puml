@@ -1,0 +1,104 @@
+@startuml component-diagram-l2
+!pragma layout smetana
+skinparam packageStyle rectangle
+skinparam componentStyle uml2
+skinparam shadowing false
+skinparam linetype ortho
+skinparam nodesep 55
+skinparam ranksep 65
+
+skinparam person {
+  BackgroundColor #E2EAFC
+  BorderColor #2B2D42
+}
+skinparam rectangle {
+  BackgroundColor #F8F9FA
+  BorderColor #2B2D42
+}
+skinparam database {
+  BackgroundColor #D8F3DC
+  BorderColor #2B2D42
+}
+skinparam cloud {
+  BackgroundColor #FFF4E6
+  BorderColor #B5651D
+}
+
+title Container Diagram (C4 Level 2) - LaPrizza Information System (Sprint 2 Baseline)
+
+' ============================== ACTORS ==============================
+person "Customer" as Customer
+person "Restaurant Manager" as Manager
+person "Restaurant Employee" as Employee
+
+' ============================== SYSTEM BOUNDARY ==============================
+rectangle "LaPrizza System Boundary" {
+
+  rectangle "Web Application (SPA)\n[Container: Angular 22 / TypeScript / HTML5]" as SPA #E0E7FF {
+    note right of SPA
+      Single-Page Application providing role-aware
+      interfaces for Customers (incl. kiosk), Managers,
+      and Restaurant Staff. Per ADR-009.
+    end note
+  }
+
+  rectangle "3D Interactive Canvas\n[Container: WebGL 2 / Three.js (SGRAI)]" as ThreeJS #E0E7FF {
+    note right of ThreeJS
+      Embedded 3D module. Sprint 2 scope:
+      Kitchen & Food Preparation Visualization
+      (II.3.3.2, mandatory). Build Your Pizza
+      (II.3.3.1) optional.
+    end note
+  }
+
+  rectangle "Back-End Modular Monolith\n[Container: Node.js 20 / NestJS 10 / TypeScript]" as BackEnd #C7D2FE {
+    note left of BackEnd
+      Clean/Onion Architecture REST API.
+      Auth (local + OIDC), business invariants,
+      catalogues, stock, kitchen configuration,
+      AI planning orchestration, GDPR.
+    end note
+  }
+
+  rectangle "AI Planning Engine\n[Container: SWI-Prolog Knowledge Base (IART)]" as PrologEngine #EDE9FE {
+    note right of PrologEngine
+      Sprint 2: Bill of Materials (BOM) and
+      Requirements Planning over daily consumption
+      forecasts. Food-preparation scheduling
+      deferred to Sprint 3.
+    end note
+  }
+
+  database "Relational Database\n[Container: PostgreSQL 16+]" as DB #D8F3DC {
+    note bottom of DB
+      Users, customers, catalogues, stock,
+      kitchen configurations (JSONB), forecasts,
+      supplier scenarios, planning results,
+      invitations, role-change audit log.
+    end note
+  }
+}
+
+' ============================== EXTERNAL SYSTEMS ==============================
+cloud "External Identity Provider\n[OIDC / OAuth 2.0 — Google | Microsoft | Auth0 | Keycloak]" as IdP
+cloud "SMTP / Transactional Email\n[Activation invitations, password reset]" as EmailProvider
+
+' ============================== RELATIONSHIPS ==============================
+Customer --> SPA : [HTTPS]\nBrowses catalogue, configures pizzas, manages profile, orders
+Manager --> SPA : [HTTPS]\nAdministers catalogues, taxonomy, users, roles, stock,\nkitchen configurations, forecasts, supplier scenarios,\nand executes AI planning
+Employee --> SPA : [HTTPS]\nConsults preparation queue and kitchen viewer
+
+SPA *-- ThreeJS : [In-Browser Integration]\nEmbeds 3D kitchen canvas
+SPA ..> BackEnd : [HTTPS / JSON]\nConsumes REST API (Auth, Customers, Catalogue, Stock,\nKitchenConfiguration, Forecasts, SupplierScenarios,\nPlanning, Catalogue)
+ThreeJS ..> BackEnd : [HTTPS / JSON]\nFetches active kitchen configuration + taxonomy
+
+BackEnd ..> IdP : [OIDC / OAuth 2.0]\nAuthorization Code Flow with PKCE
+SPA ..> IdP : [OIDC / OAuth 2.0]\nRedirect for external login
+BackEnd ..> EmailProvider : [SMTP / HTTPS]\nSends activation / invitation emails
+
+BackEnd ..> PrologEngine : [HTTPS / JSON]\nRequests BOM & Requirements Planning execution\n(Prolog KB refreshed per calculation)
+PrologEngine ..> BackEnd : [HTTPS / JSON]\nFetches pizza BOM, stock snapshot,\nforecasts, confirmed supplier scenarios
+
+BackEnd --> DB : [TCP / SQL — TypeORM / pg Pool]\nACID invariants, JSONB config, FK RESTRICT
+
+@enduml

@@ -1,0 +1,29 @@
+info:
+  name: 01 - Customer Cannot Relate Another Customer Allergens
+  type: http
+  seq: 1
+http:
+  method: POST
+  url: '{{baseUrl}}/user/{{bck02DeactivateTargetUsername}}/allergen'
+  body:
+    type: json
+    data: |-
+      {
+      	"allergens": [
+      		"{{bck02AllergenName}}"
+      	]
+      }
+  auth:
+    type: bearer
+    token: '{{bck02CustomerToken}}'
+runtime:
+  scripts:
+    - type: tests
+      code: |-
+        test("Status code is 403", function() {
+        	expect(res.getStatus()).to.equal(403);
+        });
+
+        test("Returns the expected error", function() {
+        	expect(res.getBody().error.message).to.equal("You can only relate your own dietary restrictions.");
+        });

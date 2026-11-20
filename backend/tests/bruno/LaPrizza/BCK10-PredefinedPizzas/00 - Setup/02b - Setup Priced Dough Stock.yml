@@ -1,0 +1,39 @@
+info:
+  name: 02b - Setup Priced Dough Stock
+  type: http
+  seq: 4
+http:
+  method: POST
+  url: '{{baseUrl}}/products'
+  body:
+    type: json
+    data: |-
+      {
+      	"name": "{{bck10DoughName}}",
+      	"description": "Dough component for BCK10 and BCK11 integration tests",
+      	"categoryName": "Ingredients",
+      	"isSellable": false,
+      	"isPizzaComponent": true,
+      	"isStockControlled": true,
+      	"componentTypeName": "Base Dough",
+      	"sku": "{{bck10DoughSku}}",
+      	"directSellingPrice": 2
+      }
+  auth:
+    type: bearer
+    token: '{{managerToken}}'
+runtime:
+  scripts:
+    - type: before-request
+      code: |-
+        const suffix = Date.now() + "-" + Math.random().toString(36).slice(2, 8);
+        bru.setVar("bck10DoughSku", "PRD-PRICED-B10-" + suffix);
+        bru.setVar("bck10DoughName", "BCK10 Priced Dough Stock " + suffix);
+    - type: tests
+      code: |-
+        test("Matches the current API contract", function() {
+        	expect(res.getStatus()).to.equal(201);
+        	expect(res.getBody().sku).to.equal(bru.getVar("bck10DoughSku"));
+        	expect(res.getBody().directSellingPrice).to.equal(2);
+        	bru.setVar("bck10DoughSku", res.getBody().sku);
+        });

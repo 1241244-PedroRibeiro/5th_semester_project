@@ -1,0 +1,37 @@
+info:
+  name: 10 - Invalid Login Email (Unauthorized)
+  type: http
+  seq: 10
+
+http:
+  method: POST
+  url: "{{baseUrl}}/auth/login"
+  body:
+    type: json
+    data: |-
+      {
+      	"email": "invalid-email",
+      	"password": "{{authTestPassword}}"
+      }
+
+runtime:
+  scripts:
+    - type: tests
+      code: |-
+        test("Status code is 401", function() {
+        	expect(res.getStatus()).to.equal(401);
+        });
+
+        test("Returns the expected error without credentials", function() {
+        	const data = res.getBody();
+        	expect(data.error.message).to.equal("Invalid email or password");
+        	expect(data).not.to.have.property("token");
+        	expect(data).not.to.have.property("user");
+        });
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: true

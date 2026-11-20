@@ -1,0 +1,31 @@
+info:
+  name: 14 - Update Category (Manager Success)
+  type: http
+  seq: 14
+http:
+  method: PUT
+  url: '{{baseUrl}}/categories/{{createdCategoryName}}'
+  body:
+    type: json
+    data: |-
+      {
+          "name": "{{updatedCategoryName}}",
+          "description": "Updated delicious sweets and pastries"
+      }
+  auth:
+    type: bearer
+    token: '{{managerToken}}'
+runtime:
+  scripts:
+    - type: before-request
+      code: |-
+        const suffix = Date.now().toString().slice(-4);
+        bru.setVar("updatedCategoryName", "Updated Desserts " + suffix);
+    - type: tests
+      code: |-
+        test("Manager updates category returning 200 OK", function() {
+            expect(res.getStatus()).to.equal(200);
+            const data = res.getBody();
+            expect(data.name).to.equal(bru.getVar("updatedCategoryName"));
+            expect(data.description).to.equal("Updated delicious sweets and pastries");
+        });

@@ -1,0 +1,20 @@
+# /etc/cron.d/laprizza-deploy
+# LaPrizza Automated Deployment Schedule (SYS01 / AC4)
+# This file is installed on the DEI staging host to run periodic redeploys.
+# Managed via config/deploy-schedule.yml — changes there should be reflected here.
+#
+# Timezone: UTC
+# User: root (or dedicated laprizza-deploy user with docker group access)
+# Environment: Requires .env at /opt/laprizza/.env with all secrets
+#
+# Daily staging redeploy at 02:00 UTC (from config/deploy-schedule.yml staging.cron)
+# Runs full deploy pipeline with smoke validation on develop branch
+0 2 * * * root cd /opt/laprizza && git fetch origin develop && git checkout develop && git pull origin develop && ./scripts/deploy.sh >> logs/cron-deploy-$(date +\%Y\%m\%d).log 2>&1
+
+# Daily UFW denied connection report at 07:00 UTC (SYS02 / AC3.3)
+# Generates summary report from /var/log/ufw.log
+0 7 * * * root /opt/laprizza/scripts/ufw-report.sh >> logs/ufw-report/$(date +\%Y\%m\%d).log 2>&1
+
+# Weekly log retention purge (SYS01 / AC3.3, SYS02 / AC3.3)
+# Runs every Monday at 08:00 UTC — removes deploy logs and ufw reports older than 90 days
+0 8 * * 1 root find /opt/laprizza/logs -maxdepth 1 -type d -name "deploy-*" -mtime +90 -exec rm -rf {} + 2>/dev/null; find /opt/laprizza/logs/ufw-report -name "*.txt" -mtime +90 -delete 2>/dev/null

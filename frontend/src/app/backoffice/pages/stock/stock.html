@@ -1,0 +1,57 @@
+<app-page-header
+	[title]="'Stock Management' | translate"
+	[description]="(auth.manager() ? 'Review current stock and record controlled adjustments.' : 'Review current stock levels.') | translate"
+/>
+@if (success()) {
+	<p class="notice success" role="status">{{ success() | translate }}</p>
+}
+<app-panel [title]="'Stock' | translate" [count]="loading() || error() ? null : filtered().length">
+	<div class="toolbar">
+		<select [attr.aria-label]="'Filter by product status' | translate" [ngModel]="activeFilter()"
+			(ngModelChange)="activeFilter.set($event); load()">
+			<option value="">{{ 'All product statuses' | translate }}</option>
+			<option value="true">{{ 'Active' | translate }}</option>
+			<option value="false">{{ 'Inactive' | translate }}</option>
+		</select>
+		<label class="search">
+			<span class="sr-only">{{ 'Search stock' | translate }}</span>
+			<input type="search" [placeholder]="'Search by SKU or product' | translate"
+				[ngModel]="query()" (ngModelChange)="query.set($event)" />
+		</label>
+		<label>
+			<input type="checkbox" [ngModel]="lowStockOnly()" (ngModelChange)="lowStockOnly.set($event)" />
+			{{ 'Show out of stock only' | translate }}
+		</label>
+		@if (auth.manager()) {
+		<label>
+			<span class="sr-only">{{ 'Adjustment amount' | translate }}</span>
+			<input type="number" min="1" step="1" [ngModel]="amount()" (ngModelChange)="amount.set(+$event)" />
+		</label>
+		}
+		<button class="icon-button" [disabled]="loading()" (click)="load()" [attr.aria-label]="'Refresh stock' | translate">↻</button>
+	</div>
+	@if (loading()) {
+		<app-feedback kind="loading" [title]="'Loading stock' | translate" />
+	} @else if (error()) {
+		<app-feedback kind="error" [title]="'Could not load stock' | translate" [message]="error() | translate" [retryable]="true" (retry)="load()" />
+	} @else if (!filtered().length) {
+		<app-feedback [title]="'No stock records found' | translate" />
+	} @else {
+		<table>
+			<thead><tr><th>{{ 'SKU' | translate }}</th><th>{{ 'Product' | translate }}</th><th>{{ 'Units' | translate }}</th>@if (auth.manager()) {<th>{{ 'Actions' | translate }}</th>}</tr></thead>
+			<tbody>
+				@for (item of filtered(); track item.productSku) {
+					<tr>
+						<td>{{ item.productSku }}</td><td>{{ item.productName }}</td><td>{{ item.currentUnits }}</td>
+						@if (auth.manager()) {
+						<td>
+							<button class="button small" [disabled]="saving() === item.productSku" (click)="adjust(item, 'INCREASE')">{{ 'Increase' | translate }}</button>
+							<button class="button small danger" [disabled]="saving() === item.productSku || item.currentUnits < amount()" (click)="adjust(item, 'DECREASE')">{{ 'Decrease' | translate }}</button>
+						</td>
+						}
+					</tr>
+				}
+			</tbody>
+		</table>
+	}
+</app-panel>

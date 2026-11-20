@@ -1,0 +1,40 @@
+info:
+  name: GET-STOCK
+  type: http
+  seq: 1
+http:
+  method: GET
+  url: '{{baseUrl}}/stock/'
+  auth:
+    type: bearer
+    token: '{{managerToken}}'
+runtime:
+  scripts:
+    - type: after-response
+      code: |-
+        if (res.status === 200) {
+        	const item = res.body.find(
+        		(i) => i.productName === "Mozzarella"
+        	);
+
+        	if (item) {
+        		bru.setVar("productSku", item.productSku);
+        		console.log("productSku definido:", item.productSku);
+        	} else {
+        		console.log("Produto não encontrado");
+        	}
+        }
+    - type: tests
+      code: |-
+        test("Matches the current API contract", function() {
+        	expect(res.getStatus()).to.equal(200);
+        	const item = res.getBody().find(item => item.productSku === "PRD-MOZZ");
+        	expect(item).to.exist;
+        	bru.setVar("productSku", item.productSku);
+        });
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: false

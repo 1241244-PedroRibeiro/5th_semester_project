@@ -1,0 +1,34 @@
+info:
+  name: 01 - List Pizza Sizes (Public)
+  type: http
+  seq: 3
+http:
+  method: GET
+  url: '{{baseUrl}}/pizza-sizes'
+runtime:
+  scripts:
+    - type: after-response
+      code: |-
+        if (res.status === 200 && res.body.length > 0) {
+        	res.body.forEach(function (s) { console.log(s.name, s.name); });
+        	bru.setVar("pizzaSize", res.body[0].name);
+        }
+    - type: tests
+      code: |-
+        test("Public pizza sizes listing returns 200 OK and array", function() {
+        	expect(res.getStatus()).to.equal(200);
+        	const data = res.getBody();
+        	expect(data).to.be.an("array");
+        	bru.setVar("pizzaSizesList", data);
+        	if (data.length > 0) {
+        		bru.setVar("seededSizeName", data[0].name);
+        	}
+        });
+        bru.setVar("inUseSizeName", "Small");
+        bru.setVar("pizzaSize", "Small");
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: true

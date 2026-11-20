@@ -1,0 +1,32 @@
+<section class="hero shop-container">
+	<div class="hero-copy">
+		<span class="shop-label">{{ 'Your order' | translate }}</span>
+		<h1>{{ 'Your pizza party' | translate }}<br />{{ 'starts right here.' | translate }}</h1>
+		<p>
+			{{
+				'Your next favourite is waiting. Explore the menu, pick a house favourite, and make it yours.'
+					| translate
+			}}
+		</p>
+		<a shopButton routerLink="/menu"
+			>{{ 'Browse the menu' | translate }} <app-icon name="arrow"
+		/></a>
+		<div class="hero-promises">
+			<span><app-icon name="flame" />{{ 'Baked to order' | translate }}</span
+			><span><app-icon name="pizza" />{{ 'Fresh dough daily' | translate }}</span
+			><span><app-icon name="heart" />{{ 'Made with amore' | translate }}</span>
+		</div>
+	</div>
+	<figure class="hero-photo">
+		<img
+			src="/images/storefront/pizza-party.jpg"
+			[alt]="'Fresh pepperoni pizza in an open takeaway box' | translate"
+			width="1200"
+			height="896"
+			fetchpriority="high"
+		/>
+		<figcaption>
+			<span aria-hidden="true">● ● ●</span> {{ 'A slice above the rest' | translate }}
+		</figcaption>
+	</figure>
+</section>

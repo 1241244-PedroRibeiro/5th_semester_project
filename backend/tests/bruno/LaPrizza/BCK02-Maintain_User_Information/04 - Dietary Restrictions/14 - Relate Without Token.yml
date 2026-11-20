@@ -1,0 +1,26 @@
+info:
+  name: 14 - Relate Without Token
+  type: http
+  seq: 14
+http:
+  method: POST
+  url: '{{baseUrl}}/user/{{bck02CustomerUsername}}/allergen'
+  body:
+    type: json
+    data: |-
+      {
+      	"allergens": [
+      		"{{bck02AllergenName}}"
+      	]
+      }
+runtime:
+  scripts:
+    - type: tests
+      code: |-
+        test("Status code is 401", function() {
+        	expect(res.getStatus()).to.equal(401);
+        });
+
+        test("Returns an error message", function() {
+        	expect(res.getBody().error.message).to.be.a("string").and.not.empty;
+        });

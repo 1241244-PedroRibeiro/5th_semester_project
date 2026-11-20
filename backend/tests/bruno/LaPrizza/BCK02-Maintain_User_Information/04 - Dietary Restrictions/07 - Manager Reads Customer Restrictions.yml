@@ -1,0 +1,25 @@
+info:
+  name: 07 - Manager Reads Customer Restrictions
+  type: http
+  seq: 7
+http:
+  method: GET
+  url: '{{baseUrl}}/user/{{bck02CustomerUsername}}/allergens'
+  auth:
+    type: bearer
+    token: '{{bck02ManagerToken}}'
+runtime:
+  scripts:
+    - type: tests
+      code: |-
+        test("Status code is 200", function() {
+        	expect(res.getStatus()).to.equal(200);
+        });
+
+        test("Returns the selected user's allergen names", function() {
+        	const data = res.getBody();
+        	expect(data.username).to.equal((bru.getVar("bck02CustomerUsername") ?? bru.getEnvVar("bck02CustomerUsername")));
+        	expect(data.allergens).to.be.an("array");
+        	data.allergens.forEach(name => expect(name).to.be.a("string"));
+        	expect(data.allergens).to.include((bru.getVar("bck02AllergenName") ?? bru.getEnvVar("bck02AllergenName")));
+        });

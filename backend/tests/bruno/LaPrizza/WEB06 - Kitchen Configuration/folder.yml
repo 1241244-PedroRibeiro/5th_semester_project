@@ -1,0 +1,7 @@
+info:
+  name: WEB06 - Kitchen Configuration
+  type: folder
+  seq: 21
+
+request:
+  auth: inherit

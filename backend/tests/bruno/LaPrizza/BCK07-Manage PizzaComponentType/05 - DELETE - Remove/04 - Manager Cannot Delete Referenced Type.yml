@@ -1,0 +1,20 @@
+info:
+  name: 04 - Manager Cannot Delete Referenced Type
+  type: http
+  seq: 4
+http:
+  method: DELETE
+  url: '{{baseUrl}}/pizza-component-types/{{bck07ReferencedName}}'
+  auth:
+    type: bearer
+    token: '{{bck07ManagerToken}}'
+settings:
+  encodeUrl: true
+runtime:
+  scripts:
+    - type: tests
+      code: |-
+        test("Reject Delete Type Referenced by Inactive Product", function() {
+          expect(res.getStatus()).to.equal(409);
+          expect(res.getBody().error.message).to.equal("Component type is referenced by products or configurations and cannot be deleted");
+        });

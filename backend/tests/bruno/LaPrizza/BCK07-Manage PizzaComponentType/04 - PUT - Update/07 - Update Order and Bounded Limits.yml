@@ -1,0 +1,32 @@
+info:
+  name: 07 - Update Order and Bounded Limits
+  type: http
+  seq: 7
+http:
+  method: PUT
+  url: '{{baseUrl}}/pizza-component-types/{{bck07PutName}}'
+  body:
+    type: json
+    data: |-
+      {
+        "assemblyOrder": {{bck07PutUpdatedOrder}},
+        "minCardinality": 1,
+        "maxCardinality": 3
+      }
+  auth:
+    type: bearer
+    token: '{{bck07PutManagerToken}}'
+settings:
+  encodeUrl: true
+runtime:
+  scripts:
+    - type: tests
+      code: |-
+        test("Update Order and Bounded Limits", function() {
+          expect(res.getStatus()).to.equal(200);
+          const data = res.getBody();
+          expect(data.name).to.equal(bru.getVar("bck07PutName"));
+          expect(data.assemblyOrder).to.equal(bru.getVar("bck07PutUpdatedOrder"));
+          expect(data.minCardinality).to.equal(1);
+          expect(data.maxCardinality).to.equal(3);
+        });

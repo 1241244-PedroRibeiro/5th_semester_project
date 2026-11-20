@@ -1,0 +1,51 @@
+info:
+  name: 01 - Manager Accesses Manager Endpoint (Success)
+  type: http
+  seq: 1
+http:
+  method: GET
+  url: '{{baseUrl}}/users?page=1&pageSize=2'
+  auth:
+    type: bearer
+    token: '{{aa05ManagerToken}}'
+runtime:
+  scripts:
+    - type: before-request
+      code: |-
+        const login = await bru.sendRequest({
+          method: "POST",
+          url: bru.getEnvVar("baseUrl") + "/auth/login",
+          headers: { "Content-Type": "application/json" },
+          data: {
+            email: bru.getEnvVar("aa05ManagerEmail") || "manager@laprizza.test",
+            password: bru.getEnvVar("aa05ManagerPassword") || "Manager123!"
+          },
+          validateStatus: () => true
+        });
+        if (login.status !== 200 || typeof login.data.token !== "string" || !login.data.token) {
+          throw new Error("AA05 manager login failed (HTTP " + login.status + "). Check the active fixture credentials.");
+        }
+        const user = login.data.user;
+        if (!user || user.status !== "ACTIVE" || !Array.isArray(user.roles) || !user.roles.includes("MANAGER")) {
+          throw new Error("AA05 requires an active manager account with the expected role.");
+        }
+        bru.setVar("aa05ManagerToken", login.data.token);
+        bru.setVar("aa05ManagerUsername", user.username);
+        bru.setVar("aa05ManagerPathUsername", encodeURIComponent(user.username));
+    - type: tests
+      code: |-
+        test("An active manager can access the manager-only user list", function() {
+          expect(res.getStatus()).to.equal(200);
+          const data = res.getBody();
+          expect(data.items).to.be.an("array");
+          expect(data.page).to.equal(1);
+          expect(data.pageSize).to.equal(2);
+          expect(data.total).to.be.a("number");
+          expect(data.totalPages).to.be.a("number");
+          data.items.forEach(function(user) {
+            expect(user.username).to.be.a("string");
+            expect(user).not.to.have.property("password");
+            expect(user).not.to.have.property("passwordHash");
+            expect(user).not.to.have.property("token");
+          });
+        });

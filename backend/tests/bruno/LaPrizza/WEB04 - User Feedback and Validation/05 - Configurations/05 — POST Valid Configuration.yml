@@ -1,0 +1,68 @@
+info:
+  name: 05 — POST Valid Configuration
+  type: http
+  seq: 5
+
+http:
+  method: POST
+  url: "{{baseUrl}}/kitchen-configurations"
+  body:
+    type: json
+    data: |-
+      {
+        "name": "Teste Bruno UUID1",
+        "jsonContent": {
+          "schemaVersion": "1.0",
+          "metadata": {
+            "name": "Teste Bruno UUID1",
+            "description": "Configuração de teste criada pela coleção Bruno.",
+            "author": "Manager"
+          },
+          "dimensions": {
+            "x": 12,
+            "y": 4,
+            "z": 9
+          },
+          "equipment": [
+            {
+              "id": "counter-main",
+              "label": "Main Counter",
+              "category": "counter",
+              "modelUrl": "/assets/3d/models/counter.glb",
+              "position": [
+                3,
+                0,
+                2
+              ],
+              "rotation": [
+                0,
+                0,
+                0
+              ],
+              "scale": [
+                1.2,
+                1,
+                1
+              ]
+            }
+          ],
+          "lights": [
+            {
+              "type": "ambient",
+              "color": "#ffeeaa",
+              "intensity": 0.8
+            }
+          ],
+          "animationTriggers": []
+        }
+      }
+  auth:
+    type: bearer
+    token: "{{managerToken}}"
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: false

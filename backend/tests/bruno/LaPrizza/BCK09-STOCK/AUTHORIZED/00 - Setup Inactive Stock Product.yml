@@ -1,0 +1,42 @@
+info:
+  name: 00 - Setup Inactive Stock Product
+  type: http
+  seq: 1
+http:
+  method: POST
+  url: '{{baseUrl}}/products'
+  body:
+    type: json
+    data: |-
+      {
+          "sku": "{{inactiveStockProductSku}}",
+          "name": "Inactive Stock Item {{inactiveStockProductSku}}",
+          "description": "Product used for inactive stock testing",
+          "categoryName": "Beverages",
+          "isSellable": true,
+          "isPizzaComponent": false,
+          "isStockControlled": true,
+          "directSellingPrice": 2.50
+      }
+  auth:
+    type: bearer
+    token: '{{managerToken}}'
+runtime:
+  scripts:
+    - type: before-request
+      code: |-
+        const sku = "PRD-INACT-" + Date.now();
+        bru.setVar("inactiveStockProductSku", sku);
+        bru.setEnvVar("inactiveStockProductSku", sku);
+    - type: tests
+      code: |-
+        test("Manager creates stock-controlled product for inactive tests", function () {
+            expect(res.getStatus()).to.equal(201);
+            expect(res.getBody().sku).to.equal(bru.getVar("inactiveStockProductSku"));
+        });
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: false

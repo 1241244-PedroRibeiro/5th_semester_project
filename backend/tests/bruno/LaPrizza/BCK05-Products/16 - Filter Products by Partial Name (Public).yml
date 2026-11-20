@@ -1,0 +1,23 @@
+info:
+  name: 16 - Filter Products by Partial Name (Public)
+  type: http
+  seq: 19
+http:
+  method: GET
+  url: '{{baseUrl}}/products?name=Lemonade'
+runtime:
+  scripts:
+    - type: tests
+      code: |-
+        test("Filter by partial name returns 200 OK with matches", function() {
+        	expect(res.getStatus()).to.equal(200);
+        	const data = res.getBody();
+        	expect(Array.isArray(data)).to.be.true;
+        	expect(data.some(p => p.name.includes("Lemonade"))).to.be.true;
+        });
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: true

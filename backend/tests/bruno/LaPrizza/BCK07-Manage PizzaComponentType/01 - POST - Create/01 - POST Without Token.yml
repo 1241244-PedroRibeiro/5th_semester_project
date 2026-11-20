@@ -1,0 +1,26 @@
+info:
+  name: 01 - POST Without Token
+  type: http
+  seq: 1
+http:
+  method: POST
+  url: '{{baseUrl}}/pizza-component-types'
+  body:
+    type: json
+    data: |-
+      {
+        "name": "{{bck07Name}}",
+        "assemblyOrder": {{bck07Order}},
+        "minCardinality": 0,
+        "maxCardinality": null
+      }
+settings:
+  encodeUrl: true
+runtime:
+  scripts:
+    - type: tests
+      code: |-
+        test("POST Without Token", function() {
+          expect(res.getStatus()).to.equal(401);
+          expect(res.getBody().error.message).to.equal("Authentication required.");
+        });

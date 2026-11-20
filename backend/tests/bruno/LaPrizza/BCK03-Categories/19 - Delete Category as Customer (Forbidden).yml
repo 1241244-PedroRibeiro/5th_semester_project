@@ -1,0 +1,19 @@
+info:
+  name: 19 - Delete Category as Customer (Forbidden)
+  type: http
+  seq: 19
+http:
+  method: DELETE
+  url: '{{baseUrl}}/categories/{{createdCategoryName}}'
+  body: none
+  auth:
+    type: bearer
+    token: '{{customerToken}}'
+runtime:
+  scripts:
+    - type: tests
+      code: |-
+        test("Customer cannot delete category (403 Forbidden)", function() {
+        	expect(res.getStatus()).to.equal(403);
+        	expect(res.getBody().error.message).to.equal("You do not have permission to do this.");
+        });

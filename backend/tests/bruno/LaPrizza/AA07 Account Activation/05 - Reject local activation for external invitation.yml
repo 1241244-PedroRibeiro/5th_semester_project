@@ -1,0 +1,21 @@
+info:
+  name: 05 - Reject local activation for external invitation
+  type: http
+  seq: 5
+http:
+  method: POST
+  url: '{{baseUrl}}/auth/activate'
+  auth:
+    type: none
+  body:
+    type: json
+    data: |-
+      {"token":"{{externalActivationToken}}","password":"Aa07Valid@123"}
+runtime:
+  scripts:
+    - type: tests
+      code: |-
+        test("Expected HTTP 422", () => expect(res.getStatus()).to.equal(422));
+        test("Requires the external identity flow", () => {
+          expect(res.getBody().error.message).to.match(/external|identity|provider|provedor/i);
+        });

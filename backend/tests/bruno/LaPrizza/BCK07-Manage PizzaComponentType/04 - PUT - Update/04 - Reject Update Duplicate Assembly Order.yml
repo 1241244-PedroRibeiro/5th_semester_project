@@ -1,0 +1,29 @@
+info:
+  name: 04 - Reject Update Duplicate Assembly Order
+  type: http
+  seq: 4
+http:
+  method: PUT
+  url: '{{baseUrl}}/pizza-component-types/{{bck07PutName}}'
+  body:
+    type: json
+    data: |-
+      {
+        "name": "{{bck07PutName}}",
+        "assemblyOrder": {{bck07PutExistingOrder}},
+        "minCardinality": 1,
+        "maxCardinality": 3
+      }
+  auth:
+    type: bearer
+    token: '{{bck07PutManagerToken}}'
+settings:
+  encodeUrl: true
+runtime:
+  scripts:
+    - type: tests
+      code: |-
+        test("Reject Update Duplicate Assembly Order", function() {
+          expect(res.getStatus()).to.equal(409);
+          expect(res.getBody().error.message).to.be.a("string").and.not.empty;
+        });

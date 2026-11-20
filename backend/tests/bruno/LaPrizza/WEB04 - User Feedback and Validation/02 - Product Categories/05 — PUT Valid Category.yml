@@ -1,0 +1,25 @@
+info:
+  name: 05 — PUT Valid Category
+  type: http
+  seq: 5
+
+http:
+  method: PUT
+  url: "{{baseUrl}}/categories/WEB04%20Test%20Category"
+  body:
+    type: json
+    data: |-
+      {
+        "name": "WEB04 Test Category",
+        "description": "Descrição atualizada para testar WEB04"
+      }
+  auth:
+    type: bearer
+    token: "{{managerToken}}"
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: false

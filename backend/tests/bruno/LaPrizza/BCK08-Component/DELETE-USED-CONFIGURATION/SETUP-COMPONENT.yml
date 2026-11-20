@@ -1,0 +1,50 @@
+info:
+  name: Setup Component
+  type: http
+  seq: 1
+
+http:
+  method: POST
+  url: '{{baseUrl}}/products'
+  body:
+    type: json
+    data: |-
+      {
+        "name": "Delete Guard Component {{deleteGuardSuffix}}",
+        "description": "Component used by the BCK08 deletion protection test",
+        "categoryName": "Ingredients",
+        "isSellable": false,
+        "isPizzaComponent": true,
+        "isStockControlled": false,
+        "componentTypeName": "Base Dough",
+        "sku": "{{deleteGuardComponentSku}}"
+      }
+  auth:
+    type: bearer
+    token: '{{managerToken}}'
+
+runtime:
+  scripts:
+    - type: before-request
+      code: |-
+        const suffix = Date.now().toString() +
+          Math.random().toString(36).slice(2, 6);
+
+        bru.setVar("deleteGuardSuffix", suffix);
+        bru.setVar("deleteGuardComponentSku", "PRD-DEL-GUARD-" + suffix);
+        bru.setVar("deleteGuardPizzaSku", "PRD-DEL-GUARD-PIZZA-" + suffix);
+
+    - type: tests
+      code: |-
+        test("Creates a component for the deletion test", function () {
+          expect(res.getStatus()).to.equal(201);
+          expect(res.getBody().sku).to.equal(
+            bru.getVar("deleteGuardComponentSku")
+          );
+        });
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

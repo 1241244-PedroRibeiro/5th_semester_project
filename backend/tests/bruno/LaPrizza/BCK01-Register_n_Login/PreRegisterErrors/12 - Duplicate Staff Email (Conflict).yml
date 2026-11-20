@@ -1,0 +1,42 @@
+info:
+  name: 12 - Duplicate Staff Email (Conflict)
+  type: http
+  seq: 12
+http:
+  method: POST
+  url: "{{baseUrl}}/auth/pre_register"
+  body:
+    type: json
+    data: |-
+      {
+      	"firstName": "Bruno",
+      	"lastName": "Staff",
+      	"email": "{{invitedStaffEmail}}",
+      	"roleName": "EMPLOYEE"
+      }
+  auth:
+    type: bearer
+    token: "{{managerToken}}"
+runtime:
+  scripts:
+    - type: before-request
+      code: |-
+        if (!bru.getVar("managerToken")) {
+        	throw new Error("Set managerToken before running this request; see this folder's README.");
+        }
+        if (!bru.getVar("invitedStaffEmail")) {
+        	throw new Error("Set invitedStaffEmail before running this request; see this folder's README.");
+        }
+    - type: tests
+      code: |-
+        test("Status code is 409", function() {
+        	expect(res.getStatus()).to.equal(409);
+        });
+
+        test("Returns the expected error without exposing credentials", function() {
+        	const data = res.getBody();
+        	expect(data.error.message).to.equal("User with this email already exists");
+        	expect(data).not.to.have.property("token");
+        	expect(data).not.to.have.property("password");
+        	expect(data).not.to.have.property("passwordHash");
+        });

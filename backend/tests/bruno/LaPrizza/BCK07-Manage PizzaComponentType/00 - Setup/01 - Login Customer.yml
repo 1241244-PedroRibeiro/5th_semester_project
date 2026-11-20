@@ -1,0 +1,29 @@
+info:
+  name: 01 - Login Customer
+  type: http
+  seq: 2
+http:
+  method: POST
+  url: '{{baseUrl}}/auth/login'
+  body:
+    type: json
+    data: |-
+      {
+      	"email": "customer@laprizza.test",
+      	"password": "Manager123!"
+      }
+settings:
+  encodeUrl: true
+runtime:
+  scripts:
+    - type: tests
+      code: |-
+        test("Login Customer", function() {
+        	expect(res.getStatus()).to.equal(200);
+        	const data = res.getBody();
+        	expect(typeof data.token).to.equal("string");
+        	expect(data.token.length > 0).to.equal(true);
+        	expect(data.user.roles.includes("CUSTOMER")).to.equal(true);
+        	expect(data.user.status).to.equal("ACTIVE");
+        	bru.setVar("bck07CustomerToken", data.token);
+        });

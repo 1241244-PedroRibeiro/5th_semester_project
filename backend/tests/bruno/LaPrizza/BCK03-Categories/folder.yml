@@ -1,0 +1,7 @@
+info:
+  name: BCK03-Categories
+  type: folder
+  seq: 4
+
+request:
+  auth: inherit

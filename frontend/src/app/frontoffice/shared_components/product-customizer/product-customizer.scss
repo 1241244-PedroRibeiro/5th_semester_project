@@ -1,0 +1,97 @@
+.customizer-photo {
+	width: 100%;
+	height: 12rem;
+	object-fit: cover;
+	border-radius: 0.8rem;
+}
+h3,
+legend {
+	font-family: Georgia, 'Times New Roman', serif;
+	font-size: 1.3rem;
+	font-weight: 700;
+	margin: 0 0 0.7rem;
+}
+.sizes {
+	display: grid;
+	gap: 0.7rem;
+}
+.size-option {
+	display: flex;
+	flex-direction: row;
+	align-items: center;
+	flex-wrap: wrap;
+	gap: 0.75rem;
+	font-size: 0.8rem;
+}
+.size-option > span {
+	display: flex;
+	align-items: center;
+	gap: 0.55rem;
+	flex: 1;
+}
+.size-option strong {
+	font-size: 0.8rem;
+}
+.ingredient-groups {
+	display: grid;
+	grid-template-columns: repeat(2, minmax(0, 1fr));
+	gap: 1.5rem;
+}
+.ingredient-groups > fieldset {
+	border-top: 1px solid var(--border);
+	padding-top: 1rem;
+}
+.group-limit {
+	color: var(--muted);
+	font-size: 0.7rem;
+	margin: 0 0 0.75rem;
+}
+.ingredient {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	gap: 0.65rem;
+	margin: 0.9rem 0;
+}
+.ingredient strong {
+	font-size: 0.77rem;
+	font-weight: 600;
+}
+.ingredient small {
+	display: block;
+	font-size: 0.65rem;
+	margin-top: 0.3rem;
+}
+.ingredient app-quantity-control {
+	font-size: 0.8rem;
+}
+.servings {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	border-top: 1px solid var(--border);
+	padding-top: 1rem;
+}
+.servings h3 {
+	margin: 0;
+}
+.customizer-actions {
+	display: flex;
+	flex-wrap: wrap;
+	justify-content: flex-end;
+	gap: 0.75rem;
+}
+@media (max-width: 600px) {
+	.ingredient-groups {
+		grid-template-columns: 1fr;
+	}
+	.customizer-actions {
+		width: 100%;
+	}
+	.customizer-actions > button:last-child {
+		flex: 1;
+	}
+	.customizer-photo {
+		height: 10rem;
+	}
+}

@@ -1,0 +1,18 @@
+==========================================================
+LaPrizza Deployment Validation — Smoke Tests
+Target Base URL: https://localhost
+Timestamp:       2026-11-12T18:31:05Z
+==========================================================
+[1] Health endpoint returns HTTP 200 and status == 'ok' ... PASS
+[2] Health endpoint reports identifiable version ... PASS
+[3] Health dependency: PostgreSQL is up ... PASS
+[4] Health dependency: Prolog engine is up ... PASS
+[5] Public catalogue returns HTTP 200 array ... FAIL
+[6] Public taxonomy: pizza sizes populated (length >= 1) ... PASS
+[7] Public taxonomy: allergens EU seed populated (length >= 14) ... PASS
+[8] Frontend SPA responds with HTTP 200 ... PASS
+[9] HTTP port 80 enforces redirect (HTTP 301/308) ... PASS
+==========================================================
+Smoke Tests Summary: 8/9 passed (1 failed)
+==========================================================
+DEPLOY: FAILED (smoke tests failed)

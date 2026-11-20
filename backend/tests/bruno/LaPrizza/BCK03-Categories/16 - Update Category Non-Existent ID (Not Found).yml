@@ -1,0 +1,24 @@
+info:
+  name: 16 - Update Category Non-Existent ID (Not Found)
+  type: http
+  seq: 16
+http:
+  method: PUT
+  url: '{{baseUrl}}/categories/CAT-NON-EXISTENT-999'
+  body:
+    type: json
+    data: |-
+      {
+          "name": "Ghost Category",
+          "description": "Does not exist"
+      }
+  auth:
+    type: bearer
+    token: '{{managerToken}}'
+runtime:
+  scripts:
+    - type: tests
+      code: |-
+        test("Updating non-existent category returns 404 Not Found", function() {
+            expect(res.getStatus()).to.equal(404);
+        });

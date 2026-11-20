@@ -1,0 +1,62 @@
+<app-page-header
+	[title]="'Orders' | translate"
+	[description]="'A fresh view of every order, from oven to doorstep.' | translate"
+	><span class="button"
+		><app-icon name="clock" />{{ today | localDate: 'EEE, d MMM yyyy' }}</span
+	></app-page-header
+>
+<div class="metrics">
+	@for (metric of metrics; track metric.label) {
+		<section class="metric" [class.highlight]="metric.icon === 'flame'">
+			<div>
+				<span>{{ metric.label | translate }}</span
+				><app-icon [name]="metric.icon" />
+			</div>
+			<strong [attr.aria-label]="'Unavailable' | translate">—</strong
+			><small>{{ 'Waiting for order service' | translate }}</small>
+		</section>
+	}
+</div>
+<div class="dashboard">
+	<app-panel [title]="'All orders' | translate"
+		><app-tabs [tabs]="tabs" [active]="tab()" (changed)="tab.set($event)" /><app-feedback
+			[title]="'Your order workspace is ready' | translate"
+			[message]="
+				'Order management is not available yet. Orders and live updates will appear here when the order service is connected.'
+					| translate
+			"
+	/></app-panel>
+	<div class="details-column">
+		<app-panel [title]="'Order details' | translate"
+			><app-feedback
+				[title]="'No order selected' | translate"
+				[message]="'Order details and fulfilment actions will appear here.' | translate"
+		/></app-panel>
+		@if (auth.manager()) {
+			<section class="stock-watch">
+				<header>
+					<h2><app-icon name="box" />{{ 'Stock watch' | translate }}</h2>
+					<app-badge tone="orange">{{ stock().length }} {{ 'empty' | translate }}</app-badge>
+				</header>
+				@if (stockLoading()) {
+					<p class="muted" role="status">{{ 'Checking stock…' | translate }}</p>
+				} @else if (stockError()) {
+					<p class="notice error" role="alert">{{ stockError() | translate }}</p>
+					<button class="button small" (click)="loadStock()">{{ 'Try again' | translate }}</button>
+				} @else if (!stock().length) {
+					<p class="muted">{{ 'No products are out of stock.' | translate }}</p>
+				} @else {
+					@for (item of stock().slice(0, 4); track item.productSku) {
+						<div class="stock-item">
+							<strong>{{ item.productName }}</strong
+							><span>{{ '0 units left' | translate }}</span>
+						</div>
+					}
+				}
+				<a routerLink="/backoffice/products" [queryParams]="{}"
+					>{{ 'Review products and stock' | translate }} <span>↗</span></a
+				>
+			</section>
+		}
+	</div>
+</div>

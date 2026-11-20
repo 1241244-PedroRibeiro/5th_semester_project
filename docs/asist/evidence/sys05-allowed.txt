@@ -1,0 +1,30 @@
+=== SSH EFFECTIVE CONFIG ===
+port 2222
+permitrootlogin without-password
+pubkeyauthentication yes
+passwordauthentication no
+kbdinteractiveauthentication yes
+allowusers root
+allowusers laprizza-admin-eduardo
+allowusers laprizza-admin-pedro
+
+=== PAM TIME ===
+# laprizza SYS05 - Time-based access control for SSH
+# Format: service;ttys;users;times
+# Al = all days (Monday through Sunday), 0800-2200 (08:00-22:00 local time)
+# Timezone: Europe/Lisbon (WET/WEST)
+
+sshd;*;*;Al0800-2200
+
+=== MFA STATE ===
+{
+  "laprizza-admin-pedro|10.8.127.225": {
+    "user": "laprizza-admin-pedro",
+    "source_ip": "10.8.127.225",
+    "failure_count": 4,
+    "last_failure": 1794676676,
+    "last_alert": 1794676676,
+    "mfa_required": true
+  }
+}
+MFA override absent: 1

@@ -1,0 +1,47 @@
+info:
+  name: 35 - Pre-register Pending Customer Without Session (Unauthorized)
+  type: http
+  seq: 35
+http:
+  method: POST
+  url: '{{baseUrl}}/auth/pre_register'
+  body:
+    type: json
+    data: |-
+      {
+      	"firstName": "Bruno",
+      	"lastName": "Staff",
+      	"email": "{{preRegisterEmail}}",
+      	"roleName": "EMPLOYEE"
+      }
+  auth:
+    type: bearer
+    token: '{{pendingCustomerToken}}'
+runtime:
+  scripts:
+    - type: before-request
+      code: |-
+        const jwt = require("jsonwebtoken");
+        // A valid signature alone is insufficient: this legacy token has no server session.
+        const secret = bru.getEnvVar("JWT_SECRET") || "laprizza-default-secret-key-change-in-production-2026";
+        const token = jwt.sign({
+        	sub: "pending-customer_l",
+        	email: "pending-customer@laprizza.test",
+        	roles: ["CUSTOMER"],
+        	status: "PENDING_REGISTRATION",
+        }, secret, { algorithm: "HS256", expiresIn: "15m" });
+        bru.setVar("pendingCustomerToken", token);
+        bru.setVar("preRegisterEmail", "bruno-staff-" + Date.now() + "-" + Math.random().toString(36).slice(2) + "@example.com");
+    - type: tests
+      code: |-
+        test("Sessionless token is rejected with 401", function() {
+        	expect(res.getStatus()).to.equal(401);
+        });
+
+        test("Returns the expected error without exposing credentials", function() {
+        	const data = res.getBody();
+        	expect(data.error.message).to.equal("Invalid or ended session.");
+        	expect(data).not.to.have.property("token");
+        	expect(data).not.to.have.property("password");
+        	expect(data).not.to.have.property("passwordHash");
+        });

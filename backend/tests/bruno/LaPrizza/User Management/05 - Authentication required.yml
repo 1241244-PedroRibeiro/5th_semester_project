@@ -1,0 +1,18 @@
+info:
+  name: 05 - Authentication required
+  type: http
+  seq: 5
+http:
+  method: PUT
+  url: '{{baseUrl}}/user/{{managementUsername}}/roles'
+  auth:
+    type: none
+  body:
+    type: json
+    data: |-
+      {"roles": ["EMPLOYEE"]}
+runtime:
+  scripts:
+    - type: tests
+      code: |-
+        test("Expected HTTP 401", () => expect(res.getStatus()).to.equal(401));

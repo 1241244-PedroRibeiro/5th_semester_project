@@ -1,0 +1,30 @@
+info:
+  name: 04 - Registered email is rejected
+  type: http
+  seq: 4
+http:
+  method: POST
+  url: '{{baseUrl}}/auth/invite'
+  auth:
+    type: bearer
+    token: '{{invitationToken}}'
+  body:
+    type: json
+    data: |-
+      {"email": "{{invitationEmail}}", "roleName": "EMPLOYEE"}
+runtime:
+  scripts:
+    - type: before-request
+      code: |-
+        const actor = await bru.sendRequest({
+          method: "POST", url: bru.getEnvVar("baseUrl") + "/auth/login",
+          headers: { "Content-Type": "application/json" },
+          data: { email: bru.getEnvVar("inviteManagerEmail"), password: bru.getEnvVar("inviteManagerPassword") },
+          validateStatus: () => true
+        });
+        if (actor.status !== 200) throw new Error("Invitation fixture login failed: " + actor.status);
+        bru.setVar("invitationToken", actor.data.token);
+        bru.setVar("invitationEmail", actor.data.user.email);
+    - type: tests
+      code: |-
+        test("Expected HTTP 409", () => expect(res.getStatus()).to.equal(409));

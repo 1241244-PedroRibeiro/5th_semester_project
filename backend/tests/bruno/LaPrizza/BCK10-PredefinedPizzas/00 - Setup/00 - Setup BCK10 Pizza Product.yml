@@ -1,0 +1,42 @@
+info:
+  name: 00 - Setup BCK10 Pizza Product
+  type: http
+  seq: 1
+http:
+  method: POST
+  url: '{{baseUrl}}/products'
+  body:
+    type: json
+    data: |-
+      {
+      	"name": "BCK10 Test Pizza {{bck10PizzaSku}}",
+      	"description": "Predefined pizza for BCK10 and BCK11 integration tests",
+      	"categoryName": "Pizzas",
+      	"isSellable": true,
+      	"isPizzaComponent": false,
+      	"isStockControlled": false,
+      	"directSellingPrice": 2.5,
+      	"sku": "{{bck10PizzaSku}}"
+      }
+  auth:
+    type: bearer
+    token: '{{managerToken}}'
+runtime:
+  scripts:
+    - type: before-request
+      code: 'bru.setVar("bck10PizzaSku", "PRD-B10-PIZZA-" + Date.now());'
+    - type: after-response
+      code: 'if (res.getStatus() === 201) bru.setVar("bck10PizzaSku", res.getBody().sku);'
+    - type: tests
+      code: |-
+        test("Matches the current API contract", function() {
+        	expect(res.getStatus()).to.equal(201);
+        	expect(res.getBody().sku).to.equal(bru.getVar("bck10PizzaSku"));
+        	expect(res.getBody().directSellingPrice).to.equal(2.5);
+        });
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: true

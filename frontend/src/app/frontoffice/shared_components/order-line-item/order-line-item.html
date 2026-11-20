@@ -1,0 +1,45 @@
+<article>
+	<div class="line-photo">
+		@if (image(); as image) {
+			<img [src]="image" [alt]="line().name" width="1024" height="1024" />
+		} @else {
+			<app-icon name="pizza" />
+		}
+	</div>
+	<div class="line-description">
+		<h2>{{ line().name }}</h2>
+		<p>
+			{{ line().size || ('Standard' | translate) }}
+			@if (line().ingredients.length) {
+				· {{ line().ingredients.length }} {{ 'ingredients' | translate }}
+			}
+		</p>
+		@if (line().ingredients.length) {
+			<details>
+				<summary>{{ 'View configuration' | translate }}</summary>
+				<ul>
+					@for (ingredient of line().ingredients; track ingredient.sku) {
+						<li>{{ ingredient.quantity }} × {{ ingredient.name }}</li>
+					}
+				</ul>
+			</details>
+		}
+		@if (line().quantity === 99) {
+			<small>{{ 'Maximum 99 per order line' | translate }}</small>
+		}
+	</div>
+	<div class="line-controls">
+		<app-quantity-control
+			[value]="line().quantity"
+			[label]="line().name + (' quantity' | translate) | translate"
+			(changed)="quantityChanged.emit($event)"
+		/><strong>{{ line().unitPrice * line().quantity | localCurrency: line().currency }}</strong
+		><button
+			class="icon-button"
+			[attr.aria-label]="('Remove ' | translate) + line().name | translate"
+			(click)="removed.emit()"
+		>
+			<app-icon name="close" />
+		</button>
+	</div>
+</article>

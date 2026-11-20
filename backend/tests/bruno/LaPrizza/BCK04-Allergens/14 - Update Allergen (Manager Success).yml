@@ -1,0 +1,31 @@
+info:
+  name: 14 - Update Allergen (Manager Success)
+  type: http
+  seq: 13
+http:
+  method: PUT
+  url: '{{baseUrl}}/allergens/{{createdAllergenName}}'
+  body:
+    type: json
+    data: |-
+      {
+          "name": "{{updatedAllergenName}}",
+          "description": "Updated allergen medical notes and warnings"
+      }
+  auth:
+    type: bearer
+    token: '{{managerToken}}'
+runtime:
+  scripts:
+    - type: before-request
+      code: |-
+        const suffix = Date.now().toString().slice(-4);
+        bru.setVar("updatedAllergenName", "Updated Allergen " + suffix);
+    - type: tests
+      code: |-
+        test("Manager updates allergen returning 200 OK", function() {
+            expect(res.getStatus()).to.equal(200);
+            const data = res.getBody();
+            expect(data.name).to.equal(bru.getVar("updatedAllergenName"));
+            expect(data.description).to.equal("Updated allergen medical notes and warnings");
+        });

@@ -1,0 +1,35 @@
+info:
+  name: 02 - Setup BCK10 Dough Component Stock
+  type: http
+  seq: 3
+http:
+  method: POST
+  url: '{{baseUrl}}/products'
+  body:
+    type: json
+    data: |-
+      {
+        "name": "BCK10 Test Dough Stock {{bck10StockSuffix}}",
+        "description": "Dough component for BCK10 and BCK11 integration tests",
+        "categoryName": "Ingredients",
+        "isSellable": false,
+        "isPizzaComponent": true,
+        "isStockControlled": true,
+        "componentTypeName": "Base Dough",
+        "sku": "{{bck10StockSku}}"
+      }
+  auth:
+    type: bearer
+    token: '{{managerToken}}'
+runtime:
+  scripts:
+    - type: before-request
+      code: |-
+        const suffix = Date.now().toString().slice(-6);
+        bru.setVar("bck10StockSuffix", suffix);
+        bru.setVar("bck10StockSku", "PRD-BCK10-DOUGH-STOCK-" + suffix);
+    - type: tests
+      code: |-
+        test("Manager creates stock-controlled dough component successfully", function() {
+                expect(res.getStatus()).to.equal(201);
+        });

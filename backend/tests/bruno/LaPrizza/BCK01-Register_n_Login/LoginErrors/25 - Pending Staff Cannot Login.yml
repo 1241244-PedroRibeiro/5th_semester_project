@@ -1,0 +1,34 @@
+info:
+  name: 25 - Pending Staff Cannot Login
+  type: http
+  seq: 25
+http:
+  method: POST
+  url: '{{baseUrl}}/auth/login'
+  body:
+    type: json
+    data: |-
+      {
+      	"email": "{{invitedStaffEmail}}",
+      	"password": "BrunoPassword123!"
+      }
+runtime:
+  scripts:
+    - type: before-request
+      code: |-
+        if (!bru.getVar("invitedStaffEmail")) {
+        	throw new Error("Set invitedStaffEmail before running this request; see this folder's README.");
+        }
+    - type: tests
+      code: |-
+        test("Status code is 400", function() {
+        	expect(res.getStatus()).to.equal(400);
+        });
+
+        test("Returns the expected error without exposing credentials", function() {
+        	const data = res.getBody();
+        	expect(data.error.message).to.equal("Registration is pending. Please complete your registration via the invitation link.");
+        	expect(data).not.to.have.property("token");
+        	expect(data).not.to.have.property("password");
+        	expect(data).not.to.have.property("passwordHash");
+        });

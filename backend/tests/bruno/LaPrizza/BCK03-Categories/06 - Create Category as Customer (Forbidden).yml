@@ -1,0 +1,30 @@
+info:
+  name: 06 - Create Category as Customer (Forbidden)
+  type: http
+  seq: 8
+http:
+  method: POST
+  url: '{{baseUrl}}/categories'
+  body:
+    type: json
+    data: |-
+      {
+        "categoryName": "Customer Category",
+        "description": "Forbidden attempt"
+      }
+  auth:
+    type: bearer
+    token: '{{customerToken}}'
+runtime:
+  scripts:
+    - type: before-request
+      code: |-
+        if (!bru.getVar("customerToken") && !bru.getEnvVar("customerToken")) {
+          throw new Error("customerToken is required; run request 00b first.");
+        }
+    - type: tests
+      code: |-
+        test("Rejects creation by Customer with 403 Forbidden", function() {
+          expect(res.getStatus()).to.equal(403);
+          expect(res.getBody().error.message).to.equal("You do not have permission to do this.");
+        });

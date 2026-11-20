@@ -1,0 +1,29 @@
+info:
+  name: CONSULT-CONFIG-Identifier
+  type: http
+  seq: 7
+http:
+  method: GET
+  url: '{{baseUrl}}/component-size-configurations/{{configId}}'
+  auth:
+    type: bearer
+    token: '{{managerToken}}'
+runtime:
+  scripts:
+    - type: tests
+      code: |-
+        test("returns HTTP 200", function () {
+        	expect(res.status).to.equal(200);
+        });
+
+        test("returns the requested configuration", function () {
+        	expect(res.body).to.be.an("object");
+        	expect(res.body).to.have.property("id");
+        	expect(res.body.id).to.equal(bru.getVar("configId"));
+        });
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: false

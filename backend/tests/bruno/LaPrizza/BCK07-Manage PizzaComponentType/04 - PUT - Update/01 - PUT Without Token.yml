@@ -1,0 +1,26 @@
+info:
+  name: 01 - PUT Without Token
+  type: http
+  seq: 1
+http:
+  method: PUT
+  url: '{{baseUrl}}/pizza-component-types/{{bck07PutName}}'
+  body:
+    type: json
+    data: |-
+      {
+        "name": "{{bck07PutName}}",
+        "assemblyOrder": {{bck07PutUpdatedOrder}},
+        "minCardinality": 1,
+        "maxCardinality": 3
+      }
+settings:
+  encodeUrl: true
+runtime:
+  scripts:
+    - type: tests
+      code: |-
+        test("PUT Without Token", function() {
+          expect(res.getStatus()).to.equal(401);
+          expect(res.getBody().error.message).to.equal("Authentication required.");
+        });

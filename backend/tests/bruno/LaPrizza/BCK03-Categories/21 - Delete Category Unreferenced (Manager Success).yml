@@ -1,0 +1,19 @@
+info:
+  name: 21 - Delete Category Unreferenced (Manager Success)
+  type: http
+  seq: 21
+http:
+  method: DELETE
+  url: '{{baseUrl}}/categories/{{updatedCategoryName}}'
+  body: none
+  auth:
+    type: bearer
+    token: '{{managerToken}}'
+runtime:
+  scripts:
+    - type: tests
+      code: |-
+        test("Manager deletes unreferenced category with 200 OK", function() {
+        	expect(res.getStatus()).to.equal(200);
+        	expect(res.getBody().message).to.equal("Category removed successfully");
+        });

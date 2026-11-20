@@ -1,0 +1,40 @@
+info:
+  name: 20 - Pre-register Customer Role Rejected
+  type: http
+  seq: 20
+http:
+  method: POST
+  url: '{{baseUrl}}/auth/pre_register'
+  body:
+    type: json
+    data: |-
+      {
+      	"firstName": "Bruno",
+      	"lastName": "Staff",
+      	"email": "{{preRegisterEmail}}",
+      	"roleName": "CUSTOMER"
+      }
+  auth:
+    type: bearer
+    token: '{{managerToken}}'
+runtime:
+  scripts:
+    - type: before-request
+      code: |-
+        if (!bru.getVar("managerToken")) {
+        	throw new Error("Set managerToken before running this request; see this folder's README.");
+        }
+        bru.setVar("preRegisterEmail", "bruno-staff-" + Date.now() + "-" + Math.random().toString(36).slice(2) + "@example.com");
+    - type: tests
+      code: |-
+        test("Status code is 400", function() {
+        	expect(res.getStatus()).to.equal(400);
+        });
+
+        test("Returns the expected error without exposing credentials", function() {
+        	const data = res.getBody();
+        	expect(data.error.message).to.equal("Invalid staff role");
+        	expect(data).not.to.have.property("token");
+        	expect(data).not.to.have.property("password");
+        	expect(data).not.to.have.property("passwordHash");
+        });

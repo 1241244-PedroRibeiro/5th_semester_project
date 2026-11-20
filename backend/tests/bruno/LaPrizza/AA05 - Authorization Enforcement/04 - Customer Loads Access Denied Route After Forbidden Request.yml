@@ -1,0 +1,62 @@
+info:
+  name: 04 - Customer Loads Access Denied Route After Forbidden Request
+  type: http
+  seq: 4
+http:
+  method: GET
+  url: '{{aa05AccessDeniedPageUrl}}'
+  headers:
+    - name: Accept
+      value: text/html
+runtime:
+  scripts:
+    - type: before-request
+      code: |-
+        const login = await bru.sendRequest({
+          method: "POST",
+          url: bru.getEnvVar("baseUrl") + "/auth/login",
+          headers: { "Content-Type": "application/json" },
+          data: {
+            email: bru.getEnvVar("aa05CustomerEmail") || "customer@laprizza.test",
+            password: bru.getEnvVar("aa05CustomerPassword") || "Manager123!"
+          },
+          validateStatus: () => true
+        });
+        if (login.status !== 200 || typeof login.data.token !== "string" || !login.data.token) {
+          throw new Error("AA05 customer login failed (HTTP " + login.status + "). Check the active fixture credentials.");
+        }
+        const user = login.data.user;
+        if (!user || user.status !== "ACTIVE" || !Array.isArray(user.roles) || !user.roles.includes("CUSTOMER") || user.roles.includes("MANAGER")) {
+          throw new Error("AA05 requires an active customer account with the expected role.");
+        }
+        bru.setVar("aa05CustomerToken", login.data.token);
+        bru.setVar("aa05CustomerUsername", user.username);
+        bru.setVar("aa05CustomerPathUsername", encodeURIComponent(user.username));
+        const denied = await bru.sendRequest({
+          method: "GET",
+          url: bru.getEnvVar("baseUrl") + "/users?page=1&pageSize=2",
+          headers: { Authorization: "Bearer " + bru.getVar("aa05CustomerToken") },
+          validateStatus: () => true
+        });
+        if (denied.status !== 403 || denied.data?.error?.message !== "You do not have permission to do this.") {
+          throw new Error("Expected the customer manager-endpoint request to be forbidden with HTTP 403.");
+        }
+        bru.setVar("aa05PageDeniedStatus", denied.status);
+        const frontendBaseUrl = bru.getEnvVar("aa05FrontendBaseUrl") || "https://localhost";
+        bru.setVar("aa05AccessDeniedPageUrl", frontendBaseUrl.replace(/\/+$/, "") + "/unauthorized");
+    - type: tests
+      code: |-
+        test("The customer endpoint attempt was denied before loading the error-page route", function() {
+          expect(bru.getVar("aa05PageDeniedStatus")).to.equal(403);
+        });
+
+        test("The frontend serves the public access-denied route", function() {
+          expect(res.getStatus()).to.equal(200);
+          const html = res.getBody();
+          expect(html).to.be.a("string");
+          expect(html).to.include("<app-root");
+          expect(html).to.include("<script");
+        });
+
+        // Angular renders the heading and performs automatic navigation in the browser.
+        // The Playwright authorization tests verify that behavior; Bruno does not run Angular.

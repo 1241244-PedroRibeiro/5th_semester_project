@@ -1,0 +1,35 @@
+info:
+  name: 11 - Duplicate Product SKU (Conflict)
+  type: http
+  seq: 15
+http:
+  method: POST
+  url: '{{baseUrl}}/products'
+  body:
+    type: json
+    data: |-
+      {
+          "name": "Duplicate Code Product",
+          "description": "Colliding product code test",
+          "categoryName": "Beverages",
+          "isSellable": true,
+          "isPizzaComponent": false,
+          "isStockControlled": true,
+          "sku": "{{sellableProductSku}}"
+      }
+  auth:
+    type: bearer
+    token: '{{managerToken}}'
+runtime:
+  scripts:
+    - type: tests
+      code: |-
+        test("Duplicate product SKU returns 409 Conflict", function() {
+            expect(res.getStatus()).to.equal(409);
+        });
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: true

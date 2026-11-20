@@ -1,0 +1,18 @@
+info:
+  name: 09 — DELETE Size Conflict
+  type: http
+  seq: 9
+
+http:
+  method: DELETE
+  url: "{{baseUrl}}/pizza-sizes/Large"
+  auth:
+    type: bearer
+    token: "{{managerToken}}"
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: false

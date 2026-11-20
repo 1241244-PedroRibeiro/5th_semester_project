@@ -1,0 +1,9 @@
+# auditd watch rule for SYS04 Shared Documents
+# Add to /etc/audit/rules.d/laprizza-shared.rules
+# Then reload with: auditctl -R /etc/audit/rules.d/laprizza-shared.rules
+
+# Watch /shared/documents for read, write, and attribute changes
+-w /var/lib/laprizza/shared/documents -p rwa -k shared-docs
+
+# Optional: Watch the entire shared folder for broader auditing
+# -w /var/lib/laprizza/shared -p rwa -k shared-folder

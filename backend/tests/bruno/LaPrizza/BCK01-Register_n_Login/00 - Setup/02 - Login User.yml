@@ -1,0 +1,45 @@
+info:
+  name: 07 - Login User
+  type: http
+  seq: 3
+http:
+  method: POST
+  url: '{{baseUrl}}/auth/login'
+  body:
+    type: json
+    data: |-
+      {
+      	"email": "{{authTestEmail}}",
+      	"password": "{{authTestPassword}}"
+      }
+runtime:
+  scripts:
+    - type: tests
+      code: |-
+        test("Status code is 200", function() {
+        	expect(res.getStatus()).to.equal(200);
+        });
+
+        test("Returns an active customer and JWT without exposing the password", function() {
+        	const data = res.getBody();
+        	expect(data.token).to.be.a("string").and.not.empty;
+        	expect(data.token.split(".")).to.have.lengthOf(3);
+        	expect(data.user.username).to.be.a("string").and.not.empty;
+        	expect(data.user.firstName).to.equal("Bruno");
+        	expect(data.user.lastName).to.equal("Customer");
+        	expect(data.user.email).to.equal(bru.getVar("authTestEmail"));
+        	expect(data.user.roles).to.deep.equal(["CUSTOMER"]);
+        	expect(data.user.status).to.equal("ACTIVE");
+        	expect(Number.isFinite(Date.parse(data.user.createdAt))).to.equal(true);
+        	expect(Number.isFinite(Date.parse(data.user.updatedAt))).to.equal(true);
+        	expect(data.user).not.to.have.property("password");
+        	expect(data.user).not.to.have.property("passwordHash");
+        	expect(data.user.username).to.equal(bru.getVar("authTestUsername"));
+        	bru.setVar("customerToken", data.token);
+        });
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: true

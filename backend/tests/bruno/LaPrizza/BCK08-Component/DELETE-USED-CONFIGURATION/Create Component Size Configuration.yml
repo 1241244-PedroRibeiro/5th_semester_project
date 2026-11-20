@@ -1,0 +1,44 @@
+info:
+  name: 01 - Create Component Size Configuration
+  type: http
+  seq: 2
+
+http:
+  method: POST
+  url: '{{baseUrl}}/component-size-configurations'
+  body:
+    type: json
+    data: |-
+      {
+        "pizzaSize": "Small",
+        "price": 1.25,
+        "stockUnitsConsumed": 0,
+        "componentSku": "{{deleteGuardComponentSku}}"
+      }
+  auth:
+    type: bearer
+    token: '{{managerToken}}'
+
+runtime:
+  scripts:
+    - type: after-response
+      code: |-
+        if (res.getStatus() === 201) {
+          bru.setVar("deleteGuardConfigId", res.getBody().id);
+        }
+
+    - type: tests
+      code: |-
+        test("Creates and stores the configuration ID", function () {
+          expect(res.getStatus()).to.equal(201);
+          expect(res.getBody().id).to.be.a("string").and.not.empty;
+          expect(bru.getVar("deleteGuardConfigId")).to.equal(
+            res.getBody().id
+          );
+        });
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

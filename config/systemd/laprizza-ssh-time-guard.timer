@@ -1,0 +1,13 @@
+[Unit]
+Description=Run Laprizza SSH Time Guard every 10 minutes
+Documentation=man:laprizza-ssh-time-guard.sh(1)
+Requires=laprizza-ssh-time-guard.service
+
+[Timer]
+OnBootSec=10min
+OnUnitActiveSec=10min
+AccuracySec=1min
+Persistent=true
+
+[Install]
+WantedBy=timers.target

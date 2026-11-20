@@ -1,0 +1,39 @@
+info:
+  name: 02 - Duplicate Email (Conflict)
+  type: http
+  seq: 2
+
+http:
+  method: POST
+  url: "{{baseUrl}}/auth/register"
+  body:
+    type: json
+    data: |-
+      {
+      	"firstName": "Bruno",
+      	"lastName": "Customer",
+      	"email": "{{authTestEmail}}",
+      	"password": "{{authTestPassword}}"
+      }
+
+runtime:
+  scripts:
+    - type: tests
+      code: |-
+        test("Status code is 409", function() {
+        	expect(res.getStatus()).to.equal(409);
+        });
+
+        test("Returns the expected error without credentials", function() {
+        	const data = res.getBody();
+        	expect(data.error.message).to.equal("User with this email already exists");
+        	expect(data).not.to.have.property("token");
+        	expect(data).not.to.have.property("user");
+        });
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: true

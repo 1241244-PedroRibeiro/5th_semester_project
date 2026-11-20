@@ -1,0 +1,22 @@
+info:
+  name: 01 - List Paginated Types
+  type: http
+  seq: 1
+http:
+  method: GET
+  url: '{{baseUrl}}/pizza-component-types?page=1&pageSize=2'
+settings:
+  encodeUrl: true
+runtime:
+  scripts:
+    - type: tests
+      code: |-
+        test("Returns the requested page in assembly order", function() {
+          expect(res.getStatus()).to.equal(200);
+          const data = res.getBody();
+          expect(data.page).to.equal(1);
+          expect(data.pageSize).to.equal(2);
+          expect(data.items.map(type => type.name)).to.deep.equal(["Base Dough", "Base Sauce"]);
+          expect(data.total).to.be.at.least(6);
+          expect(data.totalPages).to.equal(Math.ceil(data.total / data.pageSize));
+        });

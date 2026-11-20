@@ -1,0 +1,6 @@
+info:
+  name: 04 - PUT - Update
+  type: folder
+  seq: 5
+request:
+  auth: inherit

@@ -1,0 +1,85 @@
+@startuml
+!pragma layout smetana
+skinparam packageStyle rectangle
+skinparam shadowing false
+skinparam linetype ortho
+skinparam nodesep 50
+skinparam ranksep 60
+
+skinparam actor {
+  BackgroundColor #DCE1E3
+  BorderColor #2B2D42
+}
+
+skinparam rectangle {
+  BackgroundColor #F8F9FA
+  BorderColor #2B2D42
+  FontName "Arial"
+}
+
+title System Context Diagram (C4 Level 1) - LaPrizza Information System
+
+actor "Customer" as Customer <<Person>> #E2EAFC
+note right of Customer
+  Interacts via Web Application or
+  self-service kiosk anonymously.
+  Browses catalogue, configures pizzas,
+  simulates and places orders.
+end note
+
+actor "Restaurant Manager" as Manager <<Person>> #E2EAFC
+note top of Manager
+  Holds MANAGER role.
+  Maintains catalogues, products,
+  allergens, recipes, stock balances,
+  and manages system users and roles.
+end note
+
+actor "Restaurant Employee" as Employee <<Person>> #E2EAFC
+note left of Employee
+  Holds EMPLOYEE role.
+  Inspects incoming orders, coordinates
+  preparation activities, and manages
+  oven baking and item progress states.
+end note
+
+rectangle "LaPrizza Information System" as LaPrizzaSystem <<Software System>> #C7D2FE {
+}
+
+cloud "External Identity Provider" as IdP <<Software System>> #FFF4E6
+note right of IdP
+  OIDC / OAuth 2.0.
+  Google, Microsoft, Auth0 or Keycloak.
+  Supports JIT provisioning (Clarification #27).
+end note
+
+cloud "SMTP / Transactional Email" as SMTP <<Software System>> #FFF4E6
+note right of SMTP
+  Activation invitations,
+  password reset dispatch.
+end note
+
+cloud "Prolog AI Planning Engine" as Prolog <<Software System>> #EDE9FE
+note right of Prolog
+  SWI-Prolog BOM + Requirements Planning.
+  Invoked via REST/JSON from the
+  Back-End Monolith (ADR-012).
+end note
+
+cloud "Webhook Receiver" as Webhook <<Software System>> #FFF4E6
+note right of Webhook
+  Maintenance alerts (Sprint 3+).
+end note
+
+' Arestas
+LaPrizzaSystem --> IdP : [OIDC redirect + ID Token exchange]\nUsers authenticate externally
+LaPrizzaSystem --> SMTP : [SMTP / HTTPS]\nDispatches activation emails
+LaPrizzaSystem --> Prolog : [HTTPS/JSON]\nRequests BOM and Requirements Planning
+LaPrizzaSystem -.> Webhook : [HTTPS webhook]\nFuture: maintenance alerts
+
+' Interactions
+Customer --> LaPrizzaSystem : [HTTPS]\nBrowses catalogue, personalizes pizzas, manages profile and places orders
+Manager --> LaPrizzaSystem : [HTTPS]\nAdministers taxonomy, catalogues, prices, users, roles, and stock levels
+Employee --> LaPrizzaSystem : [HTTPS]\nConsults preparation activities, monitors kitchen schedule, and updates fulfillment
+
+@enduml

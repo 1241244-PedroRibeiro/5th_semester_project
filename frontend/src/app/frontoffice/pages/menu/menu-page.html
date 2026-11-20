@@ -1,0 +1,150 @@
+<section class="shop-container menu-page">
+	<div class="menu-heading">
+		<div>
+			<span class="shop-label">{{ 'Our menu' | translate }}</span>
+			<h1 class="shop-title">{{ 'Pick your perfect pie.' | translate }}</h1>
+		</div>
+		<span class="menu-status" [class.failed]="!!error()"
+			><app-icon [name]="error() ? 'alert' : 'flame'" />{{
+				(error()
+					? ('Menu unavailable' | translate)
+					: loading()
+						? ('Warming up…' | translate)
+						: ('Made to order' | translate)
+				) | translate
+			}}</span
+		>
+	</div>
+	<div class="menu-filters shop-panel">
+		<div class="filter-bar">
+			<button
+				type="button"
+				class="filter-toggle"
+				[attr.aria-expanded]="filtersExpanded()"
+				(click)="toggleFilters()"
+			>
+				<app-icon name="filter" />
+				{{ (filtersExpanded() ? 'Hide filters' : 'Show filters') | translate }}
+				@if (activeFilterCount()) {
+					<span class="filter-count">{{ activeFilterCount() }}</span>
+				}
+			</button>
+			<div class="filter-actions">
+				<label class="sort-control">
+					<span>{{ 'Sort by' | translate }}</span>
+					<select [ngModel]="sortOrder()" (ngModelChange)="sortOrder.set($event)">
+						<option value="relevance">{{ 'Relevance (catalogue order)' | translate }}</option>
+						<option value="price-asc">{{ 'Price: low to high' | translate }}</option>
+						<option value="price-desc">{{ 'Price: high to low' | translate }}</option>
+					</select>
+				</label>
+				<label class="menu-search">
+					<span class="sr-only">{{ 'Search menu' | translate }}</span>
+					<app-icon name="search" />
+					<input
+						type="search"
+						[placeholder]="'Search…' | translate"
+						[ngModel]="query()"
+						(ngModelChange)="query.set($event)"
+					/>
+				</label>
+			</div>
+		</div>
+		@if (filtersExpanded()) {
+			<div class="filter-options">
+				<fieldset class="category-filter">
+					<legend>{{ 'Product types' | translate }}</legend>
+					<div class="category-options">
+						@for (name of categories(); track name) {
+							<label>
+								<input
+									type="checkbox"
+									[checked]="selectedCategories().includes(name)"
+									(change)="toggleCategory(name, $event)"
+								/>
+								{{ name | translate }}
+							</label>
+						}
+					</div>
+				</fieldset>
+				<fieldset class="allergen-filter">
+					<legend>{{ 'Exclude allergens' | translate }}</legend>
+					<div class="allergen-options">
+						@for (allergen of allergenOptions(); track allergen) {
+							<label>
+								<input
+									type="checkbox"
+									[checked]="excludedAllergens().includes(allergen)"
+									(change)="toggleAllergen(allergen, $event)"
+								/>
+								{{ allergen | translate }}
+							</label>
+						}
+					</div>
+				</fieldset>
+				<div class="filter-side">
+					<label class="availability">
+						<input
+							type="checkbox"
+							[ngModel]="availableOnly()"
+							(ngModelChange)="availableOnly.set($event)"
+						/>
+						<span>{{ 'Available only' | translate }}</span>
+					</label>
+					<div class="price-filter">
+						<span class="price-label">{{ 'Price range' | translate }}</span>
+						<div class="price-values">
+							<span>{{ priceFrom() | localCurrency: priceCurrency() }}</span>
+							<span>{{ priceTo() | localCurrency: priceCurrency() }}</span>
+						</div>
+						<div class="price-sliders">
+							<input
+								type="range"
+								[min]="priceBounds().min"
+								[max]="priceTo()"
+								step="0.5"
+								[ngModel]="priceFrom()"
+								(ngModelChange)="setPriceFrom($event)"
+								[attr.aria-label]="'Minimum price' | translate"
+							/>
+							<input
+								type="range"
+								[min]="priceFrom()"
+								[max]="priceBounds().max"
+								step="0.5"
+								[ngModel]="priceTo()"
+								(ngModelChange)="setPriceTo($event)"
+								[attr.aria-label]="'Maximum price' | translate"
+							/>
+						</div>
+					</div>
+				</div>
+			</div>
+		}
+	</div>
+	@if (cart.notice()) {
+		<p class="shop-notice" role="status">{{ cart.notice() | translate: cart.noticeParams() }}</p>
+	}
+	<div class="shop-panel">
+		@if (loading()) {
+			<app-menu-feedback state="loading" />
+		} @else if (error()) {
+			<app-menu-feedback state="error" [message]="error() | translate" (retry)="load()" />
+		} @else if (!filtered().length) {
+			<app-menu-feedback state="empty" />
+		} @else {
+			<div class="menu-grid">
+				@for (item of filtered(); track item.productSku) {
+					<app-product-card
+						[item]="item"
+						(customize)="selected.set($event)"
+						(added)="addItem($event)"
+					/>
+				}
+			</div>
+		}
+	</div>
+</section>
+@if (selected(); as item) {
+	<app-product-customizer [item]="item" (closed)="selected.set(null)" (added)="addLine($event)" />
+}

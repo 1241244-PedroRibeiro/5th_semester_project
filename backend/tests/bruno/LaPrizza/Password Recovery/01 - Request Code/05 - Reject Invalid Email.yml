@@ -1,0 +1,27 @@
+info:
+  name: 05 - Reject Invalid Email
+  type: http
+  seq: 5
+http:
+  method: POST
+  url: '{{baseUrl}}/password-recovery'
+  body:
+    type: json
+    data: |-
+      {
+        "email": "invalid-email"
+      }
+runtime:
+  scripts:
+    - type: tests
+      code: |-
+        test("Returns HTTP 400", function() {
+          expect(res.getStatus()).to.equal(400);
+        });
+        test("Returns a confirmation or explanation without recovery credentials", function() {
+          const data = res.getBody();
+          expect(data.error.message).to.be.a("string").and.not.empty;
+          expect(data).not.to.have.property("recovery_code");
+          expect(data).not.to.have.property("new_password");
+          expect(data).not.to.have.property("passwordHash");
+        });

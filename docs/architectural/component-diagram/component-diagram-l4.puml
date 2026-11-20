@@ -1,0 +1,406 @@
+@startuml component-diagram-l4
+allowmixing
+!pragma layout smetana
+skinparam packageStyle rectangle
+skinparam shadowing false
+skinparam linetype ortho
+skinparam nodesep 40
+skinparam ranksep 55
+skinparam defaultFontName Helvetica
+skinparam defaultFontSize 10
+
+skinparam class {
+  BackgroundColor<<Presentation>> #E0E7FF
+  BorderColor<<Presentation>> #3B78C4
+  BackgroundColor<<Application>> #C7D2FE
+  BorderColor<<Application>> #3B78C4
+  BackgroundColor<<Domain>> #FFE9A8
+  BorderColor<<Domain>> #C99700
+  BackgroundColor<<VO>> #DDF3DD
+  BorderColor<<VO>> #3C9A3C
+  BackgroundColor<<Port>> #F0E0F7
+  BorderColor<<Port>> #8E44AD
+  BackgroundColor<<Infra>> #F8F9FA
+  BorderColor<<Infra>> #2B2D42
+  BackgroundColor<<External>> #FFF4E6
+  BorderColor<<External>> #B5651D
+  FontSize 10
+}
+
+skinparam database {
+  BackgroundColor #D8F3DC
+  BorderColor #2B2D42
+}
+
+title LaPrizza — C4 Level 4 (Code, Selective) — AI Planning Module
+
+note as TOPNOTE
+  **Scope:** `POST /api/v1/planning/executions` flow (ADR-012, ADR-013).
+  Demonstrates Clean/Onion + Hexagonal at the code level.
+  Layers top-down: Presentation → Application → Domain → Infrastructure.
+  **Dependency Rule (ADR-001):** source-code dependencies point only inward.
+  Only DTOs cross layer boundaries; entities never leak.
+end note
+
+' ==========================================================
+' PRESENTATION
+' ==========================================================
+package "1. Presentation (Driving Adapter)" <<Frame>> #E0E7FF {
+
+  class PlanningController <<Presentation>> {
+    - planningService : PlanningService
+    --
+    + execute(req : PlanningExecutionRequestDTO) : Promise~PlanningResultResponseDTO~
+    + list(query : PlanningListQuery) : Promise~PlanningResultResponseDTO[]~
+    + get(executionId : int) : Promise~PlanningResultResponseDTO~
+    + replay(executionId : int) : Promise~PlanningResultResponseDTO~
+  }
+
+  class PlanningExecutionRequestDTO <<Presentation>> {
+    + forecastName : string
+    + scenarioName : string
+    + referenceDate? : string (ISO date)
+  }
+
+  class PlanningResultResponseDTO <<Presentation>> {
+    + executionId : int
+    + forecastName : string [0..1]
+    + scenarioName : string [0..1]
+    + referenceDate : string
+    + isReplay : boolean
+    + isSimulated : boolean
+    + executedAt : string
+    + requirements : PlanningRequirementDTO[]
+    + proposals : PurchaseProposalDTO[]
+    + unmetNeeds : UnmetNeedDTO[]
+  }
+}
+
+' ==========================================================
+' APPLICATION
+' ==========================================================
+package "2. Application Services (Use Cases)" <<Frame>> #C7D2FE {
+
+  class PlanningService <<Application>> {
+    - snapshotService : PlanningSnapshotDomainService
+    - prologClient : IPrologClient
+    - forecastRepo : IConsumptionForecastRepository
+    - scenarioRepo : ISupplierScenarioRepository
+    - stockRepo : IStockRepository
+    - productRepo : IProductRepository
+    - pizzaRepo : IPredefinedPizzaRepository
+    - resultRepo : IPlanningResultRepository
+    --
+    + execute(forecastName, scenarioName, refDate?) : Promise~PlanningResult~
+    + list(filter) : Promise~PlanningResult[]~
+    + get(executionId) : Promise~PlanningResult~
+    + replay(executionId) : Promise~PlanningResult~
+    --
+    - validateReferences(fc, sc) : void   «throws 409/422»
+    - validateStockUnitsPerSale(products) : void   «throws 422»
+  }
+
+  note right of PlanningService
+    **Orchestration sequence** (ADR-012, ADR-013):
+    1. Load forecast + scenario + stock + BOM.
+    2. Validate (a) forecast/scenario exist and scenario.confirmedAt ≠ null;
+       (b) all product/size refs active (Clarification #28);
+       (c) `stockUnitsPerSale` present for every stockControlled ∧ sellable
+           product (Clarification #28 §2) → else 422.
+    3. captureSnapshot(...) via PlanningSnapshotDomainService.
+    4. Call PrologHttpClient.plan(...) → 502 on failure.
+    5. Persist immutable PlanningResult.
+    **Never** mutates stock, **never** creates purchase orders
+    (Clarification #26). Read-only aggregate.
+  end note
+}
+
+' ==========================================================
+' DOMAIN CORE
+' ==========================================================
+package "3. Domain Core" <<Frame>> #FFE9A8 {
+
+  class PlanningSnapshotDomainService <<Domain>> {
+    + captureSnapshot(
+        fc : ConsumptionForecast,
+        sc : SupplierScenario,
+        stock : StockItem[],
+        products : Product[],
+        recipes : PredefinedPizza[]
+      ) : PlanningInputSnapshot
+  }
+
+  class PlanningResult <<Domain>> <<AggregateRoot>> {
+    - executionId : int «internal SERIAL»
+    - forecastName : ForecastName [0..1]
+    - scenarioName : ScenarioName [0..1]
+    - referenceDate : Timestamp
+    - isReplay : boolean
+    - isSimulated : boolean
+    - executedAt : Timestamp
+    - forecastSnapshot : ForecastSnapshot
+    - scenarioSnapshot : SupplierScenarioSnapshot
+    - stockSnapshot : StockSnapshot
+    - requirements : DailyRequirement[*]
+    - proposals : PurchaseProposal[*]
+    - unmetNeeds : UnmetNeed[*]
+    --
+    «read-only after markExecuted()»
+    + markExecuted(ts : Timestamp) : void   «once»
+    + withReplay(isReplay : boolean) : PlanningResult
+  }
+
+  class ForecastSnapshot <<VO>> {
+    + forecastName : ForecastName
+    + startDate : date
+    + endDate : date
+    + entries : {date, productSku, pizzaSize, quantity}[*]
+  }
+
+  class SupplierScenarioSnapshot <<VO>> {
+    + scenarioName : ScenarioName
+    + confirmedAt : Timestamp
+    + suppliers : {supplierCode, name}[*]
+    + offers : {supplierCode, productSku, price, stockUnitQuantity, leadTimeDays, dailySupplyLimit?}[*]
+  }
+
+  class StockSnapshot <<VO>> {
+    + capturedAt : Timestamp
+    + quantities : Map~Sku, Integer~
+  }
+
+  class DailyRequirement <<VO>> {
+    + date : date
+    + productSku : Sku
+    + requiredUnits : int
+    + availableUnits : int
+    + replenishmentUnits : int
+  }
+
+  class PurchaseProposal <<VO>> {
+    + supplierCode : SupplierCode
+    + productSku : Sku
+    + quantity : int
+    + orderDate : date
+    + expectedDelivery : date
+  }
+
+  class UnmetNeed <<VO>> {
+    + productSku : Sku
+    + requiredUnits : int
+    + shortfallUnits : int
+    + reason : string
+  }
+
+  class ConsumptionForecast <<Domain>> <<AggregateRoot>> {
+    - name : ForecastName «PK»
+    - startDate : date
+    - endDate : date
+    - entries : ForecastEntry[*]
+    --
+    + addEntry(...)   «validates date ∈ [start, end]»
+  }
+
+  class ForecastEntry <<Domain>> <<Entity>> {
+    - entryDate : date «PK»
+    - productSku : Sku «PK»
+    - pizzaSize : PizzaSizeName «PK»
+    - quantity : int
+  }
+
+  class SupplierScenario <<Domain>> <<AggregateRoot>> {
+    - name : ScenarioName «PK»
+    - isSimulated : boolean
+    - confirmedAt : Timestamp [0..1]
+    - suppliers : Supplier[*]
+    - offers : SupplierOffer[*]
+    --
+    + confirm()   «idempotency: 409 if already confirmed»
+    + addSupplier(sc : Supplier)
+    + addOffer(offer : SupplierOffer)
+  }
+
+  class StockItem <<Domain>> <<AggregateRoot>> {
+    - productSku : Sku «PK»
+    - currentUnits : StockQuantity
+  }
+
+  class Product <<Domain>> <<AggregateRoot>> {
+    - sku : Sku «PK»
+    - isStockControlled : boolean
+    - isSellable : boolean
+    - stockUnitsPerSale : int [0..1]   «Clarification #28 §2»
+  }
+
+  class PredefinedPizza <<Domain>> <<AggregateRoot>> {
+    - sku : Sku «PK»
+    - recipe : RecipeLine[*]
+  }
+
+  note bottom of PlanningResult
+    **Immutable Aggregate Root** (ADR-013).
+    Mutators (`markExecuted`, `withReplay`) are called **only during
+    construction**. Snapshot VOs are deep-copied JSON — never reference
+    live rows. `isReplay=true` marks historical re-runs.
+    FK columns `forecast_name` / `scenario_name` are VARCHAR with
+    `ON DELETE SET NULL` (preserve history, §10.2 KB).
+  end note
+}
+
+' ==========================================================
+' PORTS (interfaces owned by inner layers)
+' ==========================================================
+package "4. Ports (Interfaces at boundary)" <<Frame>> #F0E0F7 {
+
+  interface IPrologClient <<Port>> {
+    + plan(payload : PlanningPayload) : Promise~PlanningOutput~
+  }
+
+  interface IPlanningResultRepository <<Port>> {
+    + save(result : PlanningResult) : Promise~PlanningResult~
+    + findById(id : int) : Promise~PlanningResult [0..1]~
+    + list(filter : PlanningFilter) : Promise~PlanningResult[]~
+  }
+
+  interface IConsumptionForecastRepository <<Port>> {
+    + findByName(name : ForecastName) : Promise~ConsumptionForecast [0..1]~
+  }
+
+  interface ISupplierScenarioRepository <<Port>> {
+    + findByName(name : ScenarioName) : Promise~SupplierScenario [0..1]~
+  }
+
+  interface IStockRepository <<Port>> {
+    + listAll() : Promise~StockItem[]~
+  }
+
+  interface IProductRepository <<Port>> {
+    + listActive() : Promise~Product[]~
+  }
+
+  interface IPredefinedPizzaRepository <<Port>> {
+    + listAll() : Promise~PredefinedPizza[]~
+  }
+}
+
+' ==========================================================
+' INFRASTRUCTURE
+' ==========================================================
+package "5. Infrastructure (Driven Adapters)" <<Frame>> #F8F9FA {
+
+  class PrologHttpClient <<Infra>> {
+    - baseUrl : string   «PROLOG_URL env»
+    - timeoutMs : int    «5000 connect / 30000 read»
+    + plan(payload) : Promise~PlanningOutput~
+  }
+
+  class PostgresPlanningResultRepository <<Infra>> {
+    - dataSource : DataSource
+    + save(...)
+    + findById(...)
+    + list(...)
+  }
+
+  class PostgresConsumptionForecastRepository <<Infra>> {
+    + findByName(...)
+  }
+  class PostgresSupplierScenarioRepository <<Infra>> {
+    + findByName(...)
+  }
+  class PostgresStockRepository <<Infra>> {
+    + listAll()
+  }
+  class PostgresProductRepository <<Infra>> {
+    + listActive()
+  }
+  class PostgresPredefinedPizzaRepository <<Infra>> {
+    + listAll()
+  }
+}
+
+' ==========================================================
+' EXTERNAL SYSTEMS
+' ==========================================================
+package "External Systems" <<Frame>> {
+  cloud "Prolog AI Planning Engine\n[SWI-Prolog + HTTP pack]" as PrologEngine <<External>> #FFF4E6 {
+    note right
+      POST /api/v1/plan
+      Builds ephemeral KB per request (ADR-012).
+      Never touches the DB directly.
+    end note
+  }
+  database "PostgreSQL 16+" as DB <<External>> #D8F3DC
+}
+
+' ==========================================================
+' RELATIONS — Dependency Rule (arrows point inward where applicable)
+' ==========================================================
+
+PlanningController ..> PlanningExecutionRequestDTO : «input»
+PlanningController ..> PlanningResultResponseDTO  : «output»
+PlanningController --> PlanningService            : calls
+
+PlanningService --> PlanningSnapshotDomainService : uses
+PlanningService ..> IPrologClient                 : «outbound port»
+PlanningService ..> IPlanningResultRepository     : «outbound port»
+PlanningService ..> IConsumptionForecastRepository: «outbound port»
+PlanningService ..> ISupplierScenarioRepository   : «outbound port»
+PlanningService ..> IStockRepository              : «outbound port»
+PlanningService ..> IProductRepository            : «outbound port»
+PlanningService ..> IPredefinedPizzaRepository    : «outbound port»
+
+PlanningService ..> PlanningResult                : creates «via port»
+PlanningService ..> ConsumptionForecast           : reads (domain)
+PlanningService ..> SupplierScenario              : reads (domain)
+PlanningService ..> StockItem                     : reads (domain)
+PlanningService ..> Product                       : reads (domain)
+PlanningService ..> PredefinedPizza               : reads (domain)
+
+PlanningSnapshotDomainService ..> ForecastSnapshot        : creates
+PlanningSnapshotDomainService ..> SupplierScenarioSnapshot: creates
+PlanningSnapshotDomainService ..> StockSnapshot           : creates
+
+PlanningResult *--> ForecastSnapshot         : «VO composition»
+PlanningResult *--> SupplierScenarioSnapshot : «VO composition»
+PlanningResult *--> StockSnapshot            : «VO composition»
+PlanningResult *--> DailyRequirement         : «VO composition»
+PlanningResult *--> PurchaseProposal         : «VO composition»
+PlanningResult *--> UnmetNeed                : «VO composition»
+
+ConsumptionForecast *--> ForecastEntry       : «entity inside aggregate»
+SupplierScenario    *--> "suppliers"         : «entity inside aggregate»
+SupplierScenario    *--> "offers"            : «entity inside aggregate»
+
+PrologHttpClient                  .up.|> IPrologClient                   : «implements»
+PostgresPlanningResultRepository  .up.|> IPlanningResultRepository       : «implements»
+PostgresConsumptionForecastRepository .up.|> IConsumptionForecastRepository : «implements»
+PostgresSupplierScenarioRepository    .up.|> ISupplierScenarioRepository     : «implements»
+PostgresStockRepository           .up.|> IStockRepository                : «implements»
+PostgresProductRepository         .up.|> IProductRepository              : «implements»
+PostgresPredefinedPizzaRepository .up.|> IPredefinedPizzaRepository      : «implements»
+
+PrologHttpClient ..> PrologEngine : HTTP/JSON\nPOST /api/v1/plan
+PostgresPlanningResultRepository ..> DB : SQL
+PostgresConsumptionForecastRepository ..> DB : SQL
+PostgresSupplierScenarioRepository ..> DB : SQL
+PostgresStockRepository ..> DB : SQL
+PostgresProductRepository ..> DB : SQL
+PostgresPredefinedPizzaRepository ..> DB : SQL
+
+' ==========================================================
+' LAYOUT HINTS
+' ==========================================================
+TOPNOTE -[hidden]down- PlanningController
+PlanningResult -[hidden]down- PlanningController
+PrologEngine -[hidden]left- DB
+
+legend bottom
+  **Legend:**
+  ──▶ composition / direct call
+  ┄┄▶ dependency on port (implemented elsewhere)
+  «VO» Value Object · «Port» inner-owned interface · «Infra» adapter
+  Business rules anchored to `Product.stockUnitsPerSale`, `PlanningResult`
+  immutability, and `SupplierScenario.confirm()` transitions.
+endlegend
+
+@enduml

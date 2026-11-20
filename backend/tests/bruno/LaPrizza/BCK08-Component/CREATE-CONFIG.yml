@@ -1,0 +1,48 @@
+info:
+  name: CREATE-CONFIG
+  type: http
+  seq: 4
+http:
+  method: POST
+  url: '{{baseUrl}}/component-size-configurations'
+  body:
+    type: json
+    data: |-
+      {
+      	"pizzaSize": "Small",
+      	"price": 1.5,
+      	"stockUnitsConsumed": 2,
+      	"componentSku": "{{componentProductSku}}"
+      }
+  auth:
+    type: bearer
+    token: '{{managerToken}}'
+runtime:
+  scripts:
+    - type: after-response
+      code: |-
+        if (res.status === 201) {
+        	bru.setVar("configId", res.body.id);
+        }
+    - type: tests
+      code: |-
+        test("creates the configuration successfully", function () {
+        	expect(res.status).to.equal(201);
+        });
+
+        test("response contains the created configuration ID", function () {
+        	expect(res.body).to.be.an("object");
+        	expect(res.body).to.have.property("id");
+        	expect(res.body.id).to.be.a("string").and.not.empty;
+        	expect(res.body).not.to.have.property("updatedAt");
+        });
+
+        test("configuration ID is saved correctly", function () {
+        	expect(bru.getVar("configId")).to.equal(res.body.id);
+        });
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: false

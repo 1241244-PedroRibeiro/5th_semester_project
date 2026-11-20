@@ -1,0 +1,30 @@
+info:
+  name: 05 - Missing role is rejected
+  type: http
+  seq: 5
+http:
+  method: POST
+  url: '{{baseUrl}}/auth/invite'
+  auth:
+    type: bearer
+    token: '{{invitationToken}}'
+  body:
+    type: json
+    data: |-
+      {"email": "{{invitationEmail}}"}
+runtime:
+  scripts:
+    - type: before-request
+      code: |-
+        const actor = await bru.sendRequest({
+          method: "POST", url: bru.getEnvVar("baseUrl") + "/auth/login",
+          headers: { "Content-Type": "application/json" },
+          data: { email: bru.getEnvVar("inviteManagerEmail"), password: bru.getEnvVar("inviteManagerPassword") },
+          validateStatus: () => true
+        });
+        if (actor.status !== 200) throw new Error("Invitation fixture login failed: " + actor.status);
+        bru.setVar("invitationToken", actor.data.token);
+        bru.setVar("invitationEmail", "bruno-denied-" + Date.now() + "@example.test");
+    - type: tests
+      code: |-
+        test("Expected HTTP 400", () => expect(res.getStatus()).to.equal(400));

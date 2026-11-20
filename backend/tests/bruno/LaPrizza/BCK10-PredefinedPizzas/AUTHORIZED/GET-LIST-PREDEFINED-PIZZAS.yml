@@ -1,0 +1,29 @@
+info:
+  name: GET-LIST-PREDEFINED-PIZZAS
+  type: http
+  seq: 3
+http:
+  method: GET
+  url: '{{baseUrl}}/predefined-pizzas'
+  auth: inherit
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: false
+runtime:
+  scripts:
+    - type: tests
+      code: |-
+        test("Matches the current API contract", function() {
+        	expect(res.getStatus()).to.equal(200);
+        	expect(res.getBody()).to.be.an("array");
+        	// Pending domain changes: do not assume the preceding nullable-Money create succeeded.
+        	for (const pizza of res.getBody()) {
+        		expect(pizza.pizzaSku).to.be.a("string");
+        		expect(pizza.ids).to.be.an("array");
+        		expect(pizza.defaultRecipeLines).to.be.an("array");
+        		expect(pizza.supportedSizes).to.be.an("array");
+        	}
+        });

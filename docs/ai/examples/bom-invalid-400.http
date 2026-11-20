@@ -1,0 +1,16 @@
+### AI01 invalid request: orders is missing
+POST http://localhost:3000/planning/bom-executions
+Authorization: Bearer {{managerToken}}
+Content-Type: application/json
+
+{
+  "isSimulated": true,
+  "source": "simulated"
+}
+
+### Expected response (400)
+{
+  "error": {
+    "message": "orders must be a non-empty array"
+  }
+}

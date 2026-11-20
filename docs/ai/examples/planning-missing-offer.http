@@ -1,0 +1,28 @@
+### AI02 missing data: confirmed scenario has no offer for a required SKU
+POST http://localhost:3000/planning/executions
+Authorization: Bearer {{managerToken}}
+Content-Type: application/json
+
+{
+  "forecastName": "Week-45",
+  "scenarioName": "Confirmed-Scenario-Without-Flour-Offer",
+  "referenceDate": "2026-11-05"
+}
+
+### Expected response shape (201)
+{
+  "requirements": [
+    {
+      "productSku": "PRD-FLOUR",
+      "requiredUnits": 20,
+      "replenishmentUnits": 20
+    }
+  ],
+  "proposals": [],
+  "unmetNeeds": [
+    {
+      "productSku": "PRD-FLOUR",
+      "reason": "No supplier can fulfill 20"
+    }
+  ]
+}

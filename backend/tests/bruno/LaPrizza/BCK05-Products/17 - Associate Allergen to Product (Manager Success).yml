@@ -1,0 +1,31 @@
+info:
+  name: 17 - Associate Allergen to Product (Manager Success)
+  type: http
+  seq: 20
+http:
+  method: POST
+  url: '{{baseUrl}}/products/{{dualProductSku}}/allergens'
+  body:
+    type: json
+    data: |-
+      {
+      	"allergenName": "Lactose"
+      }
+  auth:
+    type: bearer
+    token: '{{managerToken}}'
+runtime:
+  scripts:
+    - type: tests
+      code: |-
+        test("Manager associates allergen to product with 200 OK", function() {
+        	expect(res.getStatus()).to.equal(200);
+        	const data = res.getBody();
+        	expect(data.associatedAllergens).to.include("Lactose");
+        });
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: true

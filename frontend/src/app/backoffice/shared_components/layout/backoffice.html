@@ -1,0 +1,141 @@
+<a class="skip-link" href="#page-content" (click)="skipToContent($event)">{{
+	'Skip to content' | translate
+}}</a>
+@if (menuOpen()) {
+	<button
+		class="scrim"
+		[attr.aria-label]="'Close navigation overlay' | translate"
+		(click)="setMenu(false, true)"
+	></button>
+}
+@if (auth.logoutError()) {
+	<p role="alert">{{ auth.logoutError() | translate }}</p>
+}
+<aside
+	#navigation
+	id="workspace-navigation"
+	[class.open]="menuOpen()"
+	(scroll)="hideTooltip(true)"
+	(focusout)="navigationFocusLeft($event)"
+>
+	<div class="sidebar-brand">
+		<a
+			routerLink="/backoffice"
+			[attr.aria-label]="'Forno home' | translate"
+			(click)="setMenu(false)"
+			><app-brand [compact]="compact() && !menuOpen()" /></a
+		><button
+			class="icon-button close-menu"
+			[attr.aria-label]="'Close navigation' | translate"
+			(click)="setMenu(false, true)"
+		>
+			<app-icon name="close" />
+		</button>
+	</div>
+	<div class="location">
+		<span>{{ 'Your workspace' | translate }}</span
+		><strong>{{ 'LaPrizza · Backoffice' | translate }}</strong>
+	</div>
+	<p class="nav-label">{{ 'Workspace' | translate }}</p>
+	<nav [attr.aria-label]="'Workspace navigation' | translate">
+		@for (link of links; track link.path) {
+			@if (canSeeLink(link)) {
+				<a
+					[routerLink]="'/backoffice/' + link.path"
+					routerLinkActive="active"
+					ariaCurrentWhenActive="page"
+					[attr.aria-label]="link.label | translate"
+					[attr.aria-describedby]="tooltip()?.text === link.label ? 'workspace-tooltip' : null"
+					(pointerenter)="showTooltip($event, link.label)"
+					(pointerleave)="hideTooltip()"
+					(focus)="showTooltip($event, link.label)"
+					(blur)="hideTooltip()"
+					(click)="setMenu(false)"
+					><app-icon [name]="link.icon" /><span class="nav-text">{{
+						link.label | translate
+					}}</span></a
+				>
+			}
+		}
+	</nav>
+	<div class="sidebar-bottom">
+		@if (auth.restaurant()) {
+			<app-sidebar-action
+				path="/backoffice/kitchen"
+				[label]="'Kitchen Visualization' | translate"
+				icon="box"
+				[compact]="compact() && !menuOpen()"
+				[hintId]="tooltip()?.text === 'Kitchen Visualization' ? 'workspace-tooltip' : null"
+				(hintRequested)="showTooltip($event, 'Kitchen Visualization')"
+				(hintDismissed)="hideTooltip()"
+				(activated)="setMenu(false)"
+			/>
+		}
+		<a
+			class="compact-service-status"
+			routerLink="/status"
+			[attr.aria-label]="'Service status' | translate"
+			[attr.aria-describedby]="tooltip()?.text === 'Service status' ? 'workspace-tooltip' : null"
+			(pointerenter)="showTooltip($event, 'Service status')"
+			(pointerleave)="hideTooltip()"
+			(focus)="showTooltip($event, 'Service status')"
+			(blur)="hideTooltip()"
+			(click)="setMenu(false)"
+			><app-icon name="lock"
+		/></a>
+		<div class="workspace-note">
+			<app-icon name="flame" /><strong>{{ 'Made for the daily service' | translate }}</strong>
+			<p>{{ 'Your menu and your team,' | translate }}<br />{{ 'all in one place.' | translate }}</p>
+			<a routerLink="/status">{{ 'Check service status ↗' | translate }}</a>
+		</div>
+		<app-staff-profile
+			[user]="auth.user()"
+			[compact]="compact() && !menuOpen()"
+			[hintId]="tooltip()?.text === 'Sign out' ? 'workspace-tooltip' : null"
+			(hintRequested)="showTooltip($event, 'Sign out')"
+			(hintDismissed)="hideTooltip()"
+			[profileHintId]="tooltip()?.text === 'Edit profile' ? 'workspace-tooltip' : null"
+			(profileHintRequested)="showTooltip($event, 'Edit profile')"
+			(profileHintDismissed)="hideTooltip()"
+			(profileOpened)="setMenu(false)"
+			(signedOut)="logout()"
+		/>
+	</div>
+</aside>
+@if (tooltip(); as hint) {
+	<app-navigation-tooltip
+		id="workspace-tooltip"
+		[text]="hint.text"
+		[top]="hint.top"
+		[left]="hint.left"
+		(entered)="keepTooltip()"
+		(leftTooltip)="hideTooltip()"
+	/>
+}
+<div class="workspace">
+	<header class="topbar">
+		<div class="breadcrumbs">
+			<button
+				#menuToggle
+				class="icon-button open-menu"
+				[attr.aria-label]="
+					(menuOpen() ? ('Collapse navigation' | translate) : ('Open navigation' | translate))
+						| translate
+				"
+				aria-controls="workspace-navigation"
+				[attr.aria-expanded]="menuOpen()"
+				(click)="setMenu(!menuOpen())"
+			>
+				<app-icon name="menu" /></button
+			><span>{{ 'Management center' | translate }}</span
+			><app-icon name="chevron" /><strong>{{ currentPage() | translate }}</strong>
+		</div>
+		<div class="topbar-right">
+			<span class="connection">{{ '● Your restaurant, in sync' | translate }}</span
+			><a class="button small" routerLink="/status" [attr.aria-label]="'Service status' | translate"
+				><app-icon name="lock" />{{ 'Service status' | translate }}</a
+			>
+		</div>
+	</header>
+	<main id="page-content" tabindex="-1"><router-outlet /></main>
+</div>

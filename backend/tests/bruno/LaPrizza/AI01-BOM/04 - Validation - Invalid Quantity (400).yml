@@ -1,0 +1,34 @@
+info:
+  name: 04 - Validation - Invalid Quantity (400)
+  type: http
+  seq: 5
+http:
+  method: POST
+  url: "{{baseUrl}}/planning/bom-executions"
+  body:
+    type: json
+    data: |-
+      {
+        "orders": [ { "productSku": "PIZ-MARGHERITA", "pizzaSize": "Medium", "quantity": -5 } ],
+        "isSimulated": true,
+        "source": "simulated"
+      }
+  auth:
+    type: bearer
+    token: "{{managerToken}}"
+runtime:
+  scripts:
+    - type: tests
+      code: |-
+        test("Status is 400 Bad Request", function() {
+          expect(res.getStatus()).to.equal(400);
+        });
+        test("Error mentions positive integer", function() {
+          expect(res.getBody().error.message).to.include("positive integer");
+        });
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: false

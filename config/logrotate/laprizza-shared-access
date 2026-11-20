@@ -1,0 +1,16 @@
+# logrotate configuration for SYS04 shared-access logs
+# Place in /etc/logrotate.d/laprizza-shared-access
+
+/var/lib/laprizza/shared/logs/shared-access/*.log {
+    daily
+    missingok
+    rotate 90
+    compress
+    delaycompress
+    notifempty
+    create 0640 root laprizza
+    sharedscripts
+    postrotate
+        systemctl reload auditd > /dev/null 2>&1 || true
+    endscript
+}

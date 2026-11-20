@@ -1,0 +1,27 @@
+info:
+  name: SETUP-BLOCK-INACTIVE-STOCK-PRODUCT
+  type: http
+  seq: 3
+http:
+  method: PATCH
+  url: '{{baseUrl}}/products/{{inactiveStockProductSku}}/block'
+  auth:
+    type: bearer
+    token: '{{managerToken}}'
+runtime:
+  scripts:
+    - type: tests
+      code: |-
+        test("Manager blocks the stock-controlled product", function () {
+        	expect(res.getStatus()).to.equal(200);
+        	expect(res.getBody().active).to.be.false;
+        	expect(res.getBody().sku).to.equal(
+        		bru.getVar("inactiveStockProductSku")
+        	);
+        });
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: false

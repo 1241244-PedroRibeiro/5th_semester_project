@@ -1,0 +1,208 @@
+@if (forgot()) {
+	<section class="customer-auth">
+		<div class="auth-card shop-panel">
+			<div class="auth-brand"><app-storefront-brand /></div>
+			<app-password-recovery-form
+				[customer]="true"
+				[initialEmail]="email"
+				(closed)="forgot.set(false)"
+			/>
+		</div>
+	</section>
+} @else {
+	<section class="customer-auth">
+		<div class="auth-card shop-panel">
+			<div class="auth-brand"><app-storefront-brand /></div>
+			<h1>
+				{{ registration ? ('Make yourself at home.' | translate) : ('Welcome back.' | translate) }}
+			</h1>
+			<p class="auth-intro">
+				{{
+					registration
+						? ('A little closer to your next favourite pizza.' | translate)
+						: ('Sign in for your account and saved details.' | translate)
+				}}
+			</p>
+			@if (error()) {
+				<p class="shop-notice error" role="alert">
+					{{ error() | translate: { reason: (errorReason() | translate) } }}
+				</p>
+			}
+			@if (created()) {
+				<div class="stack">
+					<p class="shop-notice" role="status">
+						{{ 'Your account is ready. Continue to review your details.' | translate }}
+					</p>
+					<a shopButton routerLink="/account">{{ 'Continue to My account' | translate }}</a>
+				</div>
+			} @else if (registration) {
+				<div class="registration-steps" [attr.aria-label]="'Registration progress' | translate">
+					<span [class.current]="step() === 1">{{ '1 · Your details' | translate }}</span
+					><span [class.current]="step() === 2">{{ '2 · Your password' | translate }}</span>
+				</div>
+				@if (step() === 1) {
+					<form #details="ngForm" (ngSubmit)="details.valid && step.set(2)">
+						<fieldset class="stack" [disabled]="busy()">
+							<div class="form-grid">
+								<label class="shop-field"
+									>{{ 'First name' | translate
+									}}<input
+										name="firstName"
+										[(ngModel)]="firstName"
+										required
+										maxlength="100"
+										pattern=".*\S.*"
+										autocomplete="given-name"
+										[placeholder]="'Name…' | translate" /></label
+								><label class="shop-field"
+									>{{ 'Last name' | translate
+									}}<input
+										name="lastName"
+										[(ngModel)]="lastName"
+										required
+										maxlength="100"
+										pattern=".*\S.*"
+										autocomplete="family-name"
+										[placeholder]="'Surname…' | translate"
+								/></label>
+							</div>
+							<label class="shop-field"
+								>{{ 'Email' | translate
+								}}<input
+									type="email"
+									name="email"
+									[(ngModel)]="email"
+									required
+									email
+									autocomplete="email"
+									[placeholder]="'you@example.com' | translate"
+							/></label>
+							<div class="shop-field">
+								<span>{{ 'Phone number (optional)' | translate }}</span>
+								<app-phone-number-input name="phone" [(ngModel)]="phone" />
+							</div>
+							<button shopButton [disabled]="details.invalid">
+								{{ 'Next step' | translate }} <app-icon name="arrow" />
+							</button>
+						</fieldset>
+					</form>
+				} @else {
+					<form #passwordForm="ngForm" (ngSubmit)="passwordForm.valid && register()">
+						<fieldset class="stack" [disabled]="busy()">
+							<label class="shop-field"
+								>{{ 'Password' | translate
+								}}<span class="password-input"
+									><input
+										[type]="visible() ? 'text' : 'password'"
+										name="password"
+										[(ngModel)]="password"
+										required
+										minlength="8"
+										autocomplete="new-password"
+										[placeholder]="'Create a password…' | translate" /><button
+										type="button"
+										class="icon-button"
+										[attr.aria-label]="
+											(visible() ? ('Hide password' | translate) : ('Show password' | translate))
+												| translate
+										"
+										(click)="visible.set(!visible())"
+									>
+										<app-icon name="eye" /></button></span></label
+							><label class="shop-field"
+								>{{ 'Confirm password' | translate
+								}}<input
+									[type]="visible() ? 'text' : 'password'"
+									name="confirmation"
+									[(ngModel)]="confirmation"
+									required
+									autocomplete="new-password"
+									[placeholder]="'Enter password again…' | translate" /></label
+							><app-password-rules [value]="password" />
+							@if (confirmation && password !== confirmation) {
+								<p class="password-error" role="status">
+									{{ 'Passwords do not match.' | translate }}
+								</p>
+							}
+							<div class="registration-actions">
+								<button
+									shopButton
+									tone="secondary"
+									type="button"
+									[disabled]="busy()"
+									(click)="step.set(1); error.set('')"
+								>
+									{{ 'Back' | translate }}</button
+								><button shopButton [disabled]="busy() || !passwordValid()">
+									{{ busy() ? ('Creating account…' | translate) : ('Register' | translate) }}
+								</button>
+							</div>
+						</fieldset>
+					</form>
+				}
+				<p class="auth-switch">
+					{{ 'Already have an account?' | translate }}
+					<a routerLink="/login">{{ 'Sign in' | translate }}</a>
+				</p>
+			} @else {
+				<form #loginForm="ngForm" (ngSubmit)="loginForm.valid && login()">
+					<fieldset class="stack" [disabled]="busy()">
+						<label class="shop-field"
+							>{{ 'Email' | translate
+							}}<input
+								type="email"
+								name="email"
+								[(ngModel)]="email"
+								required
+								email
+								autocomplete="email"
+								[placeholder]="'Email…' | translate" /></label
+						><label class="shop-field"
+							>{{ 'Password' | translate
+							}}<span class="password-input"
+								><input
+									[type]="visible() ? 'text' : 'password'"
+									name="password"
+									[(ngModel)]="password"
+									required
+									autocomplete="current-password"
+									[placeholder]="'Password…' | translate" /><button
+									type="button"
+									class="icon-button"
+									[attr.aria-label]="
+										(visible() ? ('Hide password' | translate) : ('Show password' | translate))
+											| translate
+									"
+									(click)="visible.set(!visible())"
+								>
+									<app-icon name="eye" /></button></span
+						></label>
+						<div class="login-extras">
+							<label class="check-label"
+								><input type="checkbox" name="remember" [(ngModel)]="remember" />{{
+									'Keep me signed in' | translate
+								}}</label
+							><button type="button" class="shop-link" (click)="password = ''; forgot.set(true)">
+								{{ 'Forgot your password?' | translate }}
+							</button>
+						</div>
+						<div class="login-actions">
+							<button shopButton [disabled]="busy() || loginForm.invalid">
+								{{ busy() ? ('Signing in…' | translate) : ('Login' | translate) }}</button
+							><a shopButton tone="secondary" routerLink="/register">{{
+								'Register' | translate
+							}}</a>
+						</div>
+					</fieldset>
+				</form>
+				<div class="social-signin">
+					<div>
+						<button shopButton small disabled>Facebook</button>
+						<button shopButton small (click)="loginWithGoogle()">Google</button>
+					</div>
+					<small>Social sign-in is available with Google.</small>
+				</div>
+			}
+		</div>
+	</section>
+}

@@ -1,0 +1,21 @@
+info:
+  name: 05 - Create Pizza Size Without Token (Unauthorized)
+  type: http
+  seq: 7
+http:
+  method: POST
+  url: '{{baseUrl}}/pizza-sizes'
+  body:
+    type: json
+    data: |-
+      {
+      	"name": "Anonymous Size"
+      }
+runtime:
+  scripts:
+    - type: tests
+      code: |-
+        test("Rejects creation without token with 401 Unauthorized", function() {
+        	expect(res.getStatus()).to.equal(401);
+        	expect(res.getBody().error.message).to.equal("Authentication required.");
+        });

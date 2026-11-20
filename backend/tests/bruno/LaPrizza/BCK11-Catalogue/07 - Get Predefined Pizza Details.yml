@@ -1,0 +1,40 @@
+info:
+  name: 07 - Get Predefined Pizza Details
+  type: http
+  seq: 8
+http:
+  method: GET
+  url: '{{baseUrl}}/catalogue/{{bck10PizzaSku}}'
+runtime:
+  scripts:
+    - type: tests
+      code: |-
+        test("Returns predefined pizza details in the catalogue", function() {
+            expect(res.getStatus()).to.equal(200);
+
+            expect(res.getBody().productSku).to.equal(
+                bru.getVar("bck10PizzaSku")
+            );
+
+            expect(res.getBody().isPredefinedPizza).to.equal(true);
+
+            expect(res.getBody().defaultRecipeLines)
+                .to.be.an("array")
+                .that.is.not.empty;
+
+            expect(res.getBody().sizeVariants)
+                .to.be.an("array")
+                .that.is.not.empty;
+
+            expect(
+                res.getBody().sizeVariants.some(
+                    variant => variant.pizzaSize === "Small"
+                )
+            ).to.equal(true);
+        });
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: false

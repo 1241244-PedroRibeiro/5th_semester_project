@@ -1,0 +1,55 @@
+======================================================================
+LaPrizza Deployment Pipeline Started
+Timestamp:   20261112T180000Z
+Log dir:     logs/deploy-20261112T180000Z
+Project:     laprizza
+======================================================================
+--- [Stage 1/7] Pre-flight verification ---
+Validating Docker Compose configuration...
+Generating redacted configuration snapshot (AC6.2)...
+Summarizing environment variables count (AC7.4)...
+--- [Stage 2/7] Building module container images ---
+[+] Building 22.1s (4/4) FINISHED
+ => [backend] building image laprizza-backend:latest
+ => [prolog] building image laprizza-prolog:latest
+ => [frontend] building image laprizza-frontend:latest
+--- [Stage 3/7] Starting PostgreSQL database service ---
+[+] Running 1/1
+ ✔ Container laprizza_postgres  Healthy
+PostgreSQL is healthy and accepting connections.
+--- [Stage 4/7] Starting Backend service (running migrations & startup) ---
+[+] Running 1/1
+ ✔ Container laprizza_backend  Started
+Waiting for Backend container to report healthy...
+Backend is healthy.
+--- [Stage 5/7] Starting Prolog planning engine service ---
+[+] Running 1/1
+ ✔ Container laprizza_prolog  Started
+--- [Stage 6/7] Starting Frontend service ---
+[+] Running 1/1
+ ✔ Container laprizza_frontend  Started
+--- [Stage 7/7] Executing automated smoke validation ---
+==========================================================
+LaPrizza Deployment Validation — Smoke Tests
+Target Base URL: https://localhost
+Timestamp:       2026-11-12T18:00:45Z
+==========================================================
+[1] Health endpoint returns HTTP 200 and status == 'ok' ... PASS
+[2] Health endpoint reports identifiable version ... PASS
+[3] Health dependency: PostgreSQL is up ... PASS
+[4] Health dependency: Prolog engine is up ... PASS
+[5] Public catalogue returns HTTP 200 array ... PASS
+[6] Public taxonomy: pizza sizes populated (length >= 1) ... PASS
+[7] Public taxonomy: allergens seed populated (length >= 1) ... PASS
+[8] Frontend SPA responds with HTTP 200 ... PASS
+[9] HTTP port 80 enforces redirect (HTTP 301/308) ... PASS
+==========================================================
+Smoke Tests Summary: 9/9 passed (0 failed)
+==========================================================
+DEPLOY: SMOKE TESTS PASSED
+Applying log retention policy (purging archives older than 90 days)...
+======================================================================
+DEPLOY: SUCCESS
+Deployment completed successfully at 2026-11-12T18:01:10Z
+Artifacts and evidence archived in: logs/deploy-20261112T180000Z
+======================================================================

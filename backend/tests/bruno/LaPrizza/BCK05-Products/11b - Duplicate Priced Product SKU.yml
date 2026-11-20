@@ -1,0 +1,31 @@
+info:
+  name: 11b - Duplicate Priced Product SKU
+  type: http
+  seq: 13
+http:
+  method: POST
+  url: '{{baseUrl}}/products'
+  body:
+    type: json
+    data: |-
+      {
+      	"sku": "{{sellableProductSku}}",
+      	"name": "Duplicate Priced Product",
+      	"description": "Duplicate SKU with a supported price",
+      	"categoryName": "Beverages",
+      	"isSellable": true,
+      	"isPizzaComponent": false,
+      	"isStockControlled": true,
+      	"directSellingPrice": 2.5
+      }
+  auth:
+    type: bearer
+    token: '{{managerToken}}'
+runtime:
+  scripts:
+    - type: tests
+      code: |-
+        test("Matches the current API contract", function() {
+        	expect(res.getStatus()).to.equal(409);
+        	expect(res.getBody().error.message).to.equal("Product SKU already exists");
+        });

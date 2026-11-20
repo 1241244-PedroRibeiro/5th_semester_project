@@ -1,0 +1,7 @@
+info:
+  name: DELETE-USED-CONFIGURATION
+  type: folder
+  seq: 19
+
+request:
+  auth: inherit

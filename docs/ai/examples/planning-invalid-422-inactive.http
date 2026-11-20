@@ -1,0 +1,17 @@
+### AI02 invalid domain data: inactive forecast reference
+POST http://localhost:3000/planning/executions
+Authorization: Bearer {{managerToken}}
+Content-Type: application/json
+
+{
+  "forecastName": "Forecast-With-Inactive-Product",
+  "scenarioName": "Autumn-Scenario",
+  "referenceDate": "2026-11-05"
+}
+
+### Expected response (422)
+{
+  "error": {
+    "message": "Product is inactive: PRD-INACTIVE"
+  }
+}

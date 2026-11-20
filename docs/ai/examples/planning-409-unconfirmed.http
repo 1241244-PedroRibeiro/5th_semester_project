@@ -1,0 +1,16 @@
+### AI02 unconfirmed scenario
+POST http://localhost:3000/planning/executions
+Authorization: Bearer {{managerToken}}
+Content-Type: application/json
+
+{
+  "forecastName": "Week-45",
+  "scenarioName": "Unconfirmed-Scenario"
+}
+
+### Expected response (409)
+{
+  "error": {
+    "message": "Scenario must be confirmed before execution"
+  }
+}

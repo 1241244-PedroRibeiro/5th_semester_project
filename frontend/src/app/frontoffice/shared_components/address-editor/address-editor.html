@@ -1,0 +1,58 @@
+<app-modal
+	[title]="'Update address' | translate"
+	[description]="'Where should your next pizza party happen?' | translate"
+	[busy]="busy()"
+	(closed)="closed.emit()"
+	><form id="customer-address" #form="ngForm" (ngSubmit)="form.valid && save()">
+		<fieldset class="stack" [disabled]="busy()">
+			<label class="shop-field"
+				>{{ 'Street address' | translate
+				}}<input
+					name="street"
+					[(ngModel)]="draft.street"
+					required
+					maxlength="200"
+					autocomplete="street-address"
+			/></label>
+			<div class="form-grid">
+				<label class="shop-field"
+					>{{ 'City' | translate
+					}}<input
+						name="city"
+						[(ngModel)]="draft.city"
+						required
+						maxlength="100"
+						autocomplete="address-level2" /></label
+				><label class="shop-field"
+					>{{ 'Postal code' | translate
+					}}<input
+						name="postalCode"
+						[(ngModel)]="draft.postalCode"
+						required
+						maxlength="30"
+						autocomplete="postal-code"
+				/></label>
+			</div>
+			<label class="shop-field"
+				>{{ 'Extra details (optional)' | translate
+				}}<textarea
+					name="extraDetails"
+					[(ngModel)]="draft.extraDetails"
+					rows="2"
+					maxlength="500"
+					[placeholder]="'Apartment, floor or directions' | translate"
+				></textarea>
+			</label>
+			@if (error()) {
+				<p class="shop-notice error" role="alert">{{ error() | translate }}</p>
+			}
+		</fieldset>
+	</form>
+	<div modal-actions class="row-actions">
+		<button shopButton tone="secondary" [disabled]="busy()" (click)="closed.emit()">
+			{{ 'Cancel' | translate }}</button
+		><button shopButton type="submit" form="customer-address" [disabled]="busy() || form.invalid">
+			{{ busy() ? ('Saving…' | translate) : ('Save address' | translate) }}
+		</button>
+	</div></app-modal
+>

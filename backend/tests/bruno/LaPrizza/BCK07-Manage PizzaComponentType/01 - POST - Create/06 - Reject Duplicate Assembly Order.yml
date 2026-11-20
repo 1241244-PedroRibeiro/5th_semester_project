@@ -1,0 +1,29 @@
+info:
+  name: 06 - Reject Duplicate Assembly Order
+  type: http
+  seq: 6
+http:
+  method: POST
+  url: '{{baseUrl}}/pizza-component-types'
+  body:
+    type: json
+    data: |-
+      {
+        "name": "{{bck07Name}} other",
+        "assemblyOrder": {{bck07Order}},
+        "minCardinality": 0,
+        "maxCardinality": null
+      }
+  auth:
+    type: bearer
+    token: '{{bck07ManagerToken}}'
+settings:
+  encodeUrl: true
+runtime:
+  scripts:
+    - type: tests
+      code: |-
+        test("Reject Duplicate Assembly Order", function() {
+          expect(res.getStatus()).to.equal(409);
+          expect(res.getBody().error.message).to.equal("Component type code, name or assembly order already exists");
+        });

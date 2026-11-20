@@ -1,0 +1,30 @@
+#!/bin/bash
+set -euo pipefail
+
+if [ "${1:-}" != "pre" ]; then
+    echo "Usage: $0 pre" >&2
+    exit 1
+fi
+
+state_file="/var/lib/laprizza/ssh-failures.json"
+user="${PAM_USER:-unknown}"
+source_ip="${PAM_RHOST:-unknown}"
+now=$(date +%s)
+
+python3 - "$state_file" "$user" "$source_ip" "$now" <<'PY'
+import json
+import sys
+
+path, user, source_ip, now = sys.argv[1:]
+now = int(now)
+try:
+    with open(path, encoding="utf-8") as handle:
+        state = json.load(handle)
+except (FileNotFoundError, json.JSONDecodeError):
+    state = {}
+
+entry = state.get(f"{user}|{source_ip}", {})
+if now - int(entry.get("last_failure", 0)) > 86400:
+    sys.exit(0)
+sys.exit(1 if entry.get("mfa_required", False) else 0)
+PY

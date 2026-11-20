@@ -1,0 +1,53 @@
+info:
+  name: 08 - Happy Path - Insufficient Stock (201)
+  type: http
+  seq: 9
+http:
+  method: POST
+  url: "{{baseUrl}}/planning/bom-executions"
+  body:
+    type: json
+    data: |-
+      {
+        "orders": [
+          { "productSku": "PIZ-MARGHERITA", "pizzaSize": "Medium", "quantity": 10 }
+        ],
+        "isSimulated": true,
+        "source": "simulated"
+      }
+  auth:
+    type: bearer
+    token: "{{managerToken}}"
+runtime:
+  scripts:
+    - type: tests
+      code: |-
+        test("Status is 201 Created", function() {
+          expect(res.getStatus()).to.equal(201);
+        });
+
+        test("IsSimulated flag is true", function() {
+          expect(res.getBody().isSimulated).to.be.true;
+        });
+
+        test("ForecastName is null (BOM execution)", function() {
+          expect(res.getBody().forecastName).to.be.null;
+        });
+
+        test("Requirements array contains calculated values", function() {
+          const reqs = res.getBody().requirements;
+          const mozz = reqs.find(r => r.productSku === 'PRD-MOZZ');
+
+          // 10 Medium pizzas * 2 units = 20 units needed.
+          // Current stock in seed is 10. So it lacks 10.
+          expect(mozz.requiredUnits).to.equal(20);
+          expect(mozz.availableUnits).to.equal(10);
+          expect(mozz.replenishmentUnits).to.equal(10); // 20 - 10
+          expect(mozz.hypotheticalRemainingUnits).to.equal(0);
+        });
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: false

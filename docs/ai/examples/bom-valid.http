@@ -1,0 +1,35 @@
+### AI01 valid BOM execution
+POST http://localhost:3000/planning/bom-executions
+Authorization: Bearer {{managerToken}}
+Content-Type: application/json
+
+{
+  "orders": [
+    { "productSku": "PIZ-MARGHERITA", "pizzaSize": "Medium", "quantity": 2 },
+    { "productSku": "PIZ-MARGHERITA", "pizzaSize": "Large", "quantity": 1 }
+  ],
+  "referenceDate": "2026-11-05",
+  "isSimulated": true,
+  "source": "simulated"
+}
+
+### Representative response envelope (201)
+{
+  "executionId": 1,
+  "forecastName": null,
+  "scenarioName": null,
+  "referenceDate": "2026-11-05",
+  "isReplay": false,
+  "isSimulated": true,
+  "requirements": [
+    {
+      "productSku": "PRD-FLOUR",
+      "requiredUnits": 6,
+      "availableUnits": 100,
+      "hypotheticalRemainingUnits": 94,
+      "replenishmentUnits": 0
+    }
+  ],
+  "proposals": [],
+  "unmetNeeds": []
+}

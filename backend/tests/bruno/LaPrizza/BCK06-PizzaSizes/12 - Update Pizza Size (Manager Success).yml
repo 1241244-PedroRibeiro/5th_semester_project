@@ -1,0 +1,30 @@
+info:
+  name: 12 - Update Pizza Size (Manager Success)
+  type: http
+  seq: 14
+http:
+  method: PUT
+  url: '{{baseUrl}}/pizza-sizes/{{createdSizeName}}'
+  body:
+    type: json
+    data: |-
+      {
+      	"name": "{{updatedSizeName}}",
+      	"active": true
+      }
+  auth:
+    type: bearer
+    token: '{{managerToken}}'
+runtime:
+  scripts:
+    - type: before-request
+      code: |-
+        const suffix = Date.now().toString().slice(-4);
+        bru.setVar("updatedSizeName", "Party XXL " + suffix);
+    - type: tests
+      code: |-
+        test("Manager updates pizza size returning 200 OK", function() {
+        	expect(res.getStatus()).to.equal(200);
+        	const data = res.getBody();
+        	expect(data.name).to.equal(bru.getVar("updatedSizeName"));
+        });

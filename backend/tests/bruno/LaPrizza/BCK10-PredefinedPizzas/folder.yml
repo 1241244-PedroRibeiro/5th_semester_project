@@ -1,0 +1,7 @@
+info:
+  name: BCK10-PredefinedPizzas
+  type: folder
+  seq: 11
+
+request:
+  auth: inherit

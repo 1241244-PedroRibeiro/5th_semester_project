@@ -1,0 +1,7 @@
+info:
+  name: BCK06-PizzaSizes
+  type: folder
+  seq: 7
+
+request:
+  auth: inherit

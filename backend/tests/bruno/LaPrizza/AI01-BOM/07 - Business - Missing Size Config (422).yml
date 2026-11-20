@@ -1,0 +1,35 @@
+info:
+  name: 07 - Business - Missing Size Config (422)
+  type: http
+  seq: 8
+http:
+  method: POST
+  url: "{{baseUrl}}/planning/bom-executions"
+  body:
+    type: json
+    data: |-
+      {
+        "orders": [ { "productSku": "PIZ-MARGHERITA", "pizzaSize": "Gigante", "quantity": 1 } ],
+        "isSimulated": true,
+        "source": "simulated"
+      }
+  auth:
+    type: bearer
+    token: "{{managerToken}}"
+runtime:
+  scripts:
+    - type: tests
+      code: |-
+        test("Status is 422 Unprocessable", function() {
+          expect(res.getStatus()).to.equal(422);
+        });
+        test("Error mentions missing size or pizza has no size", function() {
+          const msg = res.getBody().error.message;
+          expect(msg.includes("no size") || msg.includes("Missing size configuration")).to.be.true;
+        });
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: false

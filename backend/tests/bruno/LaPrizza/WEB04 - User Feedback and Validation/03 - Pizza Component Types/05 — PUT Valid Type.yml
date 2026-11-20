@@ -1,0 +1,26 @@
+info:
+  name: 05 — PUT Valid Type
+  type: http
+  seq: 5
+
+http:
+  method: PUT
+  url: "{{baseUrl}}/pizza-component-types/WEB04%20Test%20Type"
+  body:
+    type: json
+    data: |-
+      {
+        "assemblyOrder": 5,
+        "minCardinality": 1,
+        "maxCardinality": 3
+      }
+  auth:
+    type: bearer
+    token: "{{managerToken}}"
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: false

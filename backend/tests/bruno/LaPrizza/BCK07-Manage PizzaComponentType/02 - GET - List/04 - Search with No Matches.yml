@@ -1,0 +1,17 @@
+info:
+  name: 04 - Search with No Matches
+  type: http
+  seq: 4
+http:
+  method: GET
+  url: '{{baseUrl}}/pizza-component-types?search={{bck07Name}}-NO-MATCH&page=1&pageSize=20'
+settings:
+  encodeUrl: true
+runtime:
+  scripts:
+    - type: tests
+      code: |-
+        test("Search with No Matches", function() {
+          expect(res.getStatus()).to.equal(200);
+          expect(res.getBody()).to.deep.equal({ items: [], total: 0, page: 1, pageSize: 20, totalPages: 0 });
+        });

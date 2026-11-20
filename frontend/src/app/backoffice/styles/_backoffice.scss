@@ -1,0 +1,150 @@
+.button {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	gap: 0.5rem;
+	min-height: 2.6rem;
+	padding: 0.65rem 1rem;
+	border: 1px solid var(--border);
+	border-radius: 0.5rem;
+	text-decoration: none;
+	background: var(--surface);
+	font-size: 0.8rem;
+	font-weight: 500;
+	white-space: nowrap;
+}
+.button:hover:not(:disabled) {
+	background: var(--background);
+}
+.button.primary {
+	background: var(--accent);
+	border-color: var(--accent);
+	color: white;
+}
+.button.primary:hover:not(:disabled) {
+	background: #d83f09;
+}
+.button.danger {
+	color: var(--accent);
+	border-color: var(--accent);
+	background: var(--accent-soft);
+}
+.button.small {
+	min-height: 2rem;
+	padding: 0.35rem 0.7rem;
+	font-size: 0.72rem;
+}
+.eyebrow {
+	font-size: 0.65rem;
+	font-weight: 650;
+	letter-spacing: 0.14em;
+	text-transform: uppercase;
+	color: var(--teal);
+}
+.notice {
+	padding: 0.85rem 1rem;
+	font-size: 0.8rem;
+	line-height: 1.6;
+	border-radius: 0.55rem;
+	background: var(--teal-soft);
+	color: var(--teal);
+}
+.notice.error {
+	background: var(--accent-soft);
+	color: #a32d09;
+}
+.notice.success {
+	background: var(--teal-soft);
+}
+.toolbar {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 0.75rem;
+	padding: 1rem 1.5rem;
+	border-bottom: 1px solid var(--border);
+}
+.search {
+	position: relative;
+	flex: 1;
+	min-width: 12rem;
+}
+.search app-icon {
+	position: absolute;
+	left: 0.9rem;
+	top: 50%;
+	transform: translateY(-50%);
+	color: var(--muted);
+}
+.search input {
+	padding-left: 2.6rem;
+}
+.toolbar select {
+	width: auto;
+	max-width: 100%;
+	min-height: 2.7rem;
+}
+.cell-title {
+	font-weight: 550;
+}
+.cell-subtitle {
+	display: block;
+	font-size: 0.7rem;
+	color: var(--muted);
+	margin-top: 0.35rem;
+}
+.description {
+	display: block;
+	min-width: 10rem;
+	max-width: 25rem;
+	line-height: 1.5;
+}
+.sku {
+	color: var(--accent);
+	white-space: nowrap;
+}
+.summary {
+	display: flex;
+	align-items: center;
+	gap: 1rem;
+	padding: 1rem;
+	background: var(--background);
+	border-radius: 0.7rem;
+}
+.summary > app-badge {
+	margin-left: auto;
+}
+.summary strong {
+	display: block;
+}
+.summary small {
+	display: block;
+	margin-top: 0.2rem;
+}
+.inline-link {
+	border: 0;
+	background: none;
+	padding: 0;
+	color: var(--accent);
+	text-decoration: none;
+	font-size: inherit;
+}
+.inline-link:hover {
+	text-decoration: underline;
+}
+.status-page {
+	max-width: 60rem;
+	margin: auto;
+	padding: 2rem;
+}
+@media (max-width: 540px) {
+	.toolbar {
+		padding: 1rem;
+	}
+	.toolbar select {
+		flex: 1;
+	}
+	.summary {
+		flex-wrap: wrap;
+	}
+}

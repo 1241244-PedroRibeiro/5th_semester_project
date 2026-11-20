@@ -1,0 +1,103 @@
+# ==============================================================================
+# LaPrizza - Egress Endpoint Allowlist (SYS03)
+# Documented in docs/asist/sys-network-config.md §4.1
+# ==============================================================================
+
+version: 1
+metadata:
+  owner: team-3dj-05
+  last_updated: 2026-11-13
+  rationale: "SYS03 — egress allowlist. Only these destinations may be reached from the host."
+defaults:
+  action: deny                  # anything not listed below is dropped
+  log: true                     # log denied egress to /var/log/laprizza/egress.log
+
+endpoints:
+  # --- OIDC IdP (ADR-010) ---
+  - name: oidc-google
+    protocol: tcp
+    port: 443
+    destinations:
+      - accounts.google.com
+      - oauth2.googleapis.com
+    purpose: "External identity provider (Google)"
+    sprint: 2
+
+  - name: oidc-microsoft
+    protocol: tcp
+    port: 443
+    destinations:
+      - login.microsoftonline.com
+    purpose: "External identity provider (Microsoft)"
+    sprint: 2
+
+  - name: oidc-auth0
+    protocol: tcp
+    port: 443
+    destinations:
+      - laprizza.eu.auth0.com
+    purpose: "External identity provider (Auth0)"
+    sprint: 2
+
+  # --- SMTP (activation invitations, password recovery) ---
+  - name: smtp-sendgrid
+    protocol: tcp
+    port: 587
+    destinations:
+      - smtp.sendgrid.net
+    purpose: "Transactional email dispatch (activation, recovery)"
+    sprint: 2
+
+  # --- Backup bucket (SYS08) ---
+  - name: backup-s3
+    protocol: tcp
+    port: 443
+    destinations:
+      - s3.eu-west-1.amazonaws.com
+    purpose: "Off-site backups (3-2-1 rule)"
+    sprint: 2
+
+  # --- Package managers (system updates) ---
+  - name: apt-mirrors
+    protocol: tcp
+    ports: [80, 443]
+    destinations:
+      - archive.ubuntu.com
+      - security.ubuntu.com
+    purpose: "OS security updates"
+    sprint: 2
+
+  - name: npm-registry
+    protocol: tcp
+    port: 443
+    destinations:
+      - registry.npmjs.org
+    purpose: "Node.js dependency resolution (CI only; not at runtime)"
+    sprint: 2
+
+  # --- CI provider ---
+  - name: github
+    protocol: tcp
+    port: 443
+    destinations:
+      - github.com
+      - api.github.com
+    purpose: "CI/CD, tag-based deployment"
+    sprint: 2
+
+  # --- Internal only (no egress) ---
+  - name: prolog
+    protocol: tcp
+    port: 8080
+    destinations: ["prolog"]
+    purpose: "AI Planning Engine (internal network only)"
+    sprint: 2
+    internal_only: true
+
+  - name: postgres
+    protocol: tcp
+    port: 5432
+    destinations: ["postgres"]
+    purpose: "Database (internal network only)"
+    sprint: 2
+    internal_only: true

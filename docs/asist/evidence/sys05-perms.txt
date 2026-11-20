@@ -1,0 +1,27 @@
+=== PERMISSIONS ===
+drwxr-x--- 4 root laprizza 4096 Nov 14 17:17 /var/lib/laprizza
+drwxr-x--- 2 root laprizza 4096 Nov 14 13:54 /var/log/laprizza
+-rw-r----- 1 root laprizza 229 Nov 14 17:17 /var/lib/laprizza/ssh-failures.json
+-rw-r----- 1 root laprizza  478 Nov 14 17:17 /var/log/laprizza/ssh-alerts.log
+-rw-r----- 1 root laprizza 5155 Nov 14 17:17 /var/log/laprizza/ssh-sessions.log
+
+=== LOGROTATE ===
+/var/log/laprizza/ssh-sessions.log
+/var/log/laprizza/ssh-alerts.log
+/var/log/laprizza/ssh-time-guard.log
+{
+    daily
+    missingok
+    rotate 90
+    compress
+    delaycompress
+    notifempty
+    create 0640 root laprizza
+    sharedscripts
+    postrotate
+        systemctl reload ssh > /dev/null 2>&1 || true
+    endscript
+}
+=== JOURNAL RETENTION ===
+[Journal]
+MaxFileSec=90day

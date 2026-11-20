@@ -1,0 +1,29 @@
+info:
+  name: 03 - Reject Empty Street
+  type: http
+  seq: 3
+http:
+  method: PUT
+  url: '{{baseUrl}}/user/me/address'
+  body:
+    type: json
+    data: |-
+      {
+        "street": " ",
+        "postalCode": "1000-001",
+        "city": "Lisbon",
+        "extraDetails": "Floor 2"
+      }
+  auth:
+    type: bearer
+    token: '{{bck02AddressToken}}'
+settings:
+  encodeUrl: true
+runtime:
+  scripts:
+    - type: tests
+      code: |-
+        test("Reject Empty Street", function() {
+          expect(res.getStatus()).to.equal(400);
+          expect(res.getBody()).to.deep.equal({ error: { message: "Street must be a non-empty string" } });
+        });

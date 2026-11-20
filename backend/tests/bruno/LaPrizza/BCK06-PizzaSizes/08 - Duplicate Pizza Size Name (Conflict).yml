@@ -1,0 +1,24 @@
+info:
+  name: 08 - Duplicate Pizza Size Name (Conflict)
+  type: http
+  seq: 10
+http:
+  method: POST
+  url: '{{baseUrl}}/pizza-sizes'
+  body:
+    type: json
+    data: |-
+      {
+      	"name": "{{newSizeName}}"
+      }
+  auth:
+    type: bearer
+    token: '{{managerToken}}'
+runtime:
+  scripts:
+    - type: tests
+      code: |-
+        test("Duplicate pizza size name returns 409 Conflict", function() {
+        	expect(res.getStatus()).to.equal(409);
+        	expect(res.getBody().error.message).to.equal("PizzaSize name already exists");
+        });

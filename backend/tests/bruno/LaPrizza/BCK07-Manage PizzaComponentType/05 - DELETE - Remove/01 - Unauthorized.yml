@@ -1,0 +1,17 @@
+info:
+  name: 01 - Unauthorized
+  type: http
+  seq: 1
+http:
+  method: DELETE
+  url: '{{baseUrl}}/pizza-component-types/{{bck07Name}}'
+settings:
+  encodeUrl: true
+runtime:
+  scripts:
+    - type: tests
+      code: |-
+        test("DELETE Without Token", function() {
+          expect(res.getStatus()).to.equal(401);
+          expect(res.getBody().error.message).to.equal("Authentication required.");
+        });

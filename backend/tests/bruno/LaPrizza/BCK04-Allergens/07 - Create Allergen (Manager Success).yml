@@ -1,0 +1,32 @@
+info:
+  name: 07 - Create Allergen (Manager Success)
+  type: http
+  seq: 9
+http:
+  method: POST
+  url: '{{baseUrl}}/allergens'
+  body:
+    type: json
+    data: |-
+      {
+      	"name": "{{newAllergenName}}",
+      	"description": "Artisanal food allergen for tests"
+      }
+  auth:
+    type: bearer
+    token: '{{managerToken}}'
+runtime:
+  scripts:
+    - type: before-request
+      code: |-
+        const suffix = Date.now().toString().slice(-4);
+        bru.setVar("newAllergenName", "Allergen " + suffix);
+    - type: tests
+      code: |-
+        test("Manager creates allergen returning 201 Created", function() {
+        	expect(res.getStatus()).to.equal(201);
+        	const data = res.getBody();
+        	expect(data.name).to.equal(bru.getVar("newAllergenName"));
+        	bru.setVar("createdAllergenName", data.name);
+        	bru.setEnvVar("createdAllergenName", data.name);
+        });

@@ -1,0 +1,44 @@
+info:
+  name: SETUP COMPONENT PRODUCT
+  type: http
+  seq: 1
+http:
+  method: POST
+  url: '{{baseUrl}}/products'
+  body:
+    type: json
+    data: |-
+      {
+      	"name": "{{componentProductName}}",
+      	"description": "Component for BCK08 tests",
+      	"categoryName": "Beverages",
+      	"isSellable": false,
+      	"isPizzaComponent": true,
+      	"isStockControlled": true,
+      	"componentTypeName": "Topping",
+      	"sku": "{{componentProductSku}}"
+      }
+  auth:
+    type: bearer
+    token: '{{managerToken}}'
+runtime:
+  scripts:
+    - type: before-request
+      code: |-
+        const suffix = Date.now().toString().slice(-4);
+        bru.setVar("componentProductSku", "PRD-CMP-" + suffix);
+        bru.setVar("componentProductName", "Component " + suffix);
+    - type: tests
+      code: |-
+        test("Creates an unpriced non-sellable component", function() {
+          expect(res.getStatus()).to.equal(201);
+          expect(res.getBody().isSellable).to.equal(false);
+          expect(res.getBody().isPizzaComponent).to.equal(true);
+          expect(res.getBody().directSellingPrice).to.equal(null);
+        });
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: false

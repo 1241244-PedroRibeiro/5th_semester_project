@@ -1,0 +1,132 @@
+<app-page-header [title]="'Component Size Configurations' | translate"
+	[description]="'Set ingredient prices and stock consumption for each pizza size.' | translate" />
+@if (success()) {
+<p class="notice success" role="status">{{ success() | translate }}</p>
+}
+<app-panel [title]="'Size configurations' | translate" [count]="loading() || error() ? null : items().length"><button
+		panel-actions class="button" [disabled]="loading() || !!error() || saving()" (click)="open()">
+		<app-icon name="plus" />{{ 'Add configuration' | translate }}
+	</button>
+	<div class="toolbar">
+		<label class="search"><span class="sr-only">{{ 'Search component configurations' | translate }}</span><app-icon
+				name="search" /><input type="search" [placeholder]="'Search ingredient or SKU…' | translate"
+				[ngModel]="query()" (ngModelChange)="query.set($event); page.set(1)" /></label><select
+			[attr.aria-label]="'Filter configuration size' | translate" [ngModel]="size()"
+			(ngModelChange)="size.set($event); page.set(1)">
+			<option value="">{{ 'All sizes' | translate }}</option>
+			@for (s of sizes(); track s.name) {
+			<option [value]="s.name">{{ s.name }}</option>
+			}
+		</select>
+	</div>
+	@if (loading()) {
+	<app-feedback kind="loading" [title]="'Loading configurations' | translate" />
+	} @else if (error()) {
+	<app-feedback kind="error" [title]="'Couldn\'t load configurations' | translate" [message]="error() | translate"
+		[retryable]="true" (retry)="load()" />
+	} @else {
+	@if (!filtered().length) {
+	<app-feedback [title]="'No configurations found' | translate"
+		[message]="'Configure each ingredient for the sizes you want to offer.' | translate" />
+	} @else {
+	<app-data-table [label]="'Ingredient configurations by size' | translate" [columns]="columns" [rows]="rows()"
+		trackKey="id"><ng-template let-item let-column="column">
+			@switch (column) {
+			@case ('sku') {
+			<span class="sku">{{ item.componentSku }}</span>
+			}
+			@case ('product') {
+			<span class="cell-title">{{ item.productName }}</span>
+			}
+			@case ('size') {
+			<app-badge tone="yellow">{{ item.pizzaSize }}</app-badge>
+			}
+			@case ('price') {
+			{{ item.price | localCurrency: 'EUR' }}
+			}
+			@case ('stock') {
+			{{ item.stockControlled ? item.stockUnitsConsumed : ('Not tracked' | translate) }}
+			}
+			@case ('actions') {
+			<div class="row-actions">
+				<button class="button small" [disabled]="saving()"
+					[attr.aria-label]="'Update ' + item.productName + ', ' + item.pizzaSize" (click)="open(item) ">
+					{{ 'Update' | translate }}</button><button class="button small danger" [disabled]="saving()"
+					[attr.aria-label]="'Remove ' + item.productName + ', ' + item.pizzaSize" (click)="askRemove(item)">
+					{{ 'Remove' | translate }}
+				</button>
+			</div>
+			}
+			}
+		</ng-template></app-data-table>
+	}
+	<app-pagination [page]="page()" [pageSize]="pageSize" [total]="filtered().length"
+		[label]="'configurations' | translate" (changed)="page.set($event)" />
+	}
+</app-panel>
+@if (editing()) {
+<app-modal [title]="
+			(selected()
+				? ('Update size configuration' | translate)
+				: ('Add size configuration' | translate)
+			) | translate
+		" [description]="'Ingredient pricing and stock consumption per pizza size.' | translate" [busy]="saving()"
+	(closed)="editing.set(false)">
+	<form id="configuration-form" #form="ngForm" (ngSubmit)="form.valid && save()">
+		<fieldset class="stack" [disabled]="saving()">
+			<label>{{ 'Pizza component' | translate
+				}}<select name="componentSku" [(ngModel)]="draft.componentSku" required [disabled]="!!selected()">
+					<option value="" disabled>{{ 'Select an ingredient' | translate }}</option>
+					@for (p of components(); track p.sku) {
+					<option [value]="p.sku">{{ p.name }} · {{ p.sku }}</option>
+					}
+				</select></label><label>{{ 'Pizza size' | translate
+				}}<select name="pizzaSize" [(ngModel)]="draft.pizzaSize" required [disabled]="!!selected()">
+					<option value="" disabled>{{ 'Select a size' | translate }}</option>
+					@for (s of sizes(); track s.name) {
+					<option [value]="s.name" [disabled]="s.active === false">{{ s.name }}</option>
+					}
+				</select></label>
+			<div class="form-grid">
+				<label>{{ 'Price · EUR' | translate
+					}}<input type="number" name="price" [(ngModel)]="draft.price" required min="0"
+						step="0.01" /></label>
+				@if (stockControlled()) {
+				<label>{{ 'Stock units consumed' | translate
+					}}<input type="number" name="consumption" [(ngModel)]="draft.stockUnitsConsumed" required min="0"
+						step="1" pattern="[0-9]+" /></label>
+				}
+			</div>
+			@if (formError()) {
+			<p class="notice error" role="alert">{{ formError() | translate }}</p>
+			}
+		</fieldset>
+	</form>
+	<div modal-actions class="row-actions">
+		<button class="button" [disabled]="saving()" (click)="editing.set(false)">
+			{{ 'Cancel' | translate }}</button><button class="button primary" type="submit" form="configuration-form"
+			[disabled]="saving() || form.invalid">
+			{{ saving() ? ('Saving…' | translate) : ('Save changes' | translate) }}
+		</button>
+	</div>
+</app-modal>
+}
+@if (removing(); as item) {
+<app-modal [title]="'Remove size configuration?' | translate"
+	[description]="'This may make predefined pizzas unavailable in this size.' | translate" [busy]="saving()"
+	(closed)="removing.set(null)">
+	<p>
+		{{ 'Remove' | translate }} {{ item.productName }} {{ 'for' | translate }}
+		{{ item.pizzaSize }}?
+	</p>
+	@if (formError()) {
+	<p class="notice error" role="alert">{{ formError() | translate }}</p>
+	}
+	<div modal-actions class="row-actions">
+		<button class="button" [disabled]="saving()" (click)="removing.set(null)">
+			{{ 'Cancel' | translate }}</button><button class="button danger" [disabled]="saving()" (click)="remove()">
+			{{ saving() ? ('Removing…' | translate) : ('Remove' | translate) }}
+		</button>
+	</div>
+</app-modal>
+}

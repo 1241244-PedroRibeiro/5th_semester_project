@@ -1,0 +1,23 @@
+#!/bin/bash
+# laprizza SYS05 - SSH Session Audit Start
+# Logs session open to ssh-sessions.log
+# Called from PAM session via pam_exec
+
+set -euo pipefail
+
+LOG_FILE="/var/log/laprizza/ssh-sessions.log"
+mkdir -p "$(dirname "$LOG_FILE")"
+touch "$LOG_FILE"
+chown root:laprizza "$LOG_FILE"
+chmod 0640 "$LOG_FILE"
+
+PAM_USER="${PAM_USER:-unknown}"
+PAM_RHOST="${PAM_RHOST:-unknown}"
+PAM_TTY="${PAM_TTY:-unknown}"
+PAM_SERVICE="${PAM_SERVICE:-sshd}"
+TIMESTAMP_UTC=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+TIMESTAMP_LOCAL=$(date +"%Y-%m-%d %H:%M:%S %Z")
+HOSTNAME=$(hostname)
+
+# Log format: TS=<utc> ACTOR=<user> ACTION=SESSION_OPEN RHOST=<ip> TTY=<tty> SERVICE=<service> HOST=<hostname>
+echo "TS=$TIMESTAMP_UTC ACTOR=$PAM_USER ACTION=SESSION_OPEN RHOST=$PAM_RHOST TTY=$PAM_TTY SERVICE=$PAM_SERVICE HOST=$HOSTNAME" >> "$LOG_FILE"

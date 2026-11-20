@@ -1,0 +1,18 @@
+info:
+  name: 08 — DELETE Size Not Found.
+  type: http
+  seq: 8
+
+http:
+  method: DELETE
+  url: "{{baseUrl}}/pizza-sizes/WEB04%20Does%20Not%20Exist"
+  auth:
+    type: bearer
+    token: "{{managerToken}}"
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: false

@@ -1,0 +1,97 @@
+<app-modal [title]="title() | translate" [busy]="busy()" (closed)="closed.emit()">
+	<form id="account-details-form" #form="ngForm" (ngSubmit)="form.valid && save()">
+		<fieldset class="stack" [disabled]="busy()">
+			@if (mode() === 'name') {
+				<div class="form-grid">
+					<label
+						>{{ 'First name' | translate
+						}}<input
+							name="firstName"
+							[(ngModel)]="firstName"
+							required
+							maxlength="75"
+							autocomplete="given-name"
+					/></label>
+					<label
+						>{{ 'Last name' | translate
+						}}<input
+							name="lastName"
+							[(ngModel)]="lastName"
+							required
+							maxlength="75"
+							autocomplete="family-name"
+					/></label>
+				</div>
+			} @else {
+				@if (mode() === 'email') {
+					<label
+						>{{ 'New email' | translate
+						}}<input
+							type="email"
+							name="email"
+							[(ngModel)]="email"
+							required
+							email
+							autocomplete="email"
+					/></label>
+					<p class="muted">
+						{{ 'Confirm your current password to change your sign-in email.' | translate }}
+					</p>
+				}
+				<label
+					>{{ 'Current password' | translate
+					}}<input
+						type="password"
+						name="currentPassword"
+						[(ngModel)]="currentPassword"
+						required
+						autocomplete="current-password"
+				/></label>
+				@if (mode() === 'password') {
+					<label
+						>{{ 'New password' | translate
+						}}<input
+							type="password"
+							name="newPassword"
+							[(ngModel)]="newPassword"
+							required
+							minlength="8"
+							autocomplete="new-password"
+					/></label>
+					<small>{{
+						'Use at least 8 characters, including an uppercase letter, a lowercase letter, a number and a special character.'
+							| translate
+					}}</small>
+					<label
+						>{{ 'Confirm new password' | translate
+						}}<input
+							type="password"
+							name="confirmation"
+							[(ngModel)]="confirmation"
+							required
+							autocomplete="new-password"
+					/></label>
+					@if (confirmation && confirmation !== newPassword) {
+						<p class="notice error" role="status">{{ 'Passwords must match.' | translate }}</p>
+					}
+				}
+			}
+			@if (error()) {
+				<p class="notice error" role="alert">{{ error() | translate }}</p>
+			}
+		</fieldset>
+	</form>
+	<div modal-actions class="row-actions">
+		<button class="button" [disabled]="busy()" (click)="closed.emit()">
+			{{ 'Cancel' | translate }}
+		</button>
+		<button
+			class="button primary"
+			type="submit"
+			form="account-details-form"
+			[disabled]="busy() || form.invalid || !valid()"
+		>
+			{{ busy() ? ('Saving…' | translate) : ('Save changes' | translate) }}
+		</button>
+	</div>
+</app-modal>

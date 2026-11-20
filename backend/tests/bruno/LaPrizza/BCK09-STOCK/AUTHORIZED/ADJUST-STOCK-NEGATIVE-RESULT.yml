@@ -1,0 +1,32 @@
+info:
+  name: ADJUST-STOCK-NEGATIVE-RESULT
+  type: http
+  seq: 6
+http:
+  method: POST
+  url: '{{baseUrl}}/stock/{{productSku}}/adjustments'
+  body:
+    type: json
+    data: |-
+      {
+      	"adjustmentType": "DECREASE",
+      	"amount": 999999,
+      	"reason": "Teste de stock insuficiente"
+      }
+  auth:
+    type: bearer
+    token: '{{managerToken}}'
+runtime:
+  scripts:
+    - type: tests
+      code: |-
+        test("Matches the current API contract", function() {
+        	expect(res.getStatus()).to.equal(422);
+
+        });
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: false

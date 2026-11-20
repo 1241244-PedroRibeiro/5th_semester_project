@@ -1,0 +1,889 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" contentScriptType="application/ecmascript" contentStyleType="text/css" height="2500px" preserveAspectRatio="none" style="width:10273px;height:2500px;" version="1.1" viewBox="0 0 10273 2500" width="10273px" zoomAndPan="magnify"><defs><filter height="1" id="b1fy61bpq8kfxk0" width="1" x="0" y="0"><feFlood flood-color="#FFE9A8" result="flood"/><feComposite in="SourceGraphic" in2="flood" operator="over"/></filter><filter height="1" id="b1fy61bpq8kfxk1" width="1" x="0" y="0"><feFlood flood-color="#D6E8FF" result="flood"/><feComposite in="SourceGraphic" in2="flood" operator="over"/></filter><filter height="1" id="b1fy61bpq8kfxk2" width="1" x="0" y="0"><feFlood flood-color="#DDF3DD" result="flood"/><feComposite in="SourceGraphic" in2="flood" operator="over"/></filter><filter height="1" id="b1fy61bpq8kfxk3" width="1" x="0" y="0"><feFlood flood-color="#F0E0F7" result="flood"/><feComposite in="SourceGraphic" in2="flood" operator="over"/></filter></defs><g><text fill="#000000" font-family="Helvetica" font-size="22" lengthAdjust="spacingAndGlyphs" textLength="526" x="4885" y="20.4209">Pizzeria Domain Model - General View (Sprint 2)</text><!--MD5=[aae256d1aecd06d21f68e850af5a2253]
+cluster ORDERING--><rect fill="#FDECEC" height="1398" style="stroke: #AAAAAA; stroke-width: 1.5;" width="734" x="3725" y="72.6094"/><text fill="#000000" font-family="Helvetica" font-size="15" font-weight="bold" lengthAdjust="spacingAndGlyphs" textLength="87" x="4048.5" y="88.5327">ORDERING</text><!--MD5=[7cf78341ff2b018d4bc772b77b9de39a]
+cluster Customer Order Aggregate--><rect fill="#FFFFFF" height="1330" style="stroke: #AAAAAA; stroke-width: 1.5;" width="686" x="3749" y="116.6094"/><text fill="#000000" font-family="Helvetica" font-size="15" font-weight="bold" lengthAdjust="spacingAndGlyphs" textLength="222" x="3981" y="132.5327">Customer Order Aggregate</text><!--MD5=[9658f3fa4d2e89482cd3dd3029dfe09d]
+cluster KITCHEN--><rect fill="#EEF0F2" height="1018" style="stroke: #AAAAAA; stroke-width: 1.5;" width="782" x="9126" y="49.6094"/><text fill="#000000" font-family="Helvetica" font-size="15" font-weight="bold" lengthAdjust="spacingAndGlyphs" textLength="72" x="9481" y="65.5327">KITCHEN</text><!--MD5=[a3952087c704d3d5cbef390a137fc7b0]
+cluster Preparation Activity Aggregate--><rect fill="#FFFFFF" height="589.5" style="stroke: #AAAAAA; stroke-width: 1.5;" width="442" x="9150" y="93.6094"/><text fill="#000000" font-family="Helvetica" font-size="15" font-weight="bold" lengthAdjust="spacingAndGlyphs" textLength="252" x="9245" y="109.5327">Preparation Activity Aggregate</text><!--MD5=[815b1428c6032707bf07cc7a17e99a95]
+cluster Kitchen Resource Aggregate--><rect fill="#FFFFFF" height="553" style="stroke: #AAAAAA; stroke-width: 1.5;" width="268" x="9616" y="490.6094"/><text fill="#000000" font-family="Helvetica" font-size="15" font-weight="bold" lengthAdjust="spacingAndGlyphs" textLength="232" x="9634" y="506.5327">Kitchen Resource Aggregate</text><!--MD5=[b5f971fb5f6622dc9dcba67a25f106f9]
+cluster KITCHEN CONFIGURATION--><rect fill="#E8F5E9" height="611.5" style="stroke: #AAAAAA; stroke-width: 1.5;" width="330" x="9932" y="80.1094"/><text fill="#000000" font-family="Helvetica" font-size="15" font-weight="bold" lengthAdjust="spacingAndGlyphs" textLength="216" x="9989" y="96.0327">KITCHEN CONFIGURATION</text><!--MD5=[81cb388ee31ea9ca4bc93b9be0aa6bb6]
+cluster Kitchen Configuration Aggregate--><rect fill="#FFFFFF" height="543.5" style="stroke: #AAAAAA; stroke-width: 1.5;" width="282" x="9956" y="124.1094"/><text fill="#000000" font-family="Helvetica" font-size="15" font-weight="bold" lengthAdjust="spacingAndGlyphs" textLength="266" x="9964" y="140.0327">Kitchen Configuration Aggregate</text><!--MD5=[ce726e56b523008791032454f3f0b981]
+cluster IDENTITY & CUSTOMERS--><rect fill="#EAF2FB" height="1443.5" style="stroke: #AAAAAA; stroke-width: 1.5;" width="2339" x="6763" y="450.6094"/><text fill="#000000" font-family="Helvetica" font-size="15" font-weight="bold" lengthAdjust="spacingAndGlyphs" textLength="204" x="7830.5" y="466.5327">IDENTITY &amp; CUSTOMERS</text><!--MD5=[7dfe0f04111aab41649012f73e570802]
+cluster Authentication Session Aggregate--><rect fill="#FFFFFF" height="219" style="stroke: #AAAAAA; stroke-width: 1.5;" width="293" x="8141" y="1269.6094"/><text fill="#000000" font-family="Helvetica" font-size="15" font-weight="bold" lengthAdjust="spacingAndGlyphs" textLength="277" x="8149" y="1285.5327">Authentication Session Aggregate</text><!--MD5=[d51cf5418a28509a3866ac2d3c781727]
+cluster User Aggregate--><rect fill="#FFFFFF" height="1079.5" style="stroke: #AAAAAA; stroke-width: 1.5;" width="1330" x="6787" y="783.1094"/><text fill="#000000" font-family="Helvetica" font-size="15" font-weight="bold" lengthAdjust="spacingAndGlyphs" textLength="128" x="7388" y="799.0327">User Aggregate</text><!--MD5=[0123dc4cfc0c07c9094d46fa6ac3aa96]
+cluster Customer Aggregate--><rect fill="#FFFFFF" height="1049" style="stroke: #AAAAAA; stroke-width: 1.5;" width="620" x="8458" y="821.1094"/><text fill="#000000" font-family="Helvetica" font-size="15" font-weight="bold" lengthAdjust="spacingAndGlyphs" textLength="170" x="8683" y="837.0327">Customer Aggregate</text><!--MD5=[b095907a2f2baf961b3961318bad9419]
+cluster Role Change Log Aggregate--><rect fill="#FFFFFF" height="211" style="stroke: #AAAAAA; stroke-width: 1.5;" width="254" x="7902" y="494.6094"/><text fill="#000000" font-family="Helvetica" font-size="15" font-weight="bold" lengthAdjust="spacingAndGlyphs" textLength="226" x="7916" y="510.5327">Role Change Log Aggregate</text><!--MD5=[83da60a5a1b46555255e1efe52a1a53e]
+cluster PIZZA CONFIGURATION--><rect fill="#F6ECFA" height="680" style="stroke: #AAAAAA; stroke-width: 1.5;" width="950" x="4533" y="1233.1094"/><text fill="#000000" font-family="Helvetica" font-size="15" font-weight="bold" lengthAdjust="spacingAndGlyphs" textLength="196" x="4910" y="1249.0327">PIZZA CONFIGURATION</text><!--MD5=[9816aaf9faf7a3e53252437ae719a642]
+cluster Pizza Size Aggregate--><rect fill="#FFFFFF" height="159" style="stroke: #AAAAAA; stroke-width: 1.5;" width="224" x="4563" y="1707.6094"/><text fill="#000000" font-family="Helvetica" font-size="15" font-weight="bold" lengthAdjust="spacingAndGlyphs" textLength="172" x="4589" y="1723.5327">Pizza Size Aggregate</text><!--MD5=[6a8a3cbbb51ab20aaef9f93e3078921f]
+cluster Component Size Configuration Aggregate--><rect fill="#FFFFFF" height="204" style="stroke: #AAAAAA; stroke-width: 1.5;" width="354" x="5105" y="1685.1094"/><text fill="#000000" font-family="Helvetica" font-size="15" font-weight="bold" lengthAdjust="spacingAndGlyphs" textLength="338" x="5113" y="1701.0327">Component Size Configuration Aggregate</text><!--MD5=[6eb45cd2fc6b4332e95719aa70093978]
+cluster Predefined Pizza Aggregate--><rect fill="#FFFFFF" height="577.5" style="stroke: #AAAAAA; stroke-width: 1.5;" width="243" x="4838" y="1277.1094"/><text fill="#000000" font-family="Helvetica" font-size="15" font-weight="bold" lengthAdjust="spacingAndGlyphs" textLength="227" x="4846" y="1293.0327">Predefined Pizza Aggregate</text><!--MD5=[b5202806bb8c2221c1a9314d8859b3a9]
+cluster CATALOGUE & INVENTORY--><rect fill="#FFF6E0" height="819" style="stroke: #AAAAAA; stroke-width: 1.5;" width="2028" x="2481" y="1565.6094"/><text fill="#000000" font-family="Helvetica" font-size="15" font-weight="bold" lengthAdjust="spacingAndGlyphs" textLength="221" x="3384.5" y="1581.5327">CATALOGUE &amp; INVENTORY</text><!--MD5=[96d819d1d2b78dc0122097b0eb848a90]
+cluster Product Category Aggregate--><rect fill="#FFFFFF" height="159" style="stroke: #AAAAAA; stroke-width: 1.5;" width="250" x="3103" y="2028.6094"/><text fill="#000000" font-family="Helvetica" font-size="15" font-weight="bold" lengthAdjust="spacingAndGlyphs" textLength="234" x="3111" y="2044.5327">Product Category Aggregate</text><!--MD5=[1964c62cff56d9789d5d2cd0c398c610]
+cluster Allergen Aggregate--><rect fill="#FFFFFF" height="159" style="stroke: #AAAAAA; stroke-width: 1.5;" width="216" x="4269" y="2028.6094"/><text fill="#000000" font-family="Helvetica" font-size="15" font-weight="bold" lengthAdjust="spacingAndGlyphs" textLength="156" x="4299" y="2044.5327">Allergen Aggregate</text><!--MD5=[09899529513378eca4c16c86337c2094]
+cluster Pizza Component Type Aggregate--><rect fill="#FFFFFF" height="347" style="stroke: #AAAAAA; stroke-width: 1.5;" width="408" x="3377" y="2013.6094"/><text fill="#000000" font-family="Helvetica" font-size="15" font-weight="bold" lengthAdjust="spacingAndGlyphs" textLength="277" x="3442.5" y="2029.5327">Pizza Component Type Aggregate</text><!--MD5=[86b3d4378b390aacb3729cbec47dc744]
+cluster Product Aggregate--><rect fill="#FFFFFF" height="585.5" style="stroke: #AAAAAA; stroke-width: 1.5;" width="436" x="3809" y="1609.6094"/><text fill="#000000" font-family="Helvetica" font-size="15" font-weight="bold" lengthAdjust="spacingAndGlyphs" textLength="154" x="3950" y="1625.5327">Product Aggregate</text><!--MD5=[9912538494fa80291ff184f3c3283046]
+cluster Stock Aggregate--><rect fill="#FFFFFF" height="694" style="stroke: #AAAAAA; stroke-width: 1.5;" width="574" x="2505" y="1662.6094"/><text fill="#000000" font-family="Helvetica" font-size="15" font-weight="bold" lengthAdjust="spacingAndGlyphs" textLength="137" x="2723.5" y="1678.5327">Stock Aggregate</text><!--MD5=[6ecbacbbe2e086dff54dd8a4ea91a52b]
+cluster AI PLANNING--><rect fill="#F3E5F5" height="1120.5" style="stroke: #AAAAAA; stroke-width: 1.5;" width="2435" x="22" y="781.1094"/><text fill="#000000" font-family="Helvetica" font-size="15" font-weight="bold" lengthAdjust="spacingAndGlyphs" textLength="108" x="1185.5" y="797.0327">AI PLANNING</text><!--MD5=[72e20e255f5f579246dd1e46ac67200d]
+cluster Consumption Forecast Aggregate--><rect fill="#FFFFFF" height="623" style="stroke: #AAAAAA; stroke-width: 1.5;" width="442" x="1480" y="1254.6094"/><text fill="#000000" font-family="Helvetica" font-size="15" font-weight="bold" lengthAdjust="spacingAndGlyphs" textLength="274" x="1564" y="1270.5327">Consumption Forecast Aggregate</text><!--MD5=[7c9e251cb789a631e2d56a48e3c2786e]
+cluster Supplier Scenario Aggregate--><rect fill="#FFFFFF" height="618" style="stroke: #AAAAAA; stroke-width: 1.5;" width="487" x="1946" y="859.1094"/><text fill="#000000" font-family="Helvetica" font-size="15" font-weight="bold" lengthAdjust="spacingAndGlyphs" textLength="232" x="2073.5" y="875.0327">Supplier Scenario Aggregate</text><!--MD5=[b29825512b483dbcd50ff5382556ca36]
+cluster Planning Result Aggregate--><rect fill="#FFFFFF" height="652" style="stroke: #AAAAAA; stroke-width: 1.5;" width="1410" x="46" y="825.1094"/><text fill="#000000" font-family="Helvetica" font-size="15" font-weight="bold" lengthAdjust="spacingAndGlyphs" textLength="215" x="643.5" y="841.0327">Planning Result Aggregate</text><!--MD5=[1b114121a642f58f98e03f3f0a2dd8e5]
+cluster SHARED KERNEL--><rect fill="#F2F2F2" height="475.5" style="stroke: #AAAAAA; stroke-width: 1.5;" width="1092" x="5647" y="1692.6094"/><text fill="#000000" font-family="Helvetica" font-size="15" font-weight="bold" lengthAdjust="spacingAndGlyphs" textLength="136" x="6125" y="1708.5327">SHARED KERNEL</text><!--MD5=[88a40dd85657dd4dc07cd14719960bd6]
+class CustomerOrder--><rect fill="#FFE9A8" height="177.3281" id="CustomerOrder" rx="4" ry="4" style="stroke: #C99700; stroke-width: 2.0;" width="195" x="4224.5" y="172.6094"/><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="99" x="4272.5" y="189.6763">CustomerOrder</text><line style="stroke: #C99700; stroke-width: 1.5;" x1="4225.5" x2="4418.5" y1="197.7422" y2="197.7422"/><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="160" x="4230.5" y="213.8091">orderNumber : Long «id»</text><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="181" x="4230.5" y="228.9419">customerEmail : Email [0..1]</text><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="183" x="4230.5" y="244.0747">placementTime : Timestamp</text><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="130" x="4230.5" y="259.2075">status : OrderStatus</text><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="134" x="4230.5" y="274.3403">totalAmount : Money</text><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="157" x="4230.5" y="289.4731">items : List&lt;OrderItem&gt;</text><line style="stroke: #C99700; stroke-width: 1.0;" x1="4225.5" x2="4418.5" y1="296.5391" y2="296.5391"/><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="128" x="4230.5" y="312.606">addItem(OrderItem)</text><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="177" x="4230.5" y="327.7388">place() / confirm() / cancel()</text><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="165" x="4230.5" y="342.8716">recalculateTotal() : Money</text><!--MD5=[003718b22fee2486eeba0fa029a176b7]
+class OrderItem--><rect fill="#D6E8FF" height="192.4609" id="OrderItem" rx="4" ry="4" style="stroke: #3B78C4; stroke-width: 1.5;" width="235" x="4102.5" y="524.1094"/><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="65" x="4187.5" y="541.1763">OrderItem</text><line style="stroke: #3B78C4; stroke-width: 1.5;" x1="4103.5" x2="4336.5" y1="549.2422" y2="549.2422"/><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="160" x="4108.5" y="565.3091">orderNumber : Long «id»</text><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="133" x="4108.5" y="580.4419">lineNumber : int «id»</text><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="166" x="4108.5" y="595.5747">itemType : OrderItemType</text><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="210" x="4108.5" y="610.7075">catalogueProductSku : Sku [0..1]</text><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="80" x="4108.5" y="625.8403">quantity : int</text><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="109" x="4108.5" y="640.9731">unitPrice : Money</text><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="223" x="4108.5" y="656.106">fulfillmentStatus : FulfillmentStatus</text><line style="stroke: #3B78C4; stroke-width: 1.0;" x1="4103.5" x2="4336.5" y1="663.1719" y2="663.1719"/><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="137" x="4108.5" y="679.2388">markBeingPrepared()</text><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="82" x="4108.5" y="694.3716">markReady()</text><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="88" x="4108.5" y="709.5044">markServed()</text><!--MD5=[46af22130ce494480619dd2b891c031e]
+class PersonalizedPizzaSnapshot--><rect fill="#DDF3DD" height="123.9297" id="PersonalizedPizzaSnapshot" rx="4" ry="4" style="stroke: #3C9A3C; stroke-width: 1.5;" width="254" x="3765" y="941.6094"/><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="175" x="3804.5" y="958.6763">PersonalizedPizzaSnapshot</text><line style="stroke: #3C9A3C; stroke-width: 1.5;" x1="3766" x2="4018" y1="966.7422" y2="966.7422"/><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="160" x="3771" y="982.8091">orderNumber : Long «id»</text><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="133" x="3771" y="997.9419">lineNumber : int «id»</text><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="242" x="3771" y="1013.0747">sourcePredefinedPizzaSku : Sku [0..1]</text><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="184" x="3771" y="1028.2075">chosenSize : PizzaSizeName</text><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="150" x="3771" y="1043.3403">computedPrice : Money</text><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="205" x="3771" y="1058.4731">allergens : Set&lt;AllergenName&gt;</text><!--MD5=[5ce021d443c9f3ead52fbde9600ca0b0]
+class SnapshotComponent--><rect fill="#DDF3DD" height="63.3984" id="SnapshotComponent" rx="4" ry="4" style="stroke: #3C9A3C; stroke-width: 1.5;" width="145" x="3870.5" y="1367.6094"/><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="136" x="3875" y="1384.6763">SnapshotComponent</text><line style="stroke: #3C9A3C; stroke-width: 1.5;" x1="3871.5" x2="4014.5" y1="1392.7422" y2="1392.7422"/><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="133" x="3876.5" y="1408.8091">componentSku : Sku</text><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="80" x="3876.5" y="1423.9419">quantity : int</text><!--MD5=[de626c0cb0f072ae90ffb25031374c19]
+class OrderStatus--><rect fill="#F0E0F7" height="139.0625" id="OrderStatus" rx="4" ry="4" style="stroke: #8E44AD; stroke-width: 1.5;" width="120" x="3942" y="550.6094"/><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="78" x="3963" y="567.6763">OrderStatus</text><line style="stroke: #8E44AD; stroke-width: 1.5;" x1="3943" x2="4061" y1="575.7422" y2="575.7422"/><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="74" x="3948" y="591.8091">SIMULATED</text><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="51" x="3948" y="606.9419">PLACED</text><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="76" x="3948" y="622.0747">CONFIRMED</text><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="108" x="3948" y="637.2075">IN_PREPARATION</text><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="42" x="3948" y="652.3403">READY</text><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="71" x="3948" y="667.4731">DELIVERED</text><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="77" x="3948" y="682.606">CANCELLED</text><!--MD5=[1f2860427d570b1d8a7ddbb531d83df9]
+class OrderItemType--><rect fill="#F0E0F7" height="63.3984" id="OrderItemType" rx="4" ry="4" style="stroke: #8E44AD; stroke-width: 1.5;" width="159" x="4059.5" y="972.1094"/><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="95" x="4091.5" y="989.1763">OrderItemType</text><line style="stroke: #8E44AD; stroke-width: 1.5;" x1="4060.5" x2="4217.5" y1="997.2422" y2="997.2422"/><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="141" x="4065.5" y="1013.3091">STANDARD_PRODUCT</text><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="147" x="4065.5" y="1028.4419">PERSONALIZED_PIZZA</text><!--MD5=[2e4f9bb41e0b25b9180dc47e30cdff15]
+class FulfillmentStatus--><rect fill="#F0E0F7" height="93.6641" id="FulfillmentStatus" rx="4" ry="4" style="stroke: #8E44AD; stroke-width: 1.5;" width="160" x="4259" y="956.6094"/><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="107" x="4285.5" y="973.6763">FulfillmentStatus</text><line style="stroke: #8E44AD; stroke-width: 1.5;" x1="4260" x2="4418" y1="981.7422" y2="981.7422"/><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="148" x="4265" y="997.8091">WAITING_PREPARATION</text><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="114" x="4265" y="1012.9419">BEING_PREPARED</text><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="115" x="4265" y="1028.0747">READY_TO_SERVE</text><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="52" x="4265" y="1043.2075">SERVED</text><!--MD5=[d441774222fba6d0295612cdd06e488b]
+class PreparationActivity--><rect fill="#FFE9A8" height="222.7266" id="PreparationActivity" rx="4" ry="4" style="stroke: #C99700; stroke-width: 2.0;" width="304" x="9166" y="149.6094"/><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="120" x="9258" y="166.6763">PreparationActivity</text><line style="stroke: #C99700; stroke-width: 1.5;" x1="9167" x2="9469" y1="174.7422" y2="174.7422"/><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="130" x="9172" y="190.8091">activityId : Long «id»</text><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="129" x="9172" y="205.9419">orderNumber : Long</text><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="169" x="9172" y="221.0747">orderItemLineNumber : int</text><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="125" x="9172" y="236.2075">activityType : String</text><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="227" x="9172" y="251.3403">expectedDuration : ActivityDuration</text><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="140" x="9172" y="266.4731">status : ActivityStatus</text><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="292" x="9172" y="281.606">allocatedResourceCode : ResourceCode [0..1]</text><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="170" x="9172" y="296.7388">prerequisites : Set&lt;Long&gt;</text><line style="stroke: #C99700; stroke-width: 1.0;" x1="9167" x2="9469" y1="303.8047" y2="303.8047"/><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="141" x="9172" y="319.8716">addPrerequisite(Long)</text><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="211" x="9172" y="335.0044">allocateResource(ResourceCode)</text><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="122" x="9172" y="350.1372">start() / complete()</text><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="197" x="9172" y="365.27">isReady(Set&lt;Long&gt;) : boolean</text><!--MD5=[3a7a9b260faae53ab1704ce30f3470c7]
+class ActivityDuration--><rect fill="#DDF3DD" height="48.2656" id="ActivityDuration" rx="4" ry="4" style="stroke: #3C9A3C; stroke-width: 1.5;" width="107" x="9355.5" y="596.1094"/><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="101" x="9358.5" y="613.1763">ActivityDuration</text><line style="stroke: #3C9A3C; stroke-width: 1.5;" x1="9356.5" x2="9461.5" y1="621.2422" y2="621.2422"/><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="81" x="9361.5" y="637.3091">seconds : int</text><!--MD5=[5cd220b2e425fb2534d8cc5e55831ce0]
+class ActivityStatus--><rect fill="#F0E0F7" height="93.6641" id="ActivityStatus" rx="4" ry="4" style="stroke: #8E44AD; stroke-width: 1.5;" width="102" x="9213" y="573.1094"/><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="88" x="9220" y="590.1763">ActivityStatus</text><line style="stroke: #8E44AD; stroke-width: 1.5;" x1="9214" x2="9314" y1="598.2422" y2="598.2422"/><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="53" x="9219" y="614.3091">WAITING</text><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="81" x="9219" y="629.4419">SCHEDULED</text><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="90" x="9219" y="644.5747">IN_PROGRESS</text><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="78" x="9219" y="659.7075">COMPLETED</text><!--MD5=[d14276918af6b99e64c367559a4b964d]
+class KitchenResource--><rect fill="#FFE9A8" height="147.0625" id="KitchenResource" rx="4" ry="4" style="stroke: #C99700; stroke-width: 2.0;" width="236" x="9632" y="546.6094"/><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="106" x="9697" y="563.6763">KitchenResource</text><line style="stroke: #C99700; stroke-width: 1.5;" x1="9633" x2="9867" y1="571.7422" y2="571.7422"/><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="224" x="9638" y="587.8091">resourceCode : ResourceCode «id»</text><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="87" x="9638" y="602.9419">name : String</text><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="136" x="9638" y="618.0747">resourceType : String</text><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="145" x="9638" y="633.2075">capacity : SlotCapacity</text><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="135" x="9638" y="648.3403">operational : boolean</text><line style="stroke: #C99700; stroke-width: 1.0;" x1="9633" x2="9867" y1="655.4063" y2="655.4063"/><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="117" x="9638" y="671.4731">markOperational()</text><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="127" x="9638" y="686.606">markOutOfService()</text><!--MD5=[c905b292d2027b30aa106f90d36e3feb]
+class SlotCapacity--><rect fill="#DDF3DD" height="48.2656" id="SlotCapacity" rx="4" ry="4" style="stroke: #3C9A3C; stroke-width: 1.5;" width="86" x="9707" y="979.6094"/><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="80" x="9710" y="996.6763">SlotCapacity</text><line style="stroke: #3C9A3C; stroke-width: 1.5;" x1="9708" x2="9792" y1="1004.7422" y2="1004.7422"/><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="58" x="9713" y="1020.8091">slots : int</text><!--MD5=[c18fe7e536ce7e9b0f809662b73067f5]
+class KitchenConfiguration--><rect fill="#FFE9A8" height="162.1953" id="KitchenConfiguration" rx="4" ry="4" style="stroke: #C99700; stroke-width: 2.0;" width="216" x="9972" y="180.1094"/><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="132" x="10014" y="197.1763">KitchenConfiguration</text><line style="stroke: #C99700; stroke-width: 1.5;" x1="9973" x2="10187" y1="205.2422" y2="205.2422"/><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="204" x="9978" y="221.3091">name : ConfigurationName «id»</text><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="127" x="9978" y="236.4419">jsonContent : String</text><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="112" x="9978" y="251.5747">isActive : boolean</text><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="147" x="9978" y="266.7075">createdAt : Timestamp</text><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="151" x="9978" y="281.8403">updatedAt : Timestamp</text><line style="stroke: #C99700; stroke-width: 1.0;" x1="9973" x2="10187" y1="288.9063" y2="288.9063"/><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="150" x="9978" y="304.9731">activate() / deactivate()</text><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="121" x="9978" y="320.106">replaceJson(String)</text><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="177" x="9978" y="335.2388">validate() : ValidationReport</text><!--MD5=[8f9b1d001f1b2e702c1191fdaca2cc18]
+class ConfigurationName--><rect fill="#DDF3DD" height="63.3984" id="ConfigurationName" rx="4" ry="4" style="stroke: #3C9A3C; stroke-width: 1.5;" width="130" x="10015" y="588.6094"/><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="124" x="10018" y="605.6763">ConfigurationName</text><line style="stroke: #3C9A3C; stroke-width: 1.5;" x1="10016" x2="10144" y1="613.7422" y2="613.7422"/><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="84" x="10021" y="629.8091">value : String</text><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="84" x="10021" y="644.9419">value : String</text><!--MD5=[dae4cdb60f5e89158a8e1763f50d54a0]
+class AuthSession--><rect fill="#FFE9A8" height="147.0625" id="AuthSession" rx="4" ry="4" style="stroke: #C99700; stroke-width: 2.0;" width="231" x="8156.5" y="1325.6094"/><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="80" x="8232" y="1342.6763">AuthSession</text><line style="stroke: #C99700; stroke-width: 1.5;" x1="8157.5" x2="8386.5" y1="1350.7422" y2="1350.7422"/><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="87" x="8162.5" y="1366.8091">id : UUID «id»</text><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="144" x="8162.5" y="1381.9419">username : Username</text><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="144" x="8162.5" y="1397.0747">expiresAt : Timestamp</text><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="187" x="8162.5" y="1412.2075">revokedAt : Timestamp [0..1]</text><line style="stroke: #C99700; stroke-width: 1.0;" x1="8157.5" x2="8386.5" y1="1419.2734" y2="1419.2734"/><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="153" x="8162.5" y="1435.3403">isActive(Date) : boolean</text><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="219" x="8162.5" y="1450.4731">isActiveFor(String, Date) : boolean</text><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="84" x="8162.5" y="1465.606">revoke(Date)</text><!--MD5=[3fd616f346a44cd59a91eb10b19e157c]
+class User--><rect fill="#FFE9A8" height="328.6563" id="User" rx="4" ry="4" style="stroke: #C99700; stroke-width: 2.0;" width="314" x="7534" y="839.1094"/><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="30" x="7676" y="856.1763">User</text><line style="stroke: #C99700; stroke-width: 1.5;" x1="7535" x2="7847" y1="864.2422" y2="864.2422"/><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="175" x="7540" y="880.3091">username : Username «id»</text><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="132" x="7540" y="895.4419">name : PersonName</text><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="82" x="7540" y="910.5747">email : Email</text><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="236" x="7540" y="925.7075">passwordHash : PasswordHash [0..1]</text><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="207" x="7540" y="940.8403">externalIdpSubject : String [0..1]</text><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="124" x="7540" y="955.9731">status : UserStatus</text><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="153" x="7540" y="971.106">roles : Set&lt;RoleName&gt;</text><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="287" x="7540" y="986.2388">dietaryRestrictions : Set&lt;DietaryRestriction&gt;</text><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="242" x="7540" y="1001.3716">invitations : List&lt;ActivationInvitation&gt;</text><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="147" x="7540" y="1016.5044">createdAt : Timestamp</text><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="151" x="7540" y="1031.6372">updatedAt : Timestamp</text><line style="stroke: #C99700; stroke-width: 1.0;" x1="7535" x2="7847" y1="1038.7031" y2="1038.7031"/><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="210" x="7540" y="1054.77">changePassword(PasswordHash)</text><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="150" x="7540" y="1069.9028">activate() / deactivate()</text><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="302" x="7540" y="1085.0356">assignRole(RoleName) / revokeRole(RoleName)</text><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="189" x="7540" y="1100.1685">hasRole(RoleName) : boolean</text><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="255" x="7540" y="1115.3013">recordDietaryRestriction(AllergenName)</text><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="245" x="7540" y="1130.4341">clearDietaryRestriction(AllergenName)</text><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="261" x="7540" y="1145.5669">issueInvitation(InvitationPurpose) : String</text><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="216" x="7540" y="1160.6997">consumeInvitation(String) : Result</text><!--MD5=[84af69d93ff817f9b2620e12f2d57f8b]
+class PasswordHash--><rect fill="#DDF3DD" height="48.2656" id="PasswordHash" rx="4" ry="4" style="stroke: #3C9A3C; stroke-width: 1.5;" width="145" x="7816.5" y="1375.1094"/><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="93" x="7842.5" y="1392.1763">PasswordHash</text><line style="stroke: #3C9A3C; stroke-width: 1.5;" x1="7817.5" x2="7960.5" y1="1400.2422" y2="1400.2422"/><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="133" x="7822.5" y="1416.3091">hashedValue : String</text><!--MD5=[faba9a5d9413488db8058d22964c429b]
+class RoleName--><rect fill="#DDF3DD" height="48.2656" id="RoleName" rx="4" ry="4" style="stroke: #3C9A3C; stroke-width: 1.5;" width="99" x="8001.5" y="1375.1094"/><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="66" x="8018" y="1392.1763">RoleName</text><line style="stroke: #3C9A3C; stroke-width: 1.5;" x1="8002.5" x2="8099.5" y1="1400.2422" y2="1400.2422"/><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="87" x="8007.5" y="1416.3091">name : String</text><!--MD5=[0f39e4cb6f03951afbf6d14bd2505654]
+class Address--><rect fill="#DDF3DD" height="93.6641" id="Address" rx="4" ry="4" style="stroke: #3C9A3C; stroke-width: 1.5;" width="139" x="6803.5" y="1352.1094"/><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="52" x="6847" y="1369.1763">Address</text><line style="stroke: #3C9A3C; stroke-width: 1.5;" x1="6804.5" x2="6941.5" y1="1377.2422" y2="1377.2422"/><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="88" x="6809.5" y="1393.3091">street : String</text><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="122" x="6809.5" y="1408.4419">postalCode : String</text><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="72" x="6809.5" y="1423.5747">city : String</text><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="127" x="6809.5" y="1438.7075">extraDetails : String</text><!--MD5=[b5e265065262f4f9caf90311e5706eef]
+class PhoneNumber--><rect fill="#DDF3DD" height="48.2656" id="PhoneNumber" rx="4" ry="4" style="stroke: #3C9A3C; stroke-width: 1.5;" width="98" x="6983" y="1375.1094"/><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="92" x="6986" y="1392.1763">PhoneNumber</text><line style="stroke: #3C9A3C; stroke-width: 1.5;" x1="6984" x2="7080" y1="1400.2422" y2="1400.2422"/><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="84" x="6989" y="1416.3091">value : String</text><!--MD5=[611d9020b3e795e73833d8704a74093d]
+class DietaryRestriction--><rect fill="#DDF3DD" height="63.3984" id="DietaryRestriction" rx="4" ry="4" style="stroke: #3C9A3C; stroke-width: 1.5;" width="205" x="7121.5" y="1367.6094"/><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="113" x="7167.5" y="1384.6763">DietaryRestriction</text><line style="stroke: #3C9A3C; stroke-width: 1.5;" x1="7122.5" x2="7325.5" y1="1392.7422" y2="1392.7422"/><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="193" x="7127.5" y="1408.8091">allergenName : AllergenName</text><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="155" x="7127.5" y="1423.9419">recordedAt : Timestamp</text><!--MD5=[97be8b184a7e7792d8ca26cf2512841c]
+class ActivationInvitation--><rect fill="#D6E8FF" height="123.9297" id="ActivationInvitation" rx="4" ry="4" style="stroke: #3B78C4; stroke-width: 1.5;" width="199" x="7366.5" y="1337.1094"/><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="121" x="7405.5" y="1354.1763">ActivationInvitation</text><line style="stroke: #3B78C4; stroke-width: 1.5;" x1="7367.5" x2="7564.5" y1="1362.2422" y2="1362.2422"/><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="175" x="7372.5" y="1378.3091">token : InvitationToken «id»</text><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="174" x="7372.5" y="1393.4419">purpose : InvitationPurpose</text><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="144" x="7372.5" y="1408.5747">expiresAt : Timestamp</text><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="167" x="7372.5" y="1423.7075">usedAt : Timestamp [0..1]</text><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="187" x="7372.5" y="1438.8403">revokedAt : Timestamp [0..1]</text><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="147" x="7372.5" y="1453.9731">createdAt : Timestamp</text><!--MD5=[51fd3fce36c976f35b405d5800336138]
+class UserStatus--><rect fill="#F0E0F7" height="78.5313" id="UserStatus" rx="4" ry="4" style="stroke: #8E44AD; stroke-width: 1.5;" width="170" x="7606" y="1359.6094"/><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="72" x="7655" y="1376.6763">UserStatus</text><line style="stroke: #8E44AD; stroke-width: 1.5;" x1="7607" x2="7775" y1="1384.7422" y2="1384.7422"/><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="45" x="7612" y="1400.8091">ACTIVE</text><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="89" x="7612" y="1415.9419">DEACTIVATED</text><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="158" x="7612" y="1431.0747">PENDING_REGISTRATION</text><!--MD5=[aa1b262f66c43741778c257403a38058]
+class InvitationPurpose--><rect fill="#F0E0F7" height="78.5313" id="InvitationPurpose" rx="4" ry="4" style="stroke: #8E44AD; stroke-width: 1.5;" width="208" x="7362" y="1767.6094"/><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="110" x="7411" y="1784.6763">InvitationPurpose</text><line style="stroke: #8E44AD; stroke-width: 1.5;" x1="7363" x2="7569" y1="1792.7422" y2="1792.7422"/><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="196" x="7368" y="1808.8091">LOCAL_ACCOUNT_ACTIVATION</text><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="146" x="7368" y="1823.9419">EXTERNAL_IDP_MATCH</text><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="121" x="7368" y="1839.0747">PASSWORD_RESET</text><!--MD5=[2ce0c9fb7f55b1e256ab28a8ea6b25ec]
+class Customer--><rect fill="#FFE9A8" height="252.9922" id="Customer" rx="4" ry="4" style="stroke: #C99700; stroke-width: 2.0;" width="313" x="8474.5" y="877.1094"/><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="63" x="8599.5" y="894.1763">Customer</text><line style="stroke: #C99700; stroke-width: 1.5;" x1="8475.5" x2="8786.5" y1="902.2422" y2="902.2422"/><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="113" x="8480.5" y="918.3091">email : Email «id»</text><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="182" x="8480.5" y="933.4419">username : Username [0..1]</text><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="132" x="8480.5" y="948.5747">name : PersonName</text><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="206" x="8480.5" y="963.7075">contactInfo : ContactInformation</text><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="196" x="8480.5" y="978.8403">vatNumber : VatNumber [0..1]</text><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="192" x="8480.5" y="993.9731">consent : ConsentPreferences</text><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="237" x="8480.5" y="1009.106">addresses : List&lt;CustomerAddress&gt;</text><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="147" x="8480.5" y="1024.2388">createdAt : Timestamp</text><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="151" x="8480.5" y="1039.3716">updatedAt : Timestamp</text><line style="stroke: #C99700; stroke-width: 1.0;" x1="8475.5" x2="8786.5" y1="1046.4375" y2="1046.4375"/><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="301" x="8480.5" y="1062.5044">updateContactInformation(ContactInformation)</text><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="248" x="8480.5" y="1077.6372">addAddress(DeliveryAddress, boolean)</text><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="174" x="8480.5" y="1092.77">removeAddress(AddressId)</text><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="191" x="8480.5" y="1107.9028">setDefaultAddress(AddressId)</text><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="159" x="8480.5" y="1123.0356">updateConsent(boolean)</text><!--MD5=[a11362ba449c239d5825aa8ef7f6cf4e]
+class CustomerAddress--><rect fill="#D6E8FF" height="63.3984" id="CustomerAddress" rx="4" ry="4" style="stroke: #3B78C4; stroke-width: 1.5;" width="131" x="8474.5" y="1367.6094"/><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="115" x="8482.5" y="1384.6763">CustomerAddress</text><line style="stroke: #3B78C4; stroke-width: 1.5;" x1="8475.5" x2="8604.5" y1="1392.7422" y2="1392.7422"/><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="85" x="8480.5" y="1408.8091">id : Long «id»</text><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="119" x="8480.5" y="1423.9419">isDefault : boolean</text><!--MD5=[50e91b14af953b75b920246565d9ae95]
+class DeliveryAddress--><rect fill="#DDF3DD" height="93.6641" id="DeliveryAddress" rx="4" ry="4" style="stroke: #3C9A3C; stroke-width: 1.5;" width="139" x="8474.5" y="1760.1094"/><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="103" x="8492.5" y="1777.1763">DeliveryAddress</text><line style="stroke: #3C9A3C; stroke-width: 1.5;" x1="8475.5" x2="8612.5" y1="1785.2422" y2="1785.2422"/><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="88" x="8480.5" y="1801.3091">street : String</text><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="122" x="8480.5" y="1816.4419">postalCode : String</text><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="72" x="8480.5" y="1831.5747">city : String</text><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="127" x="8480.5" y="1846.7075">extraDetails : String</text><!--MD5=[e5d8e980445664eb27d87f993fe9a72f]
+class ContactInformation--><rect fill="#DDF3DD" height="63.3984" id="ContactInformation" rx="4" ry="4" style="stroke: #3C9A3C; stroke-width: 1.5;" width="156" x="8646" y="1367.6094"/><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="123" x="8662.5" y="1384.6763">ContactInformation</text><line style="stroke: #3C9A3C; stroke-width: 1.5;" x1="8647" x2="8801" y1="1392.7422" y2="1392.7422"/><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="144" x="8652" y="1408.8091">phone : PhoneNumber</text><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="82" x="8652" y="1423.9419">email : Email</text><!--MD5=[b2cb54ff03a512b471ed4d034400d5a5]
+class ConsentPreferences--><rect fill="#DDF3DD" height="63.3984" id="ConsentPreferences" rx="4" ry="4" style="stroke: #3C9A3C; stroke-width: 1.5;" width="219" x="8842.5" y="1367.6094"/><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="129" x="8887.5" y="1384.6763">ConsentPreferences</text><line style="stroke: #3C9A3C; stroke-width: 1.5;" x1="8843.5" x2="9060.5" y1="1392.7422" y2="1392.7422"/><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="181" x="8848.5" y="1408.8091">marketingConsent : boolean</text><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="207" x="8848.5" y="1423.9419">consentTimestamp : Timestamp</text><!--MD5=[e6d577e1bd50d74582b32c36be611598]
+class RoleChangeLog--><rect fill="#FFE9A8" height="139.0625" id="RoleChangeLog" rx="4" ry="4" style="stroke: #C99700; stroke-width: 2.0;" width="222" x="7918" y="550.6094"/><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="99" x="7979.5" y="567.6763">RoleChangeLog</text><line style="stroke: #C99700; stroke-width: 2.0;" x1="7919" x2="8139" y1="575.7422" y2="575.7422"/><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="104" x="7924" y="591.8091">logId : Long «id»</text><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="179" x="7924" y="606.9419">actorUsername : Username</text><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="185" x="7924" y="622.0747">targetUsername : Username</text><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="210" x="7924" y="637.2075">previousRoles : Set&lt;RoleName&gt;</text><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="181" x="7924" y="652.3403">newRoles : Set&lt;RoleName&gt;</text><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="153" x="7924" y="667.4731">changedAt : Timestamp</text><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="132" x="7924" y="682.606">reason : String [0..1]</text><!--MD5=[f59a2d0309181cb5494b6eb19a81385d]
+class PizzaSize--><rect fill="#FFE9A8" height="86.5313" id="PizzaSize" rx="4" ry="4" style="stroke: #C99700; stroke-width: 2.0;" width="191" x="4579.5" y="1763.6094"/><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="60" x="4645" y="1780.6763">PizzaSize</text><line style="stroke: #C99700; stroke-width: 1.5;" x1="4580.5" x2="4769.5" y1="1788.7422" y2="1788.7422"/><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="179" x="4585.5" y="1804.8091">name : PizzaSizeName «id»</text><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="101" x="4585.5" y="1819.9419">active : boolean</text><line style="stroke: #C99700; stroke-width: 1.0;" x1="4580.5" x2="4769.5" y1="1827.0078" y2="1827.0078"/><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="150" x="4585.5" y="1843.0747">activate() / deactivate()</text><!--MD5=[29f9dd3e608df3c68e000e833ea8fe85]
+class ComponentSizeConfiguration--><rect fill="#FFE9A8" height="131.9297" id="ComponentSizeConfiguration" rx="4" ry="4" style="stroke: #C99700; stroke-width: 2.0;" width="250" x="5121" y="1741.1094"/><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="187" x="5152.5" y="1758.1763">ComponentSizeConfiguration</text><line style="stroke: #C99700; stroke-width: 1.5;" x1="5122" x2="5370" y1="1766.2422" y2="1766.2422"/><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="164" x="5127" y="1782.3091">componentSku : Sku «id»</text><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="202" x="5127" y="1797.4419">pizzaSize : PizzaSizeName «id»</text><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="85" x="5127" y="1812.5747">price : Money</text><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="238" x="5127" y="1827.7075">stockUnitsConsumed : StockQuantity</text><line style="stroke: #C99700; stroke-width: 1.0;" x1="5122" x2="5370" y1="1834.7734" y2="1834.7734"/><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="130" x="5127" y="1850.8403">changePrice(Money)</text><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="232" x="5127" y="1865.9731">changeConsumption(StockQuantity)</text><!--MD5=[9d45e7ab7c4ec67d9b7d6c9420e1a036]
+class PredefinedPizza--><rect fill="#FFE9A8" height="131.9297" id="PredefinedPizza" rx="4" ry="4" style="stroke: #C99700; stroke-width: 2.0;" width="175" x="4854.5" y="1333.1094"/><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="101" x="4891.5" y="1350.1763">PredefinedPizza</text><line style="stroke: #C99700; stroke-width: 1.5;" x1="4855.5" x2="5028.5" y1="1358.2422" y2="1358.2422"/><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="89" x="4860.5" y="1374.3091">sku : Sku «id»</text><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="128" x="4860.5" y="1389.4419">recipeName : String</text><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="163" x="4860.5" y="1404.5747">recipe : Set&lt;RecipeLine&gt;</text><line style="stroke: #C99700; stroke-width: 1.0;" x1="4855.5" x2="5028.5" y1="1411.6406" y2="1411.6406"/><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="150" x="4860.5" y="1427.7075">addRecipeLine(Sku, int)</text><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="151" x="4860.5" y="1442.8403">removeRecipeLine(Sku)</text><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="159" x="4860.5" y="1457.9731">changeQuantity(Sku, int)</text><!--MD5=[a51e8c7b2210f7716fea3b06c299a714]
+class RecipeLine--><rect fill="#DDF3DD" height="63.3984" id="RecipeLine" rx="4" ry="4" style="stroke: #3C9A3C; stroke-width: 1.5;" width="145" x="4869.5" y="1775.6094"/><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="68" x="4908" y="1792.6763">RecipeLine</text><line style="stroke: #3C9A3C; stroke-width: 1.5;" x1="4870.5" x2="5013.5" y1="1800.7422" y2="1800.7422"/><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="133" x="4875.5" y="1816.8091">componentSku : Sku</text><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="126" x="4875.5" y="1831.9419">defaultQuantity : int</text><!--MD5=[a1db4bf20df23ac2cd9366d22a9e2860]
+class ProductCategory--><rect fill="#FFE9A8" height="86.5313" id="ProductCategory" rx="4" ry="4" style="stroke: #C99700; stroke-width: 2.0;" width="189" x="3147.5" y="2084.6094"/><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="107" x="3188.5" y="2101.6763">ProductCategory</text><line style="stroke: #C99700; stroke-width: 1.5;" x1="3148.5" x2="3335.5" y1="2109.7422" y2="2109.7422"/><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="177" x="3153.5" y="2125.8091">name : CategoryName «id»</text><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="120" x="3153.5" y="2140.9419">description : String</text><line style="stroke: #C99700; stroke-width: 1.0;" x1="3148.5" x2="3335.5" y1="2148.0078" y2="2148.0078"/><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="165" x="3153.5" y="2164.0747">updateDescription(String)</text><!--MD5=[3ea633b366b7e3c88379499281652b08]
+class Allergen--><rect fill="#FFE9A8" height="86.5313" id="Allergen" rx="4" ry="4" style="stroke: #C99700; stroke-width: 2.0;" width="183" x="4285.5" y="2084.6094"/><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="52" x="4351" y="2101.6763">Allergen</text><line style="stroke: #C99700; stroke-width: 1.5;" x1="4286.5" x2="4467.5" y1="2109.7422" y2="2109.7422"/><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="171" x="4291.5" y="2125.8091">name : AllergenName «id»</text><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="120" x="4291.5" y="2140.9419">description : String</text><line style="stroke: #C99700; stroke-width: 1.0;" x1="4286.5" x2="4467.5" y1="2148.0078" y2="2148.0078"/><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="165" x="4291.5" y="2164.0747">updateDescription(String)</text><!--MD5=[034873260479ef6c357df06e9220a52a]
+class PizzaComponentType--><rect fill="#FFE9A8" height="116.7969" id="PizzaComponentType" rx="4" ry="4" style="stroke: #C99700; stroke-width: 2.0;" width="265" x="3503.5" y="2069.6094"/><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="138" x="3567" y="2086.6763">PizzaComponentType</text><line style="stroke: #C99700; stroke-width: 1.5;" x1="3504.5" x2="3767.5" y1="2094.7422" y2="2094.7422"/><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="224" x="3509.5" y="2110.8091">name : ComponentTypeName «id»</text><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="207" x="3509.5" y="2125.9419">assemblyOrder : AssemblyOrder</text><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="192" x="3509.5" y="2141.0747">cardinality : CardinalityBounds</text><line style="stroke: #C99700; stroke-width: 1.0;" x1="3504.5" x2="3767.5" y1="2148.1406" y2="2148.1406"/><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="253" x="3509.5" y="2164.2075">changeAssemblyOrder(AssemblyOrder)</text><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="239" x="3509.5" y="2179.3403">changeCardinality(CardinalityBounds)</text><!--MD5=[0602a91bf2eca7c685e4c3b1c6aaabdd]
+class AssemblyOrder--><rect fill="#DDF3DD" height="48.2656" id="AssemblyOrder" rx="4" ry="4" style="stroke: #3C9A3C; stroke-width: 1.5;" width="154" x="3615" y="2277.1094"/><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="98" x="3643" y="2294.1763">AssemblyOrder</text><line style="stroke: #3C9A3C; stroke-width: 1.5;" x1="3616" x2="3768" y1="2302.2422" y2="2302.2422"/><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="142" x="3621" y="2318.3091">sequenceNumber : int</text><!--MD5=[fee05db4eb9f82012e71e3382bef5520]
+class CardinalityBounds--><rect fill="#DDF3DD" height="86.5313" id="CardinalityBounds" rx="4" ry="4" style="stroke: #3C9A3C; stroke-width: 1.5;" width="182" x="3393" y="2257.6094"/><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="115" x="3426.5" y="2274.6763">CardinalityBounds</text><line style="stroke: #3C9A3C; stroke-width: 1.5;" x1="3394" x2="3574" y1="2282.7422" y2="2282.7422"/><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="89" x="3399" y="2298.8091">minimum : int</text><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="93" x="3399" y="2313.9419">maximum : int</text><line style="stroke: #3C9A3C; stroke-width: 1.5;" x1="3394" x2="3574" y1="2321.0078" y2="2321.0078"/><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="170" x="3399" y="2337.0747">isSatisfiedBy(int) : boolean</text><!--MD5=[72136138052d025cffdce3c22fbd185f]
+class Product--><rect fill="#FFE9A8" height="283.2578" id="Product" rx="4" ry="4" style="stroke: #C99700; stroke-width: 2.0;" width="403" x="3825.5" y="1665.6094"/><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="49" x="4002.5" y="1682.6763">Product</text><line style="stroke: #C99700; stroke-width: 1.5;" x1="3826.5" x2="4227.5" y1="1690.7422" y2="1690.7422"/><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="89" x="3831.5" y="1706.8091">sku : Sku «id»</text><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="137" x="3831.5" y="1721.9419">name : ProductName</text><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="120" x="3831.5" y="1737.0747">description : String</text><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="165" x="3831.5" y="1752.2075">category : CategoryName</text><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="124" x="3831.5" y="1767.3403">flags : ProductFlags</text><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="297" x="3831.5" y="1782.4731">componentType : ComponentTypeName [0..1]</text><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="163" x="3831.5" y="1797.606">directSellingPrice : Money</text><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="211" x="3831.5" y="1812.7388">stockUnitsPerSale : Integer [0..1]</text><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="101" x="3831.5" y="1827.8716">active : boolean</text><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="205" x="3831.5" y="1843.0044">allergens : Set&lt;AllergenName&gt;</text><line style="stroke: #C99700; stroke-width: 1.0;" x1="3826.5" x2="4227.5" y1="1850.0703" y2="1850.0703"/><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="212" x="3831.5" y="1866.1372">changeCategory(CategoryName)</text><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="391" x="3831.5" y="1881.27">addAllergen(AllergenName) / removeAllergen(AllergenName)</text><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="183" x="3831.5" y="1896.4028">setDirectSellingPrice(Money)</text><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="193" x="3831.5" y="1911.5356">setStockUnitsPerSale(Integer)</text><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="341" x="3831.5" y="1926.6685">designateAsPizzaComponent(ComponentTypeName)</text><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="150" x="3831.5" y="1941.8013">activate() / deactivate()</text><!--MD5=[4a3452209a12235a4257f1d80303869b]
+class ProductFlags--><rect fill="#DDF3DD" height="101.6641" id="ProductFlags" rx="4" ry="4" style="stroke: #3C9A3C; stroke-width: 1.5;" width="183" x="3935.5" y="2077.1094"/><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="82" x="3986" y="2094.1763">ProductFlags</text><line style="stroke: #3C9A3C; stroke-width: 1.5;" x1="3936.5" x2="4117.5" y1="2102.2422" y2="2102.2422"/><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="111" x="3941.5" y="2118.3091">sellable : boolean</text><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="171" x="3941.5" y="2133.4419">pizzaComponent : boolean</text><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="162" x="3941.5" y="2148.5747">stockControlled : boolean</text><line style="stroke: #3C9A3C; stroke-width: 1.5;" x1="3936.5" x2="4117.5" y1="2155.6406" y2="2155.6406"/><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="151" x="3941.5" y="2171.7075">isConsistent() : boolean</text><!--MD5=[c1092ee6348ec37567ba11658a138546]
+class StockItem--><rect fill="#FFE9A8" height="177.3281" id="StockItem" rx="4" ry="4" style="stroke: #C99700; stroke-width: 2.0;" width="293" x="2650.5" y="1718.6094"/><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="65" x="2764.5" y="1735.6763">StockItem</text><line style="stroke: #C99700; stroke-width: 1.5;" x1="2651.5" x2="2942.5" y1="1743.7422" y2="1743.7422"/><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="140" x="2656.5" y="1759.8091">productSku : Sku «id»</text><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="181" x="2656.5" y="1774.9419">currentUnits : StockQuantity</text><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="237" x="2656.5" y="1790.0747">movements : List&lt;StockMovement&gt;</text><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="147" x="2656.5" y="1805.2075">createdAt : Timestamp</text><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="151" x="2656.5" y="1820.3403">updatedAt : Timestamp</text><line style="stroke: #C99700; stroke-width: 1.0;" x1="2651.5" x2="2942.5" y1="1827.4063" y2="1827.4063"/><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="204" x="2656.5" y="1843.4731">replenish(StockQuantity, String)</text><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="205" x="2656.5" y="1858.606">consume(StockQuantity, String)</text><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="185" x="2656.5" y="1873.7388">adjust(StockQuantity, String)</text><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="281" x="2656.5" y="1888.8716">hasSufficientStock(StockQuantity) : boolean</text><!--MD5=[87fdb41deabdc047fe10cae043cef177]
+class StockMovement--><rect fill="#D6E8FF" height="108.7969" id="StockMovement" rx="4" ry="4" style="stroke: #3B78C4; stroke-width: 1.5;" width="186" x="2877" y="2073.6094"/><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="104" x="2918" y="2090.6763">StockMovement</text><line style="stroke: #3B78C4; stroke-width: 1.5;" x1="2878" x2="3062" y1="2098.7422" y2="2098.7422"/><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="155" x="2883" y="2114.8091">movementId : Long «id»</text><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="174" x="2883" y="2129.9419">type : StockMovementType</text><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="152" x="2883" y="2145.0747">amount : StockQuantity</text><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="94" x="2883" y="2160.2075">reason : String</text><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="155" x="2883" y="2175.3403">recordedAt : Timestamp</text><!--MD5=[dc189517faee61ada5c4f7e8cb6593d2]
+class StockQuantity--><rect fill="#DDF3DD" height="101.6641" id="StockQuantity" rx="4" ry="4" style="stroke: #3C9A3C; stroke-width: 1.5;" width="315" x="2521.5" y="2077.1094"/><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="90" x="2634" y="2094.1763">StockQuantity</text><line style="stroke: #3C9A3C; stroke-width: 1.5;" x1="2522.5" x2="2835.5" y1="2102.2422" y2="2102.2422"/><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="59" x="2527.5" y="2118.3091">units : int</text><line style="stroke: #3C9A3C; stroke-width: 1.5;" x1="2522.5" x2="2835.5" y1="2125.375" y2="2125.375"/><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="226" x="2527.5" y="2141.4419">add(StockQuantity) : StockQuantity</text><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="255" x="2527.5" y="2156.5747">subtract(StockQuantity) : StockQuantity</text><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="303" x="2527.5" y="2171.7075">isGreaterThanOrEqual(StockQuantity) : boolean</text><!--MD5=[ed415f516fa5930d0807b67c865f982b]
+class StockMovementType--><rect fill="#F0E0F7" height="78.5313" id="StockMovementType" rx="4" ry="4" style="stroke: #8E44AD; stroke-width: 1.5;" width="140" x="2900" y="2261.6094"/><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="134" x="2903" y="2278.6763">StockMovementType</text><line style="stroke: #8E44AD; stroke-width: 1.5;" x1="2901" x2="3039" y1="2286.7422" y2="2286.7422"/><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="107" x="2906" y="2302.8091">REPLENISHMENT</text><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="97" x="2906" y="2317.9419">CONSUMPTION</text><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="84" x="2906" y="2333.0747">ADJUSTMENT</text><!--MD5=[225374fc07fb706b4a6bd44afbc55311]
+class ConsumptionForecast--><rect fill="#FFE9A8" height="177.3281" id="ConsumptionForecast" rx="4" ry="4" style="stroke: #C99700; stroke-width: 2.0;" width="410" x="1496" y="1310.6094"/><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="140" x="1631" y="1327.6763">ConsumptionForecast</text><line style="stroke: #C99700; stroke-width: 1.5;" x1="1497" x2="1905" y1="1335.7422" y2="1335.7422"/><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="174" x="1502" y="1351.8091">name : ForecastName «id»</text><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="104" x="1502" y="1366.9419">startDate : Date</text><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="98" x="1502" y="1382.0747">endDate : Date</text><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="188" x="1502" y="1397.2075">entries : List&lt;ForecastEntry&gt;</text><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="147" x="1502" y="1412.3403">createdAt : Timestamp</text><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="151" x="1502" y="1427.4731">updatedAt : Timestamp</text><line style="stroke: #C99700; stroke-width: 1.0;" x1="1497" x2="1905" y1="1434.5391" y2="1434.5391"/><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="261" x="1502" y="1450.606">addEntry(Date, Sku, PizzaSizeName, int)</text><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="191" x="1502" y="1465.7388">removeEntry(ForecastEntryId)</text><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="398" x="1502" y="1480.8716">validateAgainstReferences(Set&lt;Sku&gt;, Set&lt;PizzaSizeName&gt;)</text><!--MD5=[140c0f4ada3b776a11a8bf92c232654b]
+class ForecastEntry--><rect fill="#D6E8FF" height="108.7969" id="ForecastEntry" rx="4" ry="4" style="stroke: #3B78C4; stroke-width: 1.5;" width="221" x="1685.5" y="1752.6094"/><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="88" x="1752" y="1769.6763">ForecastEntry</text><line style="stroke: #3B78C4; stroke-width: 1.5;" x1="1686.5" x2="1905.5" y1="1777.7422" y2="1777.7422"/><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="118" x="1691.5" y="1793.8091">entryId : Long «id»</text><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="72" x="1691.5" y="1808.9419">date : Date</text><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="109" x="1691.5" y="1824.0747">productSku : Sku</text><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="209" x="1691.5" y="1839.2075">pizzaSize : PizzaSizeName [0..1]</text><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="80" x="1691.5" y="1854.3403">quantity : int</text><!--MD5=[3e4fca49aef37acef048784e35d44d51]
+class SupplierScenario--><rect fill="#FFE9A8" height="177.3281" id="SupplierScenario" rx="4" ry="4" style="stroke: #C99700; stroke-width: 2.0;" width="212" x="1962" y="915.1094"/><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="108" x="2014" y="932.1763">SupplierScenario</text><line style="stroke: #C99700; stroke-width: 1.5;" x1="1963" x2="2173" y1="940.2422" y2="940.2422"/><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="175" x="1968" y="956.3091">name : ScenarioName «id»</text><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="165" x="1968" y="971.4419">suppliers : List&lt;Supplier&gt;</text><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="175" x="1968" y="986.5747">offers : List&lt;SupplierOffer&gt;</text><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="138" x="1968" y="1001.7075">isSimulated : boolean</text><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="200" x="1968" y="1016.8403">confirmedAt : Timestamp [0..1]</text><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="147" x="1968" y="1031.9731">createdAt : Timestamp</text><line style="stroke: #C99700; stroke-width: 1.0;" x1="1963" x2="2173" y1="1039.0391" y2="1039.0391"/><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="138" x="1968" y="1055.106">addSupplier(Supplier)</text><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="148" x="1968" y="1070.2388">addOffer(SupplierOffer)</text><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="58" x="1968" y="1085.3716">confirm()</text><!--MD5=[6f6af049516bc56aac6e320b3234ce97]
+class Supplier--><rect fill="#D6E8FF" height="63.3984" id="Supplier" rx="4" ry="4" style="stroke: #3B78C4; stroke-width: 1.5;" width="223" x="2194.5" y="1367.6094"/><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="52" x="2280" y="1384.6763">Supplier</text><line style="stroke: #3B78C4; stroke-width: 1.5;" x1="2195.5" x2="2416.5" y1="1392.7422" y2="1392.7422"/><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="211" x="2200.5" y="1408.8091">supplierCode : SupplierCode «id»</text><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="125" x="2200.5" y="1423.9419">name : String [0..1]</text><!--MD5=[bf34e54e9cd35465e0b03bba4780a739]
+class SupplierOffer--><rect fill="#D6E8FF" height="123.9297" id="SupplierOffer" rx="4" ry="4" style="stroke: #3B78C4; stroke-width: 1.5;" width="192" x="1962" y="1337.1094"/><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="83" x="2016.5" y="1354.1763">SupplierOffer</text><line style="stroke: #3B78C4; stroke-width: 1.5;" x1="1963" x2="2153" y1="1362.2422" y2="1362.2422"/><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="180" x="1968" y="1378.3091">supplierCode : SupplierCode</text><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="109" x="1968" y="1393.4419">productSku : Sku</text><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="111" x="1968" y="1408.5747">priceEUR : Money</text><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="142" x="1968" y="1423.7075">stockUnitQuantity : int</text><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="118" x="1968" y="1438.8403">leadTimeDays : int</text><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="169" x="1968" y="1453.9731">dailySupplyLimit : int [0..1]</text><!--MD5=[62d43c18a198615ee7d3c94cc28a6a34]
+class PlanningResult--><rect fill="#FFE9A8" height="244.9922" id="PlanningResult" rx="4" ry="4" style="stroke: #C99700; stroke-width: 2.0;" width="360" x="884" y="881.1094"/><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="93" x="1017.5" y="898.1763">PlanningResult</text><line style="stroke: #C99700; stroke-width: 2.0;" x1="885" x2="1243" y1="906.2422" y2="906.2422"/><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="147" x="890" y="922.3091">executionId : Long «id»</text><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="197" x="890" y="937.4419">forecastName : ForecastName</text><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="200" x="890" y="952.5747">scenarioName : ScenarioName</text><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="241" x="890" y="967.7075">forecastSnapshot : ForecastSnapshot</text><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="348" x="890" y="982.8403">supplierScenarioSnapshot : SupplierScenarioSnapshot</text><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="204" x="890" y="997.9731">stockSnapshot : StockSnapshot</text><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="143" x="890" y="1013.106">bomReference : String</text><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="135" x="890" y="1028.2388">referenceDate : Date</text><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="115" x="890" y="1043.3716">isReplay : boolean</text><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="138" x="890" y="1058.5044">isSimulated : boolean</text><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="157" x="890" y="1073.6372">executedAt : Timestamp</text><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="255" x="890" y="1088.77">requirements : List&lt;DailyRequirement&gt;</text><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="232" x="890" y="1103.9028">proposals : List&lt;PurchaseProposal&gt;</text><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="217" x="890" y="1119.0356">unmetNeeds : List&lt;UnmetNeed&gt;</text><!--MD5=[e21e1ed161cee21188b7973ce0656e45]
+class ForecastSnapshot--><rect fill="#DDF3DD" height="63.3984" id="ForecastSnapshot" rx="4" ry="4" style="stroke: #3C9A3C; stroke-width: 1.5;" width="257" x="643.5" y="1367.6094"/><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="116" x="714" y="1384.6763">ForecastSnapshot</text><line style="stroke: #3C9A3C; stroke-width: 1.5;" x1="644.5" x2="899.5" y1="1392.7422" y2="1392.7422"/><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="197" x="649.5" y="1408.8091">forecastName : ForecastName</text><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="245" x="649.5" y="1423.9419">capturedEntries : List&lt;ForecastEntry&gt;</text><!--MD5=[af2d46b25a353e55f6187a9b2a68875e]
+class SupplierScenarioSnapshot--><rect fill="#DDF3DD" height="63.3984" id="SupplierScenarioSnapshot" rx="4" ry="4" style="stroke: #3C9A3C; stroke-width: 1.5;" width="246" x="941" y="1367.6094"/><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="169" x="979.5" y="1384.6763">SupplierScenarioSnapshot</text><line style="stroke: #3C9A3C; stroke-width: 1.5;" x1="942" x2="1186" y1="1392.7422" y2="1392.7422"/><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="200" x="947" y="1408.8091">scenarioName : ScenarioName</text><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="234" x="947" y="1423.9419">capturedOffers : List&lt;SupplierOffer&gt;</text><!--MD5=[c8c029dff8cf01556ed09ba6fd871bc5]
+class StockSnapshot--><rect fill="#DDF3DD" height="63.3984" id="StockSnapshot" rx="4" ry="4" style="stroke: #3C9A3C; stroke-width: 1.5;" width="213" x="1227.5" y="1367.6094"/><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="97" x="1285.5" y="1384.6763">StockSnapshot</text><line style="stroke: #3C9A3C; stroke-width: 1.5;" x1="1228.5" x2="1439.5" y1="1392.7422" y2="1392.7422"/><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="155" x="1233.5" y="1408.8091">capturedAt : Timestamp</text><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="201" x="1233.5" y="1423.9419">quantities : Map&lt;Sku, Integer&gt;</text><!--MD5=[02887e0dae6b9d8823f3c25eb9e8170c]
+class DailyRequirement--><rect fill="#DDF3DD" height="78.5313" id="DailyRequirement" rx="4" ry="4" style="stroke: #3C9A3C; stroke-width: 1.5;" width="147" x="62.5" y="1359.6094"/><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="113" x="79.5" y="1376.6763">DailyRequirement</text><line style="stroke: #3C9A3C; stroke-width: 1.5;" x1="63.5" x2="208.5" y1="1384.7422" y2="1384.7422"/><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="72" x="68.5" y="1400.8091">date : Date</text><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="109" x="68.5" y="1415.9419">productSku : Sku</text><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="135" x="68.5" y="1431.0747">requiredQuantity : int</text><!--MD5=[50123939439240244e4abde7a8c5836b]
+class PurchaseProposal--><rect fill="#DDF3DD" height="123.9297" id="PurchaseProposal" rx="4" ry="4" style="stroke: #3C9A3C; stroke-width: 1.5;" width="192" x="250" y="1337.1094"/><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="114" x="289" y="1354.1763">PurchaseProposal</text><line style="stroke: #3C9A3C; stroke-width: 1.5;" x1="251" x2="441" y1="1362.2422" y2="1362.2422"/><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="109" x="256" y="1378.3091">productSku : Sku</text><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="180" x="256" y="1393.4419">supplierCode : SupplierCode</text><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="80" x="256" y="1408.5747">quantity : int</text><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="108" x="256" y="1423.7075">orderDate : Date</text><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="123" x="256" y="1438.8403">deliveryDate : Date</text><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="111" x="256" y="1453.9731">priceEUR : Money</text><!--MD5=[5e82adb468df13853fedf6e69203682b]
+class UnmetNeed--><rect fill="#DDF3DD" height="93.6641" id="UnmetNeed" rx="4" ry="4" style="stroke: #3C9A3C; stroke-width: 1.5;" width="121" x="482.5" y="1352.1094"/><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="78" x="504" y="1369.1763">UnmetNeed</text><line style="stroke: #3C9A3C; stroke-width: 1.5;" x1="483.5" x2="602.5" y1="1377.2422" y2="1377.2422"/><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="72" x="488.5" y="1393.3091">date : Date</text><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="109" x="488.5" y="1408.4419">productSku : Sku</text><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="79" x="488.5" y="1423.5747">shortfall : int</text><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="94" x="488.5" y="1438.7075">reason : String</text><!--MD5=[cedd7d1f3986db0d22ffdda3d8cf74b8]
+class PersonName--><rect fill="#DDF3DD" height="86.5313" id="PersonName" rx="4" ry="4" style="stroke: #3C9A3C; stroke-width: 1.5;" width="129" x="6156.5" y="1763.6094"/><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="83" x="6179.5" y="1780.6763">PersonName</text><line style="stroke: #3C9A3C; stroke-width: 1.5;" x1="6157.5" x2="6284.5" y1="1788.7422" y2="1788.7422"/><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="113" x="6162.5" y="1804.8091">firstName : String</text><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="112" x="6162.5" y="1819.9419">lastName : String</text><line style="stroke: #3C9A3C; stroke-width: 1.5;" x1="6157.5" x2="6284.5" y1="1827.0078" y2="1827.0078"/><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="117" x="6162.5" y="1843.0747">fullName() : String</text><!--MD5=[78bec0fde86ad92ec1dc3fb343b83709]
+class Email--><rect fill="#DDF3DD" height="48.2656" id="Email" rx="4" ry="4" style="stroke: #3C9A3C; stroke-width: 1.5;" width="113" x="6325.5" y="1783.1094"/><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="35" x="6364.5" y="1800.1763">Email</text><line style="stroke: #3C9A3C; stroke-width: 1.5;" x1="6326.5" x2="6437.5" y1="1808.2422" y2="1808.2422"/><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="101" x="6331.5" y="1824.3091">address : String</text><!--MD5=[08dbe06e87f91eb667838fe2f259c34a]
+class Money--><rect fill="#DDF3DD" height="116.7969" id="Money" rx="4" ry="4" style="stroke: #3C9A3C; stroke-width: 1.5;" width="171" x="5663.5" y="1748.6094"/><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="42" x="5728" y="1765.6763">Money</text><line style="stroke: #3C9A3C; stroke-width: 1.5;" x1="5664.5" x2="5833.5" y1="1773.7422" y2="1773.7422"/><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="134" x="5669.5" y="1789.8091">amount : BigDecimal</text><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="105" x="5669.5" y="1804.9419">currency : String</text><line style="stroke: #3C9A3C; stroke-width: 1.5;" x1="5664.5" x2="5833.5" y1="1812.0078" y2="1812.0078"/><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="130" x="5669.5" y="1828.0747">add(Money) : Money</text><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="159" x="5669.5" y="1843.2075">subtract(Money) : Money</text><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="130" x="5669.5" y="1858.3403">multiply(int) : Money</text><!--MD5=[7449e65854233b27c3b0ddd3ff813187]
+class Timestamp--><rect fill="#DDF3DD" height="48.2656" id="Timestamp" rx="4" ry="4" style="stroke: #3C9A3C; stroke-width: 1.5;" width="102" x="6479" y="1783.1094"/><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="72" x="6494" y="1800.1763">Timestamp</text><line style="stroke: #3C9A3C; stroke-width: 1.5;" x1="6480" x2="6580" y1="1808.2422" y2="1808.2422"/><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="90" x="6485" y="1824.3091">value : Instant</text><!--MD5=[43bd43d449abf4418b0960bcad4b8dbd]
+class ForecastName--><rect fill="#DDF3DD" height="48.2656" id="ForecastName" rx="4" ry="4" style="stroke: #3C9A3C; stroke-width: 1.5;" width="100" x="5875" y="1783.1094"/><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="94" x="5878" y="1800.1763">ForecastName</text><line style="stroke: #3C9A3C; stroke-width: 1.5;" x1="5876" x2="5974" y1="1808.2422" y2="1808.2422"/><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="84" x="5881" y="1824.3091">value : String</text><!--MD5=[a3e71ad46349d8ef860ba3ebdad01b04]
+class ScenarioName--><rect fill="#DDF3DD" height="48.2656" id="ScenarioName" rx="4" ry="4" style="stroke: #3C9A3C; stroke-width: 1.5;" width="101" x="6015.5" y="1783.1094"/><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="95" x="6018.5" y="1800.1763">ScenarioName</text><line style="stroke: #3C9A3C; stroke-width: 1.5;" x1="6016.5" x2="6115.5" y1="1808.2422" y2="1808.2422"/><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="84" x="6021.5" y="1824.3091">value : String</text><!--MD5=[89393df3a26f9719303704bce8798e78]
+class SupplierCode--><rect fill="#DDF3DD" height="48.2656" id="SupplierCode" rx="4" ry="4" style="stroke: #3C9A3C; stroke-width: 1.5;" width="96" x="5877" y="2104.1094"/><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="85" x="5882.5" y="2121.1763">SupplierCode</text><line style="stroke: #3C9A3C; stroke-width: 1.5;" x1="5878" x2="5972" y1="2129.2422" y2="2129.2422"/><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="84" x="5883" y="2145.3091">value : String</text><!--MD5=[58bcb2c3fe19a00b7ae4f27050bb608e]
+class InvitationToken--><rect fill="#DDF3DD" height="48.2656" id="InvitationToken" rx="4" ry="4" style="stroke: #3C9A3C; stroke-width: 1.5;" width="102" x="6621" y="1783.1094"/><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="96" x="6624" y="1800.1763">InvitationToken</text><line style="stroke: #3C9A3C; stroke-width: 1.5;" x1="6622" x2="6722" y1="1808.2422" y2="1808.2422"/><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="84" x="6627" y="1824.3091">value : String</text><!--MD5=[ba390b34befb6597e26cb745a8d5300a]
+class ResourceCode--><rect fill="#DDF3DD" height="48.2656" id="ResourceCode" rx="4" ry="4" style="stroke: #3C9A3C; stroke-width: 1.5;" width="98" x="6013" y="2104.1094"/><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="92" x="6016" y="2121.1763">ResourceCode</text><line style="stroke: #3C9A3C; stroke-width: 1.5;" x1="6014" x2="6110" y1="2129.2422" y2="2129.2422"/><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="84" x="6019" y="2145.3091">value : String</text><!--MD5=[5af70a90d83d94487ff7ce4b1989f266]
+reverse link User to AuthSession--><path d="M7852.99,1070.7294 C7936.82,1109.0994 8038.23,1162.2694 8119,1225.1094 C8155.87,1253.7894 8190.87,1292.1994 8218.06,1325.5394 " fill="none" id="User&lt;-AuthSession" style="stroke: #555555; stroke-width: 1.0;"/><polygon fill="#555555" points="7848.25,1068.5694,7854.7602,1075.9598,7852.794,1070.6556,7858.0981,1068.6894,7848.25,1068.5694" style="stroke: #555555; stroke-width: 1.0;"/><text fill="#444444" font-family="Helvetica" font-size="11" lengthAdjust="spacingAndGlyphs" textLength="60" x="8100" y="1214.3198">belongs to</text><text fill="#444444" font-family="Helvetica" font-size="11" lengthAdjust="spacingAndGlyphs" textLength="7" x="7856.0363" y="1069.6635">1</text><text fill="#444444" font-family="Helvetica" font-size="11" lengthAdjust="spacingAndGlyphs" textLength="21" x="8190.0119" y="1315.0874">0..*</text><!--MD5=[718c7338f1fabdc29bb1a1b428c7fd15]
+link User to DietaryRestriction--><path d="M7523.3394,1093.7588 C7523.3394,1093.7588 7398.02,1175.3994 7346,1225.1094 C7305.12,1264.1694 7269.31,1318.7694 7247.25,1356.1194 " fill="none" id="User-DietaryRestriction" style="stroke: #555555; stroke-width: 1.0;"/><polygon fill="#555555" points="7240.57,1367.5894,7248.5486,1361.8151,7243.0808,1363.2655,7241.6304,1357.7978,7240.57,1367.5894" style="stroke: #555555; stroke-width: 1.0;"/><line style="stroke: #555555; stroke-width: 1.0;" x1="7243.0808" x2="7247.105" y1="1363.2655" y2="1356.3544"/><polygon fill="#555555" points="7533.62,1087.5694,7526.4166,1087.2372,7523.3394,1093.7588,7530.5429,1094.091,7533.62,1087.5694" style="stroke: #555555; stroke-width: 1.0;"/><text fill="#444444" font-family="Helvetica" font-size="11" lengthAdjust="spacingAndGlyphs" textLength="21" x="7220.9737" y="1357.1703">0..*</text><!--MD5=[ecafd6c365c0dbf3fb8a7e627607946e]
+link User to ActivationInvitation--><path d="M7591.4107,1178.775 C7591.4107,1178.775 7531.15,1284.1794 7507.69,1325.1894 " fill="none" id="User-ActivationInvitation" style="stroke: #555555; stroke-width: 1.0;"/><polygon fill="#555555" points="7501.11,1336.6994,7509.0458,1330.8665,7503.5889,1332.3571,7502.0983,1326.9002,7501.11,1336.6994" style="stroke: #555555; stroke-width: 1.0;"/><line style="stroke: #555555; stroke-width: 1.0;" x1="7503.5889" x2="7507.57" y1="1332.3571" y2="1325.4144"/><polygon fill="#555555" points="7597.37,1168.3594,7590.9184,1171.5808,7591.4107,1178.775,7597.8622,1175.5537,7597.37,1168.3594" style="stroke: #555555; stroke-width: 1.0;"/><text fill="#444444" font-family="Helvetica" font-size="11" lengthAdjust="spacingAndGlyphs" textLength="21" x="7483.1093" y="1326.6257">0..*</text><!--MD5=[5ac470f9b94b99e5833b689523206712]
+link User to RoleName--><path d="M7848.29,1100.4594 C7895.69,1135.1494 7944.71,1177.6194 7981,1225.1094 C8015.13,1269.7594 8035.15,1333.3394 8044.51,1369.6894 " fill="none" id="User-&gt;RoleName" style="stroke: #555555; stroke-width: 1.0;"/><polygon fill="#555555" points="8045.81,1374.8494,8047.4741,1365.1421,8044.5805,1370.0029,8039.7197,1367.1093,8045.81,1374.8494" style="stroke: #555555; stroke-width: 1.0;"/><text fill="#444444" font-family="Helvetica" font-size="11" lengthAdjust="spacingAndGlyphs" textLength="21" x="8020.3972" y="1364.625">1..*</text><!--MD5=[b048c38a43dd1cf4d9e5228d8084cda5]
+link User to PasswordHash--><path d="M7773.39,1168.3594 C7811.84,1244.7594 7853.72,1327.9894 7874.95,1370.1894 " fill="none" id="User-&gt;PasswordHash" style="stroke: #555555; stroke-width: 1.0;"/><polygon fill="#555555" points="7877.31,1374.8794,7876.8502,1365.0413,7875.0682,1370.4101,7869.6994,1368.6281,7877.31,1374.8794" style="stroke: #555555; stroke-width: 1.0;"/><text fill="#444444" font-family="Helvetica" font-size="11" lengthAdjust="spacingAndGlyphs" textLength="22" x="7848.9284" y="1364.6634">0..1</text><!--MD5=[6cb56ad2db0e14266f83041296b08dce]
+link User to Address--><path d="M7533.73,1016.8894 C7373.91,1036.8094 7127.13,1088.9294 6963,1225.1094 C6925.1,1256.5594 6901.21,1308.1294 6887.65,1346.7994 " fill="none" id="User-&gt;Address" style="stroke: #555555; stroke-width: 1.0;"/><polygon fill="#555555" points="6885.88,1351.9194,6892.5732,1344.6944,6887.4954,1347.1875,6885.0022,1342.1097,6885.88,1351.9194" style="stroke: #555555; stroke-width: 1.0;"/><text fill="#444444" font-family="Helvetica" font-size="11" lengthAdjust="spacingAndGlyphs" textLength="7" x="6880.4336" y="1341.4147">1</text><!--MD5=[18321e14a835830d9a9a79e9f8c86f43]
+link User to PhoneNumber--><path d="M7533.9,1027.2494 C7402.78,1053.7594 7218.93,1109.7294 7101,1225.1094 C7060.36,1264.8794 7042.99,1331.6394 7036.1,1369.5494 " fill="none" id="User-&gt;PhoneNumber" style="stroke: #555555; stroke-width: 1.0;"/><polygon fill="#555555" points="7035.16,1374.9294,7040.6429,1366.7478,7036.0167,1370.0033,7032.7612,1365.3771,7035.16,1374.9294" style="stroke: #555555; stroke-width: 1.0;"/><text fill="#444444" font-family="Helvetica" font-size="11" lengthAdjust="spacingAndGlyphs" textLength="7" x="7028.0601" y="1364.3536">1</text><!--MD5=[bd856e2197b38e4467871f917ce43c08]
+link User to UserStatus--><path d="M7691,1168.3594 C7691,1236.0194 7691,1309.0394 7691,1354.1694 " fill="none" id="User-&gt;UserStatus" style="stroke: #555555; stroke-width: 1.0;"/><polygon fill="#555555" points="7691,1359.2694,7695,1350.2694,7691,1354.2694,7687,1350.2694,7691,1359.2694" style="stroke: #555555; stroke-width: 1.0;"/><text fill="#444444" font-family="Helvetica" font-size="11" lengthAdjust="spacingAndGlyphs" textLength="7" x="7683.3547" y="1349.1455">1</text><!--MD5=[1b2012efa70a46c9060e57d5562fdfb7]
+link Customer to CustomerAddress--><path d="M8599.2578,1141.8912 C8599.2578,1141.8912 8561.8,1303.8394 8550.06,1354.6094 " fill="none" id="Customer-CustomerAddress" style="stroke: #555555; stroke-width: 1.0;"/><polygon fill="#555555" points="8547.12,1367.3294,8553.0439,1359.4612,8548.2459,1362.4578,8545.2494,1357.6598,8547.12,1367.3294" style="stroke: #555555; stroke-width: 1.0;"/><line style="stroke: #555555; stroke-width: 1.0;" x1="8548.2459" x2="8550.045" y1="1362.4578" y2="1354.6644"/><polygon fill="#555555" points="8601.96,1130.1994,8596.7116,1135.1446,8599.2578,1141.8912,8604.5062,1136.946,8601.96,1130.1994" style="stroke: #555555; stroke-width: 1.0;"/><text fill="#444444" font-family="Helvetica" font-size="11" lengthAdjust="spacingAndGlyphs" textLength="21" x="8525.3384" y="1356.8502">0..*</text><!--MD5=[0d839c3f40b8a58c1223a4aac04dd857]
+link CustomerAddress to DeliveryAddress--><path d="M8540.3,1430.6294 C8540.98,1499.8794 8542.65,1669.5294 8543.5,1755.0494 " fill="none" id="CustomerAddress-&gt;DeliveryAddress" style="stroke: #555555; stroke-width: 1.0;"/><polygon fill="#555555" points="8543.55,1760.0594,8547.4727,1751.0254,8543.5071,1755.0596,8539.473,1751.094,8543.55,1760.0594" style="stroke: #555555; stroke-width: 1.0;"/><text fill="#444444" font-family="Helvetica" font-size="11" lengthAdjust="spacingAndGlyphs" textLength="7" x="8535.8958" y="1749.5779">1</text><!--MD5=[7d78c0bc0d8743bb8e9e601c7c940d21]
+link Customer to ContactInformation--><path d="M8660.68,1130.1994 C8679.79,1211.0394 8703.27,1310.3994 8715.57,1362.4394 " fill="none" id="Customer-&gt;ContactInformation" style="stroke: #555555; stroke-width: 1.0;"/><polygon fill="#555555" points="8716.73,1367.3294,8718.5418,1357.6486,8715.5745,1362.4647,8710.7583,1359.4974,8716.73,1367.3294" style="stroke: #555555; stroke-width: 1.0;"/><text fill="#444444" font-family="Helvetica" font-size="11" lengthAdjust="spacingAndGlyphs" textLength="7" x="8707.2394" y="1356.8502">1</text><!--MD5=[25a398a43dd620634bc06f16d389593c]
+link Customer to ConsentPreferences--><path d="M8742.37,1130.1394 C8768.88,1160.8494 8796.79,1193.8794 8822,1225.1094 C8859.76,1271.8794 8901.1,1327.7694 8926.79,1363.0994 " fill="none" id="Customer-&gt;ConsentPreferences" style="stroke: #555555; stroke-width: 1.0;"/><polygon fill="#555555" points="8929.85,1367.3094,8927.8035,1357.6755,8926.9142,1363.262,8921.3277,1362.3727,8929.85,1367.3094" style="stroke: #555555; stroke-width: 1.0;"/><text fill="#444444" font-family="Helvetica" font-size="11" lengthAdjust="spacingAndGlyphs" textLength="7" x="8916.9184" y="1356.8255">1</text><!--MD5=[5652400c4a0df70a00cd68490eef6bac]
+link PizzaComponentType to AssemblyOrder--><path d="M3654.96,2186.9994 C3664.34,2215.6494 3675.24,2248.9194 3682.77,2271.9294 " fill="none" id="PizzaComponentType-&gt;AssemblyOrder" style="stroke: #555555; stroke-width: 1.0;"/><polygon fill="#555555" points="3684.42,2276.9694,3685.4218,2267.1716,3682.8646,2272.2175,3677.8187,2269.6603,3684.42,2276.9694" style="stroke: #555555; stroke-width: 1.0;"/><text fill="#444444" font-family="Helvetica" font-size="11" lengthAdjust="spacingAndGlyphs" textLength="7" x="3674.1653" y="2266.4054">1</text><!--MD5=[24af28f1a8515d01a80e18f1693b6fd2]
+link PizzaComponentType to CardinalityBounds--><path d="M3584.54,2186.9994 C3565.24,2208.7094 3543.58,2233.0794 3525.32,2253.6194 " fill="none" id="PizzaComponentType-&gt;CardinalityBounds" style="stroke: #555555; stroke-width: 1.0;"/><polygon fill="#555555" points="3521.95,2257.4094,3530.9276,2253.3593,3525.2798,2253.6794,3524.9597,2248.0316,3521.95,2257.4094" style="stroke: #555555; stroke-width: 1.0;"/><text fill="#444444" font-family="Helvetica" font-size="11" lengthAdjust="spacingAndGlyphs" textLength="7" x="3521.0864" y="2246.8804">1</text><!--MD5=[ac5c05aee694b0afca4f2114ce9d26db]
+link Product to ProductFlags--><path d="M4027,1948.9594 C4027,1992.3694 4027,2037.6394 4027,2071.6894 " fill="none" id="Product-&gt;ProductFlags" style="stroke: #555555; stroke-width: 1.0;"/><polygon fill="#555555" points="4027,2077.0594,4031,2068.0594,4027,2072.0594,4023,2068.0594,4027,2077.0594" style="stroke: #555555; stroke-width: 1.0;"/><text fill="#444444" font-family="Helvetica" font-size="11" lengthAdjust="spacingAndGlyphs" textLength="7" x="4019.4641" y="2066.6214">1</text><!--MD5=[ebdb9b714854317af055cf4f9a83d275]
+link StockItem to StockMovement--><path d="M2850.2222,1906.2472 C2850.2222,1906.2472 2910.39,2017.1894 2934.52,2061.6794 " fill="none" id="StockItem-StockMovement" style="stroke: #555555; stroke-width: 1.0;"/><polygon fill="#555555" points="2940.78,2073.2294,2940.0043,2063.4111,2938.3958,2068.8344,2932.9724,2067.2259,2940.78,2073.2294" style="stroke: #555555; stroke-width: 1.0;"/><line style="stroke: #555555; stroke-width: 1.0;" x1="2938.3958" x2="2934.58" y1="2068.8344" y2="2061.7994"/><polygon fill="#555555" points="2844.5,1895.6994,2843.8452,1902.8807,2850.2222,1906.2472,2850.877,1899.0659,2844.5,1895.6994" style="stroke: #555555; stroke-width: 1.0;"/><text fill="#444444" font-family="Helvetica" font-size="11" lengthAdjust="spacingAndGlyphs" textLength="21" x="2914.1944" y="2062.9494">0..*</text><!--MD5=[a937950472d7f6887285bc69ecbf0117]
+link StockItem to StockQuantity--><path d="M2764.6,1895.6994 C2743.76,1952.0494 2717.31,2023.5394 2699.37,2072.0494 " fill="none" id="StockItem-&gt;StockQuantity" style="stroke: #555555; stroke-width: 1.0;"/><polygon fill="#555555" points="2697.55,2076.9594,2704.4107,2069.8932,2699.2759,2072.2667,2696.9024,2067.1318,2697.55,2076.9594" style="stroke: #555555; stroke-width: 1.0;"/><text fill="#444444" font-family="Helvetica" font-size="11" lengthAdjust="spacingAndGlyphs" textLength="7" x="2692.8545" y="2066.5061">1</text><!--MD5=[1a04e9440b19d9e42f6b85e93690c08c]
+link StockMovement to StockMovementType--><path d="M2970,2182.7494 C2970,2206.5094 2970,2234.1094 2970,2256.5694 " fill="none" id="StockMovement-&gt;StockMovementType" style="stroke: #555555; stroke-width: 1.0;"/><polygon fill="#555555" points="2970,2261.5794,2974,2252.5794,2970,2256.5794,2966,2252.5794,2970,2261.5794" style="stroke: #555555; stroke-width: 1.0;"/><text fill="#444444" font-family="Helvetica" font-size="11" lengthAdjust="spacingAndGlyphs" textLength="7" x="2962.3109" y="2250.9515">1</text><!--MD5=[4967c57990d803a3558ee6728edcade9]
+link PredefinedPizza to RecipeLine--><path d="M4942,1477.3394 C4942,1477.3394 4942,1694.2494 4942,1762.1394 " fill="none" id="PredefinedPizza-RecipeLine" style="stroke: #555555; stroke-width: 1.0;"/><polygon fill="#555555" points="4942,1775.2294,4946,1766.2294,4942,1770.2294,4938,1766.2294,4942,1775.2294" style="stroke: #555555; stroke-width: 1.0;"/><line style="stroke: #555555; stroke-width: 1.0;" x1="4942" x2="4942" y1="1770.2294" y2="1762.2294"/><polygon fill="#555555" points="4942,1465.3394,4938,1471.3394,4942,1477.3394,4946,1471.3394,4942,1465.3394" style="stroke: #555555; stroke-width: 1.0;"/><text fill="#444444" font-family="Helvetica" font-size="11" lengthAdjust="spacingAndGlyphs" textLength="21" x="4918.7031" y="1765.198">1..*</text><!--MD5=[644d33f343a0b1ae216106c23e42ed10]
+link CustomerOrder to OrderStatus--><path d="M4224.49,319.0894 C4176.77,350.7294 4121.3,393.5894 4082,442.6094 C4057.63,473.0094 4038.94,512.0194 4025.77,545.6394 " fill="none" id="CustomerOrder-&gt;OrderStatus" style="stroke: #555555; stroke-width: 1.0;"/><polygon fill="#555555" points="4023.87,550.5494,4030.8385,543.5895,4025.6678,545.8838,4023.3735,540.713,4023.87,550.5494" style="stroke: #555555; stroke-width: 1.0;"/><text fill="#444444" font-family="Helvetica" font-size="11" lengthAdjust="spacingAndGlyphs" textLength="7" x="4018.994" y="540.0661">1</text><!--MD5=[e21c48c7fd692565c50a037d783652b0]
+link CustomerOrder to OrderItem--><path d="M4293.6233,361.4377 C4293.6233,361.4377 4264.36,463.8494 4250.87,511.0494 " fill="none" id="CustomerOrder-OrderItem" style="stroke: #555555; stroke-width: 1.0;"/><polygon fill="#555555" points="4247.22,523.8294,4253.5386,516.2745,4248.5936,519.0218,4245.8464,514.0768,4247.22,523.8294" style="stroke: #555555; stroke-width: 1.0;"/><line style="stroke: #555555; stroke-width: 1.0;" x1="4248.5936" x2="4250.795" y1="519.0218" y2="511.3294"/><polygon fill="#555555" points="4296.92,349.8994,4291.4256,354.5696,4293.6233,361.4377,4299.1178,356.7674,4296.92,349.8994" style="stroke: #555555; stroke-width: 1.0;"/><text fill="#444444" font-family="Helvetica" font-size="11" lengthAdjust="spacingAndGlyphs" textLength="21" x="4227.6046" y="513.584">1..*</text><!--MD5=[0da7227e6bb01e4e0fd1b8c4a4ae9efb]
+link OrderItem to OrderItemType--><path d="M4199.77,716.3894 C4182.48,797.7994 4158.56,910.4694 4146.54,967.0994 " fill="none" id="OrderItem-&gt;OrderItemType" style="stroke: #555555; stroke-width: 1.0;"/><polygon fill="#555555" points="4145.48,972.0694,4151.2483,964.0865,4146.5101,967.1766,4143.4199,962.4384,4145.48,972.0694" style="stroke: #555555; stroke-width: 1.0;"/><text fill="#444444" font-family="Helvetica" font-size="11" lengthAdjust="spacingAndGlyphs" textLength="7" x="4139.1691" y="961.6457">1</text><!--MD5=[3273c2026234dc513825d3d0bfdf2f7d]
+link OrderItem to FulfillmentStatus--><path d="M4249.72,716.3894 C4272.96,790.8794 4304.35,891.5394 4323.06,951.4994 " fill="none" id="OrderItem-&gt;FulfillmentStatus" style="stroke: #555555; stroke-width: 1.0;"/><polygon fill="#555555" points="4324.6,956.4494,4325.7435,946.6671,4323.1135,951.6755,4318.1052,949.0455,4324.6,956.4494" style="stroke: #555555; stroke-width: 1.0;"/><text fill="#444444" font-family="Helvetica" font-size="11" lengthAdjust="spacingAndGlyphs" textLength="7" x="4314.6353" y="945.9497">1</text><!--MD5=[40e96ea3926ed14146816c8b49154e4d]
+link OrderItem to PersonalizedPizzaSnapshot--><path d="M4093.24,719.008 C4093.24,719.008 4055.15,754.7394 4039,773.1094 C3996.73,821.2094 3958.07,882.5994 3931.01,929.7794 " fill="none" id="OrderItem-PersonalizedPizzaSnapshot" style="stroke: #555555; stroke-width: 1.0;"/><polygon fill="#555555" points="3924.56,941.1394,3932.4783,935.2827,3927.0259,936.7897,3925.5189,931.3373,3924.56,941.1394" style="stroke: #555555; stroke-width: 1.0;"/><line style="stroke: #555555; stroke-width: 1.0;" x1="3927.0259" x2="3930.98" y1="936.7897" y2="929.8344"/><polygon fill="#555555" points="4102.23,711.0594,4095.0855,712.037,4093.24,719.008,4100.3846,718.0303,4102.23,711.0594" style="stroke: #555555; stroke-width: 1.0;"/><text fill="#444444" font-family="Helvetica" font-size="11" lengthAdjust="spacingAndGlyphs" textLength="22" x="3905.1876" y="931.0584">0..1</text><!--MD5=[0f873882fb0af9afd0ddd9e1ecfe52ee]
+link PersonalizedPizzaSnapshot to SnapshotComponent--><path d="M3901.4519,1077.5599 C3901.4519,1077.5599 3928.64,1287.2894 3937.29,1354.0394 " fill="none" id="PersonalizedPizzaSnapshot-SnapshotComponent" style="stroke: #555555; stroke-width: 1.0;"/><polygon fill="#555555" points="3939.01,1367.3194,3941.8191,1357.8796,3938.3668,1362.3609,3933.8855,1358.9087,3939.01,1367.3194" style="stroke: #555555; stroke-width: 1.0;"/><line style="stroke: #555555; stroke-width: 1.0;" x1="3938.3668" x2="3937.34" y1="1362.3609" y2="1354.4244"/><polygon fill="#555555" points="3899.91,1065.6594,3896.7141,1072.1236,3901.4519,1077.5599,3904.6478,1071.0957,3899.91,1065.6594" style="stroke: #555555; stroke-width: 1.0;"/><text fill="#444444" font-family="Helvetica" font-size="11" lengthAdjust="spacingAndGlyphs" textLength="21" x="3914.6592" y="1356.8379">1..*</text><!--MD5=[d0e94dae26af76f5ef1ffef6b4e3a2d8]
+link PreparationActivity to ActivityDuration--><path d="M9346.17,372.6194 C9365.61,448.8894 9390.01,544.6194 9401.87,591.1494 " fill="none" id="PreparationActivity-&gt;ActivityDuration" style="stroke: #555555; stroke-width: 1.0;"/><polygon fill="#555555" points="9403.12,596.0394,9404.7841,586.3321,9401.8905,591.1929,9397.0297,588.2993,9403.12,596.0394" style="stroke: #555555; stroke-width: 1.0;"/><text fill="#444444" font-family="Helvetica" font-size="11" lengthAdjust="spacingAndGlyphs" textLength="7" x="9393.3646" y="585.4959">1</text><!--MD5=[22d2c60856bb54875aa1224ba0b6b49d]
+link PreparationActivity to ActivityStatus--><path d="M9301.28,372.6194 C9291.43,437.7594 9279.43,517.0894 9271.75,567.8494 " fill="none" id="PreparationActivity-&gt;ActivityStatus" style="stroke: #555555; stroke-width: 1.0;"/><polygon fill="#555555" points="9270.98,572.9694,9276.2732,564.6638,9271.7231,568.0249,9268.362,563.4748,9270.98,572.9694" style="stroke: #555555; stroke-width: 1.0;"/><text fill="#444444" font-family="Helvetica" font-size="11" lengthAdjust="spacingAndGlyphs" textLength="7" x="9264.5564" y="562.473">1</text><!--MD5=[dc80a31dc687084ecaec70394a8c6210]
+link KitchenResource to SlotCapacity--><path d="M9750,693.7694 C9750,778.7594 9750,915.3194 9750,974.1394 " fill="none" id="KitchenResource-&gt;SlotCapacity" style="stroke: #555555; stroke-width: 1.0;"/><polygon fill="#555555" points="9750,979.2494,9754,970.2494,9750,974.2494,9746,970.2494,9750,979.2494" style="stroke: #555555; stroke-width: 1.0;"/><text fill="#444444" font-family="Helvetica" font-size="11" lengthAdjust="spacingAndGlyphs" textLength="7" x="9742.0156" y="968.9969">1</text><!--MD5=[3d91919a8e6a74a7502b161fbb7a8080]
+link KitchenConfiguration to ConfigurationName--><path d="M10080,342.2294 C10080,417.7094 10080,527.3194 10080,583.2894 " fill="none" id="KitchenConfiguration-&gt;ConfigurationName" style="stroke: #555555; stroke-width: 1.0;"/><polygon fill="#555555" points="10080,588.5394,10084,579.5394,10080,583.5394,10076,579.5394,10080,588.5394" style="stroke: #555555; stroke-width: 1.0;"/><text fill="#444444" font-family="Helvetica" font-size="11" lengthAdjust="spacingAndGlyphs" textLength="7" x="10072.1906" y="578.1087">1</text><!--MD5=[4c99e590b26fbe74ca2eda5b16bc5acb]
+link ActivationInvitation to InvitationToken--><path d="M7403.75,1461.1194 C7386.32,1474.9894 7366.5,1488.1194 7346,1496.6094 C7114.3,1592.6094 6988.22,1410.6294 6785,1557.6094 C6711.12,1611.0494 6684.46,1724.5194 6675.78,1777.6094 " fill="none" id="ActivationInvitation-&gt;InvitationToken" style="stroke: #555555; stroke-width: 1.0;"/><polygon fill="#555555" points="6674.95,1782.8594,6680.29,1774.5838,6675.721,1777.9192,6672.3857,1773.3502,6674.95,1782.8594" style="stroke: #555555; stroke-width: 1.0;"/><text fill="#444444" font-family="Helvetica" font-size="11" lengthAdjust="spacingAndGlyphs" textLength="7" x="6667.7953" y="1772.6378">1</text><!--MD5=[0aeb2e7e4c4f3d82e92b320c6ff6dfd6]
+link ActivationInvitation to InvitationPurpose--><path d="M7466,1461.3294 C7466,1544.0794 7466,1689.5994 7466,1762.2594 " fill="none" id="ActivationInvitation-&gt;InvitationPurpose" style="stroke: #555555; stroke-width: 1.0;"/><polygon fill="#555555" points="7466,1767.3594,7470,1758.3594,7466,1762.3594,7462,1758.3594,7466,1767.3594" style="stroke: #555555; stroke-width: 1.0;"/><text fill="#444444" font-family="Helvetica" font-size="11" lengthAdjust="spacingAndGlyphs" textLength="7" x="7458.3328" y="1756.9701">1</text><!--MD5=[128b041ce6f841c846474089d65da712]
+link ConsumptionForecast to ForecastEntry--><path d="M1724.2301,1499.3947 C1724.2301,1499.3947 1765.28,1674.8094 1780.45,1739.6594 " fill="none" id="ConsumptionForecast-ForecastEntry" style="stroke: #555555; stroke-width: 1.0;"/><polygon fill="#555555" points="1783.47,1752.5494,1785.3175,1742.8754,1782.3325,1747.6805,1777.5273,1744.6954,1783.47,1752.5494" style="stroke: #555555; stroke-width: 1.0;"/><line style="stroke: #555555; stroke-width: 1.0;" x1="1782.3325" x2="1780.5" y1="1747.6805" y2="1739.8844"/><polygon fill="#555555" points="1721.5,1487.7094,1718.9699,1494.4621,1724.2301,1499.3947,1726.7602,1492.642,1721.5,1487.7094" style="stroke: #555555; stroke-width: 1.0;"/><text fill="#444444" font-family="Helvetica" font-size="11" lengthAdjust="spacingAndGlyphs" textLength="21" x="1759.0875" y="1741.9391">0..*</text><!--MD5=[0f9a9db51abe0de6dff0985060d61dab]
+link SupplierScenario to Supplier--><path d="M2127.3288,1102.6983 C2127.3288,1102.6983 2244.64,1296.6594 2280.74,1356.3494 " fill="none" id="SupplierScenario-Supplier" style="stroke: #555555; stroke-width: 1.0;"/><polygon fill="#555555" points="2287.53,1367.5694,2286.2908,1357.7988,2284.9406,1363.2921,2279.4472,1361.9419,2287.53,1367.5694" style="stroke: #555555; stroke-width: 1.0;"/><line style="stroke: #555555; stroke-width: 1.0;" x1="2284.9406" x2="2280.8" y1="1363.2921" y2="1356.4444"/><polygon fill="#555555" points="2121.12,1092.4294,2120.8014,1099.6334,2127.3288,1102.6983,2127.6474,1095.4942,2121.12,1092.4294" style="stroke: #555555; stroke-width: 1.0;"/><text fill="#444444" font-family="Helvetica" font-size="11" lengthAdjust="spacingAndGlyphs" textLength="21" x="2259.8307" y="1357.1457">0..*</text><!--MD5=[997c3858cb4e6e8d00b1188cea784ed0]
+link SupplierScenario to SupplierOffer--><path d="M2065.4668,1104.4255 C2065.4668,1104.4255 2061.46,1262.0694 2059.89,1323.7094 " fill="none" id="SupplierScenario-SupplierOffer" style="stroke: #555555; stroke-width: 1.0;"/><polygon fill="#555555" points="2059.56,1336.8294,2063.7861,1327.9333,2059.6863,1331.831,2055.7887,1327.7312,2059.56,1336.8294" style="stroke: #555555; stroke-width: 1.0;"/><line style="stroke: #555555; stroke-width: 1.0;" x1="2059.6863" x2="2059.89" y1="1331.831" y2="1323.8344"/><polygon fill="#555555" points="2065.77,1092.4294,2061.6197,1098.3264,2065.4668,1104.4255,2069.6171,1098.5285,2065.77,1092.4294" style="stroke: #555555; stroke-width: 1.0;"/><text fill="#444444" font-family="Helvetica" font-size="11" lengthAdjust="spacingAndGlyphs" textLength="21" x="2037.4146" y="1326.3475">0..*</text><!--MD5=[20f64034c6aebc6b726cf26e067e262e]
+link PlanningResult to ForecastSnapshot--><path d="M966.6629,1135.7888 C966.6629,1135.7888 841.23,1304.8094 802.72,1356.7194 " fill="none" id="PlanningResult-ForecastSnapshot" style="stroke: #555555; stroke-width: 1.0;"/><polygon fill="#555555" points="794.73,1367.4794,803.3035,1362.6322,797.708,1363.463,796.8772,1357.8674,794.73,1367.4794" style="stroke: #555555; stroke-width: 1.0;"/><line style="stroke: #555555; stroke-width: 1.0;" x1="797.708" x2="802.475" y1="1363.463" y2="1357.0394"/><polygon fill="#555555" points="973.81,1126.1494,967.0233,1128.5867,966.6629,1135.7888,973.4496,1133.3515,973.81,1126.1494" style="stroke: #555555; stroke-width: 1.0;"/><text fill="#444444" font-family="Helvetica" font-size="11" lengthAdjust="spacingAndGlyphs" textLength="7" x="792.1769" y="1357.0349">1</text><!--MD5=[aa7f69b3b4cba4e8446e78f65ca5b006]
+link PlanningResult to SupplierScenarioSnapshot--><path d="M1064,1138.1494 C1064,1138.1494 1064,1302.5694 1064,1354.2294 " fill="none" id="PlanningResult-SupplierScenarioSnapshot" style="stroke: #555555; stroke-width: 1.0;"/><polygon fill="#555555" points="1064,1367.4794,1068,1358.4794,1064,1362.4794,1060,1358.4794,1064,1367.4794" style="stroke: #555555; stroke-width: 1.0;"/><line style="stroke: #555555; stroke-width: 1.0;" x1="1064" x2="1064" y1="1362.4794" y2="1354.4794"/><polygon fill="#555555" points="1064,1126.1494,1060,1132.1494,1064,1138.1494,1068,1132.1494,1064,1126.1494" style="stroke: #555555; stroke-width: 1.0;"/><text fill="#444444" font-family="Helvetica" font-size="11" lengthAdjust="spacingAndGlyphs" textLength="7" x="1056.1906" y="1357.0349">1</text><!--MD5=[172b7a8310709b7214c8dd00ade88f56]
+link PlanningResult to StockSnapshot--><path d="M1154.1927,1136.0417 C1154.1927,1136.0417 1270.08,1304.9494 1305.61,1356.7394 " fill="none" id="PlanningResult-StockSnapshot" style="stroke: #555555; stroke-width: 1.0;"/><polygon fill="#555555" points="1312.98,1367.4794,1311.1829,1357.7959,1310.1497,1363.3576,1304.588,1362.3244,1312.98,1367.4794" style="stroke: #555555; stroke-width: 1.0;"/><line style="stroke: #555555; stroke-width: 1.0;" x1="1310.1497" x2="1305.63" y1="1363.3576" y2="1356.7644"/><polygon fill="#555555" points="1147.4,1126.1494,1147.4989,1133.3598,1154.1927,1136.0417,1154.0938,1128.8313,1147.4,1126.1494" style="stroke: #555555; stroke-width: 1.0;"/><text fill="#444444" font-family="Helvetica" font-size="11" lengthAdjust="spacingAndGlyphs" textLength="7" x="1300.3098" y="1357.0349">1</text><!--MD5=[c4ecfaf0432c36a75131a2c7cb6a9231]
+link PlanningResult to DailyRequirement--><path d="M871.9265,1012.6249 C871.9265,1012.6249 415.47,1079.4394 230,1225.1094 C190.67,1255.9994 165.59,1308.0894 151.32,1347.0594 " fill="none" id="PlanningResult-DailyRequirement" style="stroke: #555555; stroke-width: 1.0;"/><polygon fill="#555555" points="146.98,1359.4594,153.7312,1352.2885,148.6335,1354.7407,146.1813,1349.643,146.98,1359.4594" style="stroke: #555555; stroke-width: 1.0;"/><line style="stroke: #555555; stroke-width: 1.0;" x1="148.6335" x2="151.275" y1="1354.7407" y2="1347.1944"/><polygon fill="#555555" points="883.88,1011.5694,877.5514,1008.1126,871.9265,1012.6249,878.2551,1016.0816,883.88,1011.5694" style="stroke: #555555; stroke-width: 1.0;"/><text fill="#444444" font-family="Helvetica" font-size="11" lengthAdjust="spacingAndGlyphs" textLength="21" x="126.0715" y="1349.0892">0..*</text><!--MD5=[e1eb56d97b80928b6ba44b9f26580964]
+link PlanningResult to PurchaseProposal--><path d="M872.1322,1042.2853 C872.1322,1042.2853 581.45,1131.3294 462,1225.1094 C428.14,1251.6894 400.69,1290.9594 381.01,1325.3694 " fill="none" id="PlanningResult-PurchaseProposal" style="stroke: #555555; stroke-width: 1.0;"/><polygon fill="#555555" points="374.63,1336.8294,382.4993,1330.9071,377.0596,1332.4594,375.5073,1327.0197,374.63,1336.8294" style="stroke: #555555; stroke-width: 1.0;"/><line style="stroke: #555555; stroke-width: 1.0;" x1="377.0596" x2="380.955" y1="1332.4594" y2="1325.4694"/><polygon fill="#555555" points="883.77,1039.3594,876.9758,1036.9431,872.1322,1042.2853,878.9264,1044.7016,883.77,1039.3594" style="stroke: #555555; stroke-width: 1.0;"/><text fill="#444444" font-family="Helvetica" font-size="11" lengthAdjust="spacingAndGlyphs" textLength="21" x="355.9529" y="1326.3475">0..*</text><!--MD5=[4ff715baf00460275f7ce108d2537ecc]
+link PlanningResult to UnmetNeed--><path d="M872.8571,1067.1063 C872.8571,1067.1063 691.38,1154.6094 623,1225.1094 C592.09,1256.9794 571.6,1302.9694 559.1,1339.5194 " fill="none" id="PlanningResult-UnmetNeed" style="stroke: #555555; stroke-width: 1.0;"/><polygon fill="#555555" points="555.01,1352.0194,561.6102,1344.7093,556.5647,1347.2672,554.0068,1342.2217,555.01,1352.0194" style="stroke: #555555; stroke-width: 1.0;"/><line style="stroke: #555555; stroke-width: 1.0;" x1="556.5647" x2="559.055" y1="1347.2672" y2="1339.6644"/><polygon fill="#555555" points="883.95,1062.5294,876.8779,1061.1202,872.8571,1067.1063,879.9292,1068.5155,883.95,1062.5294" style="stroke: #555555; stroke-width: 1.0;"/><text fill="#444444" font-family="Helvetica" font-size="11" lengthAdjust="spacingAndGlyphs" textLength="21" x="534.2601" y="1341.5313">0..*</text><!--MD5=[6414565bda2732f9b0501b8c9fbd7295]
+link Customer to User--><path d="M8474.24,1003.6094 C8302.19,1003.6094 8027.36,1003.6094 7853.19,1003.6094 " fill="none" id="Customer-&gt;User" style="stroke: #555555; stroke-width: 1.0; stroke-dasharray: 7.0,7.0;"/><polygon fill="#555555" points="7848.07,1003.6094,7857.07,1007.6094,7853.07,1003.6094,7857.07,999.6094,7848.07,1003.6094" style="stroke: #555555; stroke-width: 1.0;"/><text fill="#444444" font-family="Helvetica" font-size="11" lengthAdjust="spacingAndGlyphs" textLength="58" x="8132.25" y="997.8198">username</text><!--MD5=[6414565bda2732f9b0501b8c9fbd7295]
+link Customer to User--><!--MD5=[87efe99f0b4cd2dd3a43edc462424f88]
+link User to Allergen--><path d="M7533.78,1040.4694 C7352.29,1082.4094 7045.11,1155.0294 6783,1225.1094 C6273.95,1361.2094 6047.55,1217.6094 5645,1557.6094 C5497.4,1682.2794 5588.1,1808.5594 5455,1948.6094 C5423.89,1981.3394 5408.91,1983.5494 5366,1997.6094 C5050.95,2100.8694 4653.97,2122.1094 4473.82,2126.2594 " fill="none" id="User-&gt;Allergen" style="stroke: #555555; stroke-width: 1.0; stroke-dasharray: 7.0,7.0;"/><polygon fill="#555555" points="4468.82,2126.3694,4477.8982,2130.1886,4473.819,2126.2694,4477.7382,2122.1902,4468.82,2126.3694" style="stroke: #555555; stroke-width: 1.0;"/><text fill="#444444" font-family="Helvetica" font-size="11" lengthAdjust="spacingAndGlyphs" textLength="39" x="5696" y="1533.8198">dietary</text><text fill="#444444" font-family="Helvetica" font-size="11" lengthAdjust="spacingAndGlyphs" textLength="65" x="5683" y="1546.6245">restrictions</text><!--MD5=[1c8f17b95ed74b020271e3c457b5839f]
+link RoleChangeLog to User--><path d="M7968.18,689.7594 C7932.15,730.4194 7884.81,783.8594 7839.46,835.0394 " fill="none" id="RoleChangeLog-&gt;User" style="stroke: #555555; stroke-width: 1.0; stroke-dasharray: 7.0,7.0;"/><polygon fill="#555555" points="7835.92,839.0294,7844.8812,834.9431,7839.2347,835.286,7838.8918,829.6396,7835.92,839.0294" style="stroke: #555555; stroke-width: 1.0;"/><text fill="#444444" font-family="Helvetica" font-size="11" lengthAdjust="spacingAndGlyphs" textLength="93" x="7912" y="762.3198">targetUsername</text><!--MD5=[5c0c66984b48f13f6f1fd84ba8e61151]
+link Product to ProductCategory--><path d="M3825.16,1844.8594 C3691.38,1874.9394 3515.33,1925.7894 3375,2005.6094 C3340.41,2025.2894 3307.35,2055.4194 3282.84,2080.7494 " fill="none" id="Product-&gt;ProductCategory" style="stroke: #555555; stroke-width: 1.0; stroke-dasharray: 7.0,7.0;"/><polygon fill="#555555" points="3279.29,2084.4494,3288.4166,2080.7473,3282.7607,2080.8502,3282.6578,2075.1942,3279.29,2084.4494" style="stroke: #555555; stroke-width: 1.0;"/><text fill="#444444" font-family="Helvetica" font-size="11" lengthAdjust="spacingAndGlyphs" textLength="82" x="3409" y="1994.8198">categoryName</text><!--MD5=[5c0c66984b48f13f6f1fd84ba8e61151]
+link Product to ProductCategory--><!--MD5=[7534c7c98f7cae5bfca7ccc3f908f83c]
+link Product to PizzaComponentType--><path d="M3854.65,1948.7194 C3804.07,1989.9894 3751.4,2032.9594 3710.43,2066.3794 " fill="none" id="Product-&gt;PizzaComponentType" style="stroke: #555555; stroke-width: 1.0; stroke-dasharray: 7.0,7.0;"/><polygon fill="#555555" points="3706.5,2069.5894,3716.0027,2067.0014,3710.3749,2066.4294,3710.9468,2060.8016,3706.5,2069.5894" style="stroke: #555555; stroke-width: 1.0;"/><text fill="#444444" font-family="Helvetica" font-size="11" lengthAdjust="spacingAndGlyphs" textLength="123" x="3810" y="1994.8198">componentTypeName</text><!--MD5=[6f86f329e7d3a187342a2fccfa30544a]
+link Product to Allergen--><path d="M4184.48,1948.7894 C4205.56,1967.8194 4226.85,1987.1494 4247,2005.6094 C4273.92,2030.2694 4303.69,2058.0494 4327.94,2080.8194 " fill="none" id="Product-&gt;Allergen" style="stroke: #555555; stroke-width: 1.0; stroke-dasharray: 7.0,7.0;"/><polygon fill="#555555" points="4331.78,2084.4294,4327.9499,2075.3558,4328.1323,2081.0097,4322.4784,2081.1921,4331.78,2084.4294" style="stroke: #555555; stroke-width: 1.0;"/><text fill="#444444" font-family="Helvetica" font-size="11" lengthAdjust="spacingAndGlyphs" textLength="53" x="4237" y="1994.8198">allergens</text><!--MD5=[50357a71ab0b35b44d9bf792345b3908]
+link StockItem to Product--><path d="M2943.54,1807.1094 C3161.49,1807.1094 3571.98,1807.1094 3820.35,1807.1094 " fill="none" id="StockItem-&gt;Product" style="stroke: #555555; stroke-width: 1.0; stroke-dasharray: 7.0,7.0;"/><polygon fill="#555555" points="3825.46,1807.1094,3816.46,1803.1094,3820.46,1807.1094,3816.46,1811.1094,3825.46,1807.1094" style="stroke: #555555; stroke-width: 1.0;"/><text fill="#444444" font-family="Helvetica" font-size="11" lengthAdjust="spacingAndGlyphs" textLength="20" x="3374.5" y="1801.3198">sku</text><!--MD5=[820de62fe221729f86eabcefdc70854a]
+link Product to StockItem--><!--MD5=[f8102529421ed15e186082b8333c99f5]
+link ComponentSizeConfiguration to Product--><path d="M5206.91,1740.9594 C5172.4,1689.6394 5116.89,1622.3194 5048,1592.1094 C4849.78,1505.1794 4773.49,1550.9394 4561,1592.1094 C4448.72,1613.8594 4330.12,1659.1294 4233.29,1702.5394 " fill="none" id="ComponentSizeConfiguration-&gt;Product" style="stroke: #555555; stroke-width: 1.0; stroke-dasharray: 7.0,7.0;"/><polygon fill="#555555" points="4228.69,1704.6094,4238.5387,1704.5522,4233.2472,1702.5522,4235.2472,1697.2607,4228.69,1704.6094" style="stroke: #555555; stroke-width: 1.0;"/><text fill="#444444" font-family="Helvetica" font-size="11" lengthAdjust="spacingAndGlyphs" textLength="84" x="4680" y="1540.3198">componentSku</text><!--MD5=[f624aa9a700fcb5fbd299f73b0a17819]
+link ComponentSizeConfiguration to PizzaSize--><path d="M5206.91,1740.9594 C5172.4,1689.6394 5116.89,1622.3194 5048,1592.1094 C4961.71,1554.2694 4920.26,1549.9394 4836,1592.1094 C4766.78,1626.7494 4719.64,1706.8594 4695.04,1758.9094 " fill="none" id="ComponentSizeConfiguration-&gt;PizzaSize" style="stroke: #555555; stroke-width: 1.0; stroke-dasharray: 7.0,7.0;"/><polygon fill="#555555" points="4692.88,1763.5494,4700.3285,1757.1058,4695.0069,1759.0243,4693.0884,1753.7027,4692.88,1763.5494" style="stroke: #555555; stroke-width: 1.0;"/><text fill="#444444" font-family="Helvetica" font-size="11" lengthAdjust="spacingAndGlyphs" textLength="50" x="4771" y="1540.3198">pizzaSize</text><!--MD5=[f624aa9a700fcb5fbd299f73b0a17819]
+link ComponentSizeConfiguration to PizzaSize--><!--MD5=[9b7ec96304b6d066e8f2b9ccde2e9e8b]
+link PredefinedPizza to Product--><path d="M4854.5,1418.5794 C4735.31,1444.3694 4528.65,1491.4994 4458,1522.6094 C4373.92,1559.6394 4288.02,1612.5194 4215.25,1662.5894 " fill="none" id="PredefinedPizza-&gt;Product" style="stroke: #555555; stroke-width: 1.0; stroke-dasharray: 7.0,7.0;"/><polygon fill="#555555" points="4210.92,1665.5794,4220.5982,1663.754,4215.0335,1662.737,4216.0505,1657.1723,4210.92,1665.5794" style="stroke: #555555; stroke-width: 1.0;"/><text fill="#444444" font-family="Helvetica" font-size="11" lengthAdjust="spacingAndGlyphs" textLength="20" x="4500.5" y="1533.8198">sku</text><text fill="#444444" font-family="Helvetica" font-size="11" lengthAdjust="spacingAndGlyphs" textLength="103" x="4459" y="1546.6245">(and components)</text><!--MD5=[e61562aa4cde42f6d9d86cf900dee6f1]
+link PredefinedPizza to PizzaSize--><path d="M4854.11,1402.8294 C4769.29,1410.7094 4645.02,1437.2294 4584,1522.6094 C4531.9,1595.5094 4592.07,1699.6594 4636.37,1759.3294 " fill="none" id="PredefinedPizza-&gt;PizzaSize" style="stroke: #555555; stroke-width: 1.0; stroke-dasharray: 7.0,7.0;"/><polygon fill="#555555" points="4639.53,1763.5394,4637.33,1753.9394,4636.53,1759.5394,4630.93,1758.7394,4639.53,1763.5394" style="stroke: #555555; stroke-width: 1.0;"/><text fill="#444444" font-family="Helvetica" font-size="11" lengthAdjust="spacingAndGlyphs" textLength="83" x="4585" y="1540.3198">available sizes</text><!--MD5=[568bfbaf0836cd5ec0184526bbb1d5f6]
+link CustomerOrder to Customer--><path d="M4419.72,262.0694 C4984.11,262.4394 7813.72,272.7994 8158,442.6094 C8344.86,534.7794 8486.17,738.0994 8563.77,872.7094 " fill="none" id="CustomerOrder-&gt;Customer" style="stroke: #555555; stroke-width: 1.0; stroke-dasharray: 7.0,7.0;"/><polygon fill="#555555" points="8566.28,877.0694,8565.2669,867.2728,8563.7901,872.7335,8558.3294,871.2567,8566.28,877.0694" style="stroke: #555555; stroke-width: 1.0;"/><text fill="#444444" font-family="Helvetica" font-size="11" lengthAdjust="spacingAndGlyphs" textLength="85" x="8459" y="624.3198">customerEmail</text><!--MD5=[568bfbaf0836cd5ec0184526bbb1d5f6]
+link CustomerOrder to Customer--><!--MD5=[663c18ce459b41abc4dbff87433befbf]
+link OrderItem to Product--><path d="M4102.15,706.8894 C4095.48,710.2694 4088.74,713.3794 4082,716.1094 C3941.23,773.1894 3843.05,657.0894 3745,773.1094 C3526.81,1031.3094 3760.86,1443.8894 3914.78,1661.2694 " fill="none" id="OrderItem-&gt;Product" style="stroke: #555555; stroke-width: 1.0; stroke-dasharray: 7.0,7.0;"/><polygon fill="#555555" points="3917.72,1665.4094,3915.7566,1655.7582,3914.8192,1661.3368,3909.2406,1660.3995,3917.72,1665.4094" style="stroke: #555555; stroke-width: 1.0;"/><text fill="#444444" font-family="Helvetica" font-size="11" lengthAdjust="spacingAndGlyphs" textLength="119" x="3685" y="1214.3198">catalogueProductSku</text><!--MD5=[86f3e4e94e0b0e0967099f09c0767db5]
+link PersonalizedPizzaSnapshot to PredefinedPizza--><path d="M3930.77,1065.8294 C3956.86,1101.6494 3994.55,1144.3794 4039,1168.1094 C4117.82,1210.1894 4350.13,1204.2094 4437,1225.1094 C4584.23,1260.5394 4749.26,1321.2294 4849.38,1360.4894 " fill="none" id="PersonalizedPizzaSnapshot-&gt;PredefinedPizza" style="stroke: #555555; stroke-width: 1.0; stroke-dasharray: 7.0,7.0;"/><polygon fill="#555555" points="4854.1,1362.3394,4847.1919,1355.3196,4849.4478,1360.5071,4844.2603,1362.7631,4854.1,1362.3394" style="stroke: #555555; stroke-width: 1.0;"/><text fill="#444444" font-family="Helvetica" font-size="11" lengthAdjust="spacingAndGlyphs" textLength="148" x="4387" y="1214.3198">sourcePredefinedPizzaSku</text><!--MD5=[a28a3dac1c1053dc7a178685ea78d783]
+link PersonalizedPizzaSnapshot to PizzaSize--><path d="M3946.47,1065.8594 C3974.04,1096.6794 4008.12,1134.5394 4039,1168.1094 C4196.62,1339.4694 4232.71,1385.6394 4398,1549.6094 C4474.34,1625.3394 4566.6,1709.3494 4623.02,1759.9294 " fill="none" id="PersonalizedPizzaSnapshot-&gt;PizzaSize" style="stroke: #555555; stroke-width: 1.0; stroke-dasharray: 7.0,7.0;"/><polygon fill="#555555" points="4627.02,1763.5094,4622.9699,1754.5318,4623.2901,1760.1796,4617.6423,1760.4997,4627.02,1763.5094" style="stroke: #555555; stroke-width: 1.0;"/><text fill="#444444" font-family="Helvetica" font-size="11" lengthAdjust="spacingAndGlyphs" textLength="64" x="4344" y="1403.3198">chosenSize</text><!--MD5=[81b8162b3b0a4db15f913afeb84e4d92]
+link PersonalizedPizzaSnapshot to Allergen--><path d="M3929.21,1065.9494 C3955.06,1102.5494 3993.06,1146.0594 4039,1168.1094 C4140.23,1216.6994 4945.22,1179.8794 5048,1225.1094 C5241.74,1310.3794 5306.76,1362.5594 5389,1557.6094 C5456.51,1717.7394 5500.7,1815.4894 5389,1948.6094 C5272.53,2087.4194 4703.75,2118.3294 4473.77,2125.1794 " fill="none" id="PersonalizedPizzaSnapshot-&gt;Allergen" style="stroke: #555555; stroke-width: 1.0; stroke-dasharray: 7.0,7.0;"/><polygon fill="#555555" points="4468.74,2125.3194,4477.8612,2129.0347,4473.7375,2125.1623,4477.6099,2121.0386,4468.74,2125.3194" style="stroke: #555555; stroke-width: 1.0;"/><text fill="#444444" font-family="Helvetica" font-size="11" lengthAdjust="spacingAndGlyphs" textLength="53" x="5387" y="1540.3198">allergens</text><!--MD5=[0e8b0f4eef5248851e9162456617f5a4]
+link SnapshotComponent to Product--><path d="M3949.31,1430.6294 C3959.34,1479.0794 3979.54,1576.6994 3996.82,1660.2594 " fill="none" id="SnapshotComponent-&gt;Product" style="stroke: #555555; stroke-width: 1.0; stroke-dasharray: 7.0,7.0;"/><polygon fill="#555555" points="3997.85,1665.2294,3999.9371,1655.6042,3996.8337,1660.3338,3992.1041,1657.2303,3997.85,1665.2294" style="stroke: #555555; stroke-width: 1.0;"/><text fill="#444444" font-family="Helvetica" font-size="11" lengthAdjust="spacingAndGlyphs" textLength="84" x="3974" y="1540.3198">componentSku</text><!--MD5=[4f716f38dac7f80b317eb9a2eaf42ae0]
+link PreparationActivity to CustomerOrder--><path d="M9165.9,261.1094 C8408.57,261.1094 5055.63,261.1094 4424.6,261.1094 " fill="none" id="PreparationActivity-&gt;CustomerOrder" style="stroke: #555555; stroke-width: 1.0; stroke-dasharray: 7.0,7.0;"/><polygon fill="#555555" points="4419.56,261.1094,4428.56,265.1094,4424.56,261.1094,4428.56,257.1094,4419.56,261.1094" style="stroke: #555555; stroke-width: 1.0;"/><text fill="#444444" font-family="Helvetica" font-size="11" lengthAdjust="spacingAndGlyphs" textLength="76" x="6754.75" y="255.3198">orderNumber</text><!--MD5=[c434bfc07f55f1eb6eaabffb97e45d71]
+link CustomerOrder to PreparationActivity--><!--MD5=[6e4a4721b23c0bd8d3683c11badaadbb]
+link PreparationActivity to KitchenResource--><path d="M9470.06,351.1694 C9511.88,378.3794 9556.11,409.8394 9594,442.6094 C9628.48,472.4294 9662.51,509.7494 9689.94,542.3694 " fill="none" id="PreparationActivity-&gt;KitchenResource" style="stroke: #555555; stroke-width: 1.0; stroke-dasharray: 7.0,7.0;"/><polygon fill="#555555" points="9693.26,546.3294,9690.5539,536.8596,9690.0521,542.4941,9684.4175,541.9923,9693.26,546.3294" style="stroke: #555555; stroke-width: 1.0;"/><text fill="#444444" font-family="Helvetica" font-size="11" lengthAdjust="spacingAndGlyphs" textLength="133" x="9582" y="425.3198">allocatedResourceCode</text><!--MD5=[fedadb81cae763e41158f4b4fe9cd633]
+link PreparationActivity to PreparationActivity--><path d="M9470.1,233.6194 C9493.83,237.7294 9510,246.8894 9510,261.1094 C9510,274.2694 9496.14,283.0994 9475.26,287.5994 " fill="none" id="PreparationActivity-&gt;PreparationActivity" style="stroke: #555555; stroke-width: 1.0; stroke-dasharray: 7.0,7.0;"/><polygon fill="#555555" points="9470.1,288.5994,9479.6925,290.8319,9475.0104,287.6573,9478.1851,282.9752,9470.1,288.5994" style="stroke: #555555; stroke-width: 1.0;"/><text fill="#444444" font-family="Helvetica" font-size="11" lengthAdjust="spacingAndGlyphs" textLength="76" x="9516" y="265.3198">prerequisites</text><!--MD5=[771bf2fcd72c90f8db52d96291f18fa2]
+link KitchenConfiguration to KitchenResource--><path d="M10005.94,342.2294 C9950.53,402.1694 9875.22,483.6494 9820.65,542.6794 " fill="none" id="KitchenConfiguration-&gt;KitchenResource" style="stroke: #555555; stroke-width: 1.0; stroke-dasharray: 7.0,7.0;"/><polygon fill="#555555" points="9817.08,546.5394,9826.13,542.6539,9820.4773,542.8708,9820.2604,537.2181,9817.08,546.5394" style="stroke: #555555; stroke-width: 1.0;"/><text fill="#444444" font-family="Helvetica" font-size="11" lengthAdjust="spacingAndGlyphs" textLength="80" x="9962" y="418.8198">resourceCode</text><text fill="#444444" font-family="Helvetica" font-size="11" lengthAdjust="spacingAndGlyphs" textLength="114" x="9945" y="431.6245">(inside jsonContent)</text><!--MD5=[cc13f6ee7eb2f6176c5327fd1a69319a]
+link ConsumptionForecast to Product--><path d="M1906.14,1484.9394 C1918.86,1489.1494 1931.55,1493.0894 1944,1496.6094 C2075.12,1533.7294 2110.3,1537.1394 2246,1549.6094 C2338.39,1558.0994 2989.04,1545.2894 3081,1557.6094 C3340.41,1592.3794 3630.38,1675.3594 3820.07,1735.8994 " fill="none" id="ConsumptionForecast-&gt;Product" style="stroke: #555555; stroke-width: 1.0; stroke-dasharray: 7.0,7.0;"/><polygon fill="#555555" points="3825.09,1737.4994,3817.7394,1730.9443,3820.3284,1735.9739,3815.2987,1738.5629,3825.09,1737.4994" style="stroke: #555555; stroke-width: 1.0;"/><text fill="#444444" font-family="Helvetica" font-size="11" lengthAdjust="spacingAndGlyphs" textLength="64" x="2247" y="1540.3198">productSku</text><!--MD5=[03b3be77ec5c544671a19d1bdf80b8c3]
+link ConsumptionForecast to PizzaSize--><path d="M1906.09,1486.5894 C1918.79,1490.3694 1931.5,1493.7694 1944,1496.6094 C2106.47,1533.5794 2153.25,1497.7094 2318,1522.6094 C2369.91,1530.4594 2380.86,1543.4494 2433,1549.6094 C2483.04,1555.5194 4198.37,1544.3994 4247,1557.6094 C4393.02,1597.2694 4540.67,1699.9594 4618.62,1760.1894 " fill="none" id="ConsumptionForecast-&gt;PizzaSize" style="stroke: #555555; stroke-width: 1.0; stroke-dasharray: 7.0,7.0;"/><polygon fill="#555555" points="4622.74,1763.3794,4618.0829,1754.7012,4618.7902,1760.3136,4613.1777,1761.0209,4622.74,1763.3794" style="stroke: #555555; stroke-width: 1.0;"/><text fill="#444444" font-family="Helvetica" font-size="11" lengthAdjust="spacingAndGlyphs" textLength="50" x="2434" y="1540.3198">pizzaSize</text><!--MD5=[0d1333706d84d9dbdeeb9242ef6a3c1d]
+link SupplierScenario to Product--><path d="M2174.23,1035.2294 C2308.63,1074.8794 2546.5,1148.0794 2745,1225.1094 C3131.93,1375.2694 3569.77,1581.9394 3820.63,1704.0194 " fill="none" id="SupplierScenario-&gt;Product" style="stroke: #555555; stroke-width: 1.0; stroke-dasharray: 7.0,7.0;"/><polygon fill="#555555" points="3825.42,1706.3494,3819.0914,1698.8029,3820.9281,1704.1533,3815.5777,1705.99,3825.42,1706.3494" style="stroke: #555555; stroke-width: 1.0;"/><text fill="#444444" font-family="Helvetica" font-size="11" lengthAdjust="spacingAndGlyphs" textLength="64" x="3376" y="1403.3198">productSku</text><!--MD5=[da326d8c6050c372b8c7abcdad90c8eb]
+link PlanningResult to ConsumptionForecast--><path d="M1244.39,1100.1894 C1312.31,1137.5694 1389.62,1181.8094 1458,1225.1094 C1498.32,1250.6394 1541.09,1280.1994 1579.33,1307.5894 " fill="none" id="PlanningResult-&gt;ConsumptionForecast" style="stroke: #555555; stroke-width: 1.0; stroke-dasharray: 7.0,7.0;"/><polygon fill="#555555" points="1583.49,1310.5694,1578.5139,1302.07,1579.4291,1307.6524,1573.8467,1308.5675,1583.49,1310.5694" style="stroke: #555555; stroke-width: 1.0;"/><text fill="#444444" font-family="Helvetica" font-size="11" lengthAdjust="spacingAndGlyphs" textLength="80" x="1439" y="1214.3198">forecastName</text><!--MD5=[ae7553a68e57a68cf92712bb22a98ef1]
+link PlanningResult to SupplierScenario--><path d="M1244.07,1003.6094 C1451.11,1003.6094 1784.49,1003.6094 1956.85,1003.6094 " fill="none" id="PlanningResult-&gt;SupplierScenario" style="stroke: #555555; stroke-width: 1.0; stroke-dasharray: 7.0,7.0;"/><polygon fill="#555555" points="1961.9,1003.6094,1952.9,999.6094,1956.9,1003.6094,1952.9,1007.6094,1961.9,1003.6094" style="stroke: #555555; stroke-width: 1.0;"/><text fill="#444444" font-family="Helvetica" font-size="11" lengthAdjust="spacingAndGlyphs" textLength="82" x="1562" y="997.8198">scenarioName</text><!--MD5=[b0d03954c996d06db72b8593ad167752]
+link SupplierScenario to PlanningResult--><!--MD5=[8873780e8cd0299137b6e2e915d9bf8a]
+link PlanningResult to StockItem--><path d="M1244.15,1041.7994 C1421.59,1077.5494 1700.65,1131.4194 1944,1168.1094 C2052.62,1184.4894 2342.2,1166.3394 2435,1225.1094 C2615.78,1339.6094 2721.34,1580.4694 2768.06,1713.2894 " fill="none" id="PlanningResult-&gt;StockItem" style="stroke: #555555; stroke-width: 1.0; stroke-dasharray: 7.0,7.0;"/><polygon fill="#555555" points="2769.83,1718.3594,2770.619,1708.5422,2768.1719,1713.6423,2763.0717,1711.1952,2769.83,1718.3594" style="stroke: #555555; stroke-width: 1.0;"/><text fill="#444444" font-family="Helvetica" font-size="11" lengthAdjust="spacingAndGlyphs" textLength="64" x="2670" y="1403.3198">productSku</text><!--MD5=[9b5820823b460b2c3e4eae2becd05634]
+link PreparationActivity to KitchenConfiguration--><!--MD5=[1e5e2fc8505900ded07f2606d641fa16]
+link RoleChangeLog to Customer--><!--MD5=[b889737d554faccf7e071f3ea62f1f47]
+link User to PredefinedPizza--><!--MD5=[b9a45d95dc083b931ed27d19dedd98ef]
+link PredefinedPizza to ComponentSizeConfiguration--><!--MD5=[c0ff323a9b350f35fbbdbcadc7e15ec1]
+link Customer to Product--><!--MD5=[9f5343a815ad0baaa2b40cd9b631a2ca]
+link ProductCategory to Allergen--><!--MD5=[b45fc7ddbecdccde8ccddd74aa0f70a1]
+link Allergen to PizzaComponentType--><!--MD5=[850ed4f57abf78eaddc6f3988e5d17ef]
+link ProductCategory to ConsumptionForecast--><!--MD5=[82c29b32c82db30b80a1f6fb1c08e7b5]
+link ConsumptionForecast to SupplierScenario--><!--MD5=[4cae6abf25c40cf6e0645476f41a8c7d]
+link ConsumptionForecast to Money--><!--MD5=[7bda1782664752d94b4f495d761b744e]
+link Money to PersonName--><!--MD5=[9e4e60d0f41664023e175e14e32e3fcf]
+link PersonName to Email--><!--MD5=[b015a341c4bbc2bfe70bd1ee8ddac055]
+link Email to Timestamp--><!--MD5=[598731d6d44a9e15dd54549884810d1d]
+link ForecastName to ScenarioName--><!--MD5=[95c2c39457688872356716b28d9836cd]
+link ForecastName to SupplierCode--><!--MD5=[99a55232794f9023e38773987afdcfe9]
+link SupplierCode to ResourceCode--><rect fill="#FAFAFA" height="70.5313" rx="5" ry="5" style="stroke: #CCCCCC; stroke-width: 1.0;" width="1372" x="4461.5" y="2418.6094"/><text fill="#000000" filter="url(#b1fy61bpq8kfxk0)" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="97" x="4475.5" y="2435.6763">Aggregate root</text><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="0" x="4588.5" y="2435.6763"/><text fill="#000000" filter="url(#b1fy61bpq8kfxk1)" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="177" x="4596.5" y="2435.6763">Entity (inside an aggregate)</text><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="0" x="4789.5" y="2435.6763"/><text fill="#000000" filter="url(#b1fy61bpq8kfxk2)" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="79" x="4797.5" y="2435.6763">Value object</text><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="0" x="4892.5" y="2435.6763"/><text fill="#000000" filter="url(#b1fy61bpq8kfxk3)" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="82" x="4900.5" y="2435.6763">Enumeration</text><text fill="#000000" font-family="monospace" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="24" x="4467.5" y="2450.8091">──▶</text><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="374" x="4495.5" y="2450.8091">owned by the aggregate (composition or plain association)</text><text fill="#000000" font-family="monospace" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="24" x="4893.5" y="2450.8091">┈┈▶</text><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="408" x="4921.5" y="2450.8091">reference to another aggregate by identity only, never by object</text><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="364" x="4467.5" y="2465.9419">«id» marks the identity attribute.  Business identities use</text><text fill="#000000" font-family="Helvetica" font-size="13" font-weight="bold" lengthAdjust="spacingAndGlyphs" textLength="105" x="4835.5" y="2465.9419">Business Keys</text><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="883" x="4944.5" y="2465.9419">(Usernames, SKUs, Emails, Names) or internal Long IDs. AuthSession uses an unpredictable UUID and references its owner by Username.</text><text fill="#000000" font-family="Helvetica" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="1229" x="4467.5" y="2481.0747">Sprint 2 additions: KitchenConfiguration (WEB06/VIS02), ConsumptionForecast + SupplierScenario + PlanningResult (WEB07/AI01/AI02/AI06), ActivationInvitation &amp; RoleChangeLog (AA06/AA07).</text><!--MD5=[cf65ec8a6495a90de519c35844d5611e]
+@startuml domain-model-general
+skinparam backgroundColor white
+skinparam shadowing false
+skinparam roundCorner 8
+skinparam classAttributeIconSize 0
+skinparam defaultFontName Helvetica
+skinparam defaultFontSize 13
+skinparam nodesep 40
+skinparam ranksep 70
+skinparam packageStyle rectangle
+skinparam ArrowColor #555555
+skinparam ArrowFontSize 11
+skinparam ArrowFontColor #444444
+skinparam titleFontSize 22
+skinparam legendBackgroundColor #FAFAFA
+skinparam legendBorderColor #CCCCCC
+skinparam package {
+  FontStyle bold
+  FontSize 15
+  BorderColor #AAAAAA
+}
+skinparam class {
+  BackgroundColor<<Root>> #FFE9A8
+  BorderColor<<Root>> #C99700
+  BorderThickness<<Root>> 2
+  BackgroundColor<<Entity>> #D6E8FF
+  BorderColor<<Entity>> #3B78C4
+  BackgroundColor<<VO>> #DDF3DD
+  BorderColor<<VO>> #3C9A3C
+  BackgroundColor<<Enum>> #F0E0F7
+  BorderColor<<Enum>> #8E44AD
+}
+hide empty methods
+hide empty fields
+hide circle
+hide stereotype
+
+title Pizzeria Domain Model - General View (Sprint 2)
+
+package "ORDERING" #FDECEC {
+
+  package "Customer Order Aggregate" #FFFFFF {
+    class CustomerOrder <<Root>> {
+      orderNumber : Long «id»
+      customerEmail : Email [0..1]
+      placementTime : Timestamp
+      status : OrderStatus
+      totalAmount : Money
+      items : List<OrderItem>
+      - -
+      addItem(OrderItem)
+      place() / confirm() / cancel()
+      recalculateTotal() : Money
+    }
+    class OrderItem <<Entity>> {
+      orderNumber : Long «id»
+      lineNumber : int «id»
+      itemType : OrderItemType
+      catalogueProductSku : Sku [0..1]
+      quantity : int
+      unitPrice : Money
+      fulfillmentStatus : FulfillmentStatus
+      - -
+      markBeingPrepared()
+      markReady()
+      markServed()
+    }
+    class PersonalizedPizzaSnapshot <<VO>> {
+      orderNumber : Long «id»
+      lineNumber : int «id»
+      sourcePredefinedPizzaSku : Sku [0..1]
+      chosenSize : PizzaSizeName
+      computedPrice : Money
+      allergens : Set<AllergenName>
+    }
+    class SnapshotComponent <<VO>> {
+      componentSku : Sku
+      quantity : int
+    }
+    enum OrderStatus <<Enum>> {
+      SIMULATED
+      PLACED
+      CONFIRMED
+      IN_PREPARATION
+      READY
+      DELIVERED
+      CANCELLED
+    }
+    enum OrderItemType <<Enum>> {
+      STANDARD_PRODUCT
+      PERSONALIZED_PIZZA
+    }
+    enum FulfillmentStatus <<Enum>> {
+      WAITING_PREPARATION
+      BEING_PREPARED
+      READY_TO_SERVE
+      SERVED
+    }
+  }
+}
+
+package "KITCHEN" #EEF0F2 {
+
+  package "Preparation Activity Aggregate" #FFFFFF {
+    class PreparationActivity <<Root>> {
+      activityId : Long «id»
+      orderNumber : Long
+      orderItemLineNumber : int
+      activityType : String
+      expectedDuration : ActivityDuration
+      status : ActivityStatus
+      allocatedResourceCode : ResourceCode [0..1]
+      prerequisites : Set<Long>
+      - -
+      addPrerequisite(Long)
+      allocateResource(ResourceCode)
+      start() / complete()
+      isReady(Set<Long>) : boolean
+    }
+    class ActivityDuration <<VO>> {
+      seconds : int
+    }
+    enum ActivityStatus <<Enum>> {
+      WAITING
+      SCHEDULED
+      IN_PROGRESS
+      COMPLETED
+    }
+  }
+
+  package "Kitchen Resource Aggregate" #FFFFFF {
+    class KitchenResource <<Root>> {
+      resourceCode : ResourceCode «id»
+      name : String
+      resourceType : String
+      capacity : SlotCapacity
+      operational : boolean
+      - -
+      markOperational()
+      markOutOfService()
+    }
+    class SlotCapacity <<VO>> {
+      slots : int
+    }
+  }
+}
+
+package "KITCHEN CONFIGURATION" #E8F5E9 {
+
+  package "Kitchen Configuration Aggregate" #FFFFFF {
+    class KitchenConfiguration <<Root>> {
+      name : ConfigurationName «id»
+      jsonContent : String
+      isActive : boolean
+      createdAt : Timestamp
+      updatedAt : Timestamp
+      - -
+      activate() / deactivate()
+      replaceJson(String)
+      validate() : ValidationReport
+    }
+    class ConfigurationName <<VO>> {
+      value : String
+    }
+  }
+}
+
+package "IDENTITY & CUSTOMERS" #EAF2FB {
+
+  package "Authentication Session Aggregate" #FFFFFF {
+    class AuthSession <<Root>> {
+      id : UUID «id»
+      username : Username
+      expiresAt : Timestamp
+      revokedAt : Timestamp [0..1]
+      - -
+      isActive(Date) : boolean
+      isActiveFor(String, Date) : boolean
+      revoke(Date)
+    }
+  }
+
+  package "User Aggregate" #FFFFFF {
+    class User <<Root>> {
+      username : Username «id»
+      name : PersonName
+      email : Email
+      passwordHash : PasswordHash [0..1]
+      externalIdpSubject : String [0..1]
+      status : UserStatus
+      roles : Set<RoleName>
+      dietaryRestrictions : Set<DietaryRestriction>
+      invitations : List<ActivationInvitation>
+      createdAt : Timestamp
+      updatedAt : Timestamp
+      - -
+      changePassword(PasswordHash)
+      activate() / deactivate()
+      assignRole(RoleName) / revokeRole(RoleName)
+      hasRole(RoleName) : boolean
+      recordDietaryRestriction(AllergenName)
+      clearDietaryRestriction(AllergenName)
+      issueInvitation(InvitationPurpose) : String
+      consumeInvitation(String) : Result
+    }
+    class PasswordHash <<VO>> {
+      hashedValue : String
+    }
+    class RoleName <<VO>> {
+      name : String
+    }
+    class Address <<VO>> {
+      street : String
+      postalCode : String
+      city : String
+      extraDetails : String
+    }
+    class PhoneNumber <<VO>> {
+      value : String
+    }
+    class DietaryRestriction <<VO>> {
+      allergenName : AllergenName
+      recordedAt : Timestamp
+    }
+    class ActivationInvitation <<Entity>> {
+      token : InvitationToken «id»
+      purpose : InvitationPurpose
+      expiresAt : Timestamp
+      usedAt : Timestamp [0..1]
+      revokedAt : Timestamp [0..1]
+      createdAt : Timestamp
+    }
+    enum UserStatus <<Enum>> {
+      ACTIVE
+      DEACTIVATED
+      PENDING_REGISTRATION
+    }
+    enum InvitationPurpose <<Enum>> {
+      LOCAL_ACCOUNT_ACTIVATION
+      EXTERNAL_IDP_MATCH
+      PASSWORD_RESET
+    }
+  }
+
+  package "Customer Aggregate" #FFFFFF {
+    class Customer <<Root>> {
+      email : Email «id»
+      username : Username [0..1]
+      name : PersonName
+      contactInfo : ContactInformation
+      vatNumber : VatNumber [0..1]
+      consent : ConsentPreferences
+      addresses : List<CustomerAddress>
+      createdAt : Timestamp
+      updatedAt : Timestamp
+      - -
+      updateContactInformation(ContactInformation)
+      addAddress(DeliveryAddress, boolean)
+      removeAddress(AddressId)
+      setDefaultAddress(AddressId)
+      updateConsent(boolean)
+    }
+    class CustomerAddress <<Entity>> {
+      id : Long «id»
+      isDefault : boolean
+    }
+    class DeliveryAddress <<VO>> {
+      street : String
+      postalCode : String
+      city : String
+      extraDetails : String
+    }
+    class ContactInformation <<VO>> {
+      phone : PhoneNumber
+      email : Email
+    }
+    class ConsentPreferences <<VO>> {
+      marketingConsent : boolean
+      consentTimestamp : Timestamp
+    }
+  }
+
+  package "Role Change Log Aggregate" #FFFFFF {
+    class RoleChangeLog <<Root>> {
+      logId : Long «id»
+      actorUsername : Username
+      targetUsername : Username
+      previousRoles : Set<RoleName>
+      newRoles : Set<RoleName>
+      changedAt : Timestamp
+      reason : String [0..1]
+    }
+  }
+}
+
+package "PIZZA CONFIGURATION" #F6ECFA {
+
+  package "Pizza Size Aggregate" #FFFFFF {
+    class PizzaSize <<Root>> {
+      name : PizzaSizeName «id»
+      active : boolean
+      - -
+      activate() / deactivate()
+    }
+  }
+
+  package "Component Size Configuration Aggregate" #FFFFFF {
+    class ComponentSizeConfiguration <<Root>> {
+      componentSku : Sku «id»
+      pizzaSize : PizzaSizeName «id»
+      price : Money
+      stockUnitsConsumed : StockQuantity
+      - -
+      changePrice(Money)
+      changeConsumption(StockQuantity)
+    }
+  }
+
+  package "Predefined Pizza Aggregate" #FFFFFF {
+    class PredefinedPizza <<Root>> {
+      sku : Sku «id»
+      recipeName : String
+      recipe : Set<RecipeLine>
+      - -
+      addRecipeLine(Sku, int)
+      removeRecipeLine(Sku)
+      changeQuantity(Sku, int)
+    }
+    class RecipeLine <<VO>> {
+      componentSku : Sku
+      defaultQuantity : int
+    }
+  }
+}
+
+package "CATALOGUE & INVENTORY" #FFF6E0 {
+
+  package "Product Category Aggregate" #FFFFFF {
+    class ProductCategory <<Root>> {
+      name : CategoryName «id»
+      description : String
+      - -
+      updateDescription(String)
+    }
+  }
+
+  package "Allergen Aggregate" #FFFFFF {
+    class Allergen <<Root>> {
+      name : AllergenName «id»
+      description : String
+      - -
+      updateDescription(String)
+    }
+  }
+
+  package "Pizza Component Type Aggregate" #FFFFFF {
+    class PizzaComponentType <<Root>> {
+      name : ComponentTypeName «id»
+      assemblyOrder : AssemblyOrder
+      cardinality : CardinalityBounds
+      - -
+      changeAssemblyOrder(AssemblyOrder)
+      changeCardinality(CardinalityBounds)
+    }
+    class AssemblyOrder <<VO>> {
+      sequenceNumber : int
+    }
+    class CardinalityBounds <<VO>> {
+      minimum : int
+      maximum : int
+      isSatisfiedBy(int) : boolean
+    }
+  }
+
+  package "Product Aggregate" #FFFFFF {
+    class Product <<Root>> {
+      sku : Sku «id»
+      name : ProductName
+      description : String
+      category : CategoryName
+      flags : ProductFlags
+      componentType : ComponentTypeName [0..1]
+      directSellingPrice : Money
+      stockUnitsPerSale : Integer [0..1]
+      active : boolean
+      allergens : Set<AllergenName>
+      - -
+      changeCategory(CategoryName)
+      addAllergen(AllergenName) / removeAllergen(AllergenName)
+      setDirectSellingPrice(Money)
+      setStockUnitsPerSale(Integer)
+      designateAsPizzaComponent(ComponentTypeName)
+      activate() / deactivate()
+    }
+    class ProductFlags <<VO>> {
+      sellable : boolean
+      pizzaComponent : boolean
+      stockControlled : boolean
+      isConsistent() : boolean
+    }
+  }
+
+  package "Stock Aggregate" #FFFFFF {
+    class StockItem <<Root>> {
+      productSku : Sku «id»
+      currentUnits : StockQuantity
+      movements : List<StockMovement>
+      createdAt : Timestamp
+      updatedAt : Timestamp
+      - -
+      replenish(StockQuantity, String)
+      consume(StockQuantity, String)
+      adjust(StockQuantity, String)
+      hasSufficientStock(StockQuantity) : boolean
+    }
+    class StockMovement <<Entity>> {
+      movementId : Long «id»
+      type : StockMovementType
+      amount : StockQuantity
+      reason : String
+      recordedAt : Timestamp
+    }
+    class StockQuantity <<VO>> {
+      units : int
+      add(StockQuantity) : StockQuantity
+      subtract(StockQuantity) : StockQuantity
+      isGreaterThanOrEqual(StockQuantity) : boolean
+    }
+    enum StockMovementType <<Enum>> {
+      REPLENISHMENT
+      CONSUMPTION
+      ADJUSTMENT
+    }
+  }
+}
+
+package "AI PLANNING" #F3E5F5 {
+
+  package "Consumption Forecast Aggregate" #FFFFFF {
+    class ConsumptionForecast <<Root>> {
+      name : ForecastName «id»
+      startDate : Date
+      endDate : Date
+      entries : List<ForecastEntry>
+      createdAt : Timestamp
+      updatedAt : Timestamp
+      - -
+      addEntry(Date, Sku, PizzaSizeName, int)
+      removeEntry(ForecastEntryId)
+      validateAgainstReferences(Set<Sku>, Set<PizzaSizeName>)
+    }
+    class ForecastEntry <<Entity>> {
+      entryId : Long «id»
+      date : Date
+      productSku : Sku
+      pizzaSize : PizzaSizeName [0..1]
+      quantity : int
+    }
+  }
+
+  package "Supplier Scenario Aggregate" #FFFFFF {
+    class SupplierScenario <<Root>> {
+      name : ScenarioName «id»
+      suppliers : List<Supplier>
+      offers : List<SupplierOffer>
+      isSimulated : boolean
+      confirmedAt : Timestamp [0..1]
+      createdAt : Timestamp
+      - -
+      addSupplier(Supplier)
+      addOffer(SupplierOffer)
+      confirm()
+    }
+    class Supplier <<Entity>> {
+      supplierCode : SupplierCode «id»
+      name : String [0..1]
+    }
+    class SupplierOffer <<Entity>> {
+      supplierCode : SupplierCode
+      productSku : Sku
+      priceEUR : Money
+      stockUnitQuantity : int
+      leadTimeDays : int
+      dailySupplyLimit : int [0..1]
+    }
+  }
+
+  package "Planning Result Aggregate" #FFFFFF {
+    class PlanningResult <<Root>> {
+      executionId : Long «id»
+      forecastName : ForecastName
+      scenarioName : ScenarioName
+      forecastSnapshot : ForecastSnapshot
+      supplierScenarioSnapshot : SupplierScenarioSnapshot
+      stockSnapshot : StockSnapshot
+      bomReference : String
+      referenceDate : Date
+      isReplay : boolean
+      isSimulated : boolean
+      executedAt : Timestamp
+      requirements : List<DailyRequirement>
+      proposals : List<PurchaseProposal>
+      unmetNeeds : List<UnmetNeed>
+    }
+    class ForecastSnapshot <<VO>> {
+      forecastName : ForecastName
+      capturedEntries : List<ForecastEntry>
+    }
+    class SupplierScenarioSnapshot <<VO>> {
+      scenarioName : ScenarioName
+      capturedOffers : List<SupplierOffer>
+    }
+    class StockSnapshot <<VO>> {
+      capturedAt : Timestamp
+      quantities : Map<Sku, Integer>
+    }
+    class DailyRequirement <<VO>> {
+      date : Date
+      productSku : Sku
+      requiredQuantity : int
+    }
+    class PurchaseProposal <<VO>> {
+      productSku : Sku
+      supplierCode : SupplierCode
+      quantity : int
+      orderDate : Date
+      deliveryDate : Date
+      priceEUR : Money
+    }
+    class UnmetNeed <<VO>> {
+      date : Date
+      productSku : Sku
+      shortfall : int
+      reason : String
+    }
+  }
+}
+
+package "SHARED KERNEL" #F2F2F2 {
+  class PersonName <<VO>> {
+    firstName : String
+    lastName : String
+    fullName() : String
+  }
+  class Email <<VO>> {
+    address : String
+  }
+  class Money <<VO>> {
+    amount : BigDecimal
+    currency : String
+    add(Money) : Money
+    subtract(Money) : Money
+    multiply(int) : Money
+  }
+  class Timestamp <<VO>> {
+    value : Instant
+  }
+  class ConfigurationName <<VO>> {
+    value : String
+  }
+  class ForecastName <<VO>> {
+    value : String
+  }
+  class ScenarioName <<VO>> {
+    value : String
+  }
+  class SupplierCode <<VO>> {
+    value : String
+  }
+  class InvitationToken <<VO>> {
+    value : String
+  }
+  class ResourceCode <<VO>> {
+    value : String
+  }
+}
+
+User "1" <- - "0..*" AuthSession : belongs to
+User *- -> "0..*" DietaryRestriction
+User *- -> "0..*" ActivationInvitation
+User - -> "1..*" RoleName
+User - -> "0..1" PasswordHash
+User - -> "1" Address
+User - -> "1" PhoneNumber
+User - -> "1" UserStatus
+
+Customer *- -> "0..*" CustomerAddress
+CustomerAddress - -> "1" DeliveryAddress
+Customer - -> "1" ContactInformation
+Customer - -> "1" ConsentPreferences
+
+PizzaComponentType - -> "1" AssemblyOrder
+PizzaComponentType - -> "1" CardinalityBounds
+Product - -> "1" ProductFlags
+
+StockItem *- -> "0..*" StockMovement
+StockItem - -> "1" StockQuantity
+StockMovement - -> "1" StockMovementType
+
+PredefinedPizza *- -> "1..*" RecipeLine
+
+CustomerOrder - -> "1" OrderStatus
+CustomerOrder *- -> "1..*" OrderItem
+OrderItem - -> "1" OrderItemType
+OrderItem - -> "1" FulfillmentStatus
+OrderItem *- -> "0..1" PersonalizedPizzaSnapshot
+PersonalizedPizzaSnapshot *- -> "1..*" SnapshotComponent
+
+PreparationActivity - -> "1" ActivityDuration
+PreparationActivity - -> "1" ActivityStatus
+KitchenResource - -> "1" SlotCapacity
+
+KitchenConfiguration - -> "1" ConfigurationName
+ActivationInvitation - -> "1" InvitationToken
+ActivationInvitation - -> "1" InvitationPurpose
+
+ConsumptionForecast *- -> "0..*" ForecastEntry
+SupplierScenario *- -> "0..*" Supplier
+SupplierScenario *- -> "0..*" SupplierOffer
+PlanningResult *- -> "1" ForecastSnapshot
+PlanningResult *- -> "1" SupplierScenarioSnapshot
+PlanningResult *- -> "1" StockSnapshot
+PlanningResult *- -> "0..*" DailyRequirement
+PlanningResult *- -> "0..*" PurchaseProposal
+PlanningResult *- -> "0..*" UnmetNeed
+
+Customer ..> User : username
+User ..> Allergen : dietary\nrestrictions
+RoleChangeLog ..> User : targetUsername
+
+Product ..> ProductCategory : categoryName
+Product ..> PizzaComponentType : componentTypeName
+Product ..> Allergen : allergens
+StockItem ..> Product : sku
+
+ComponentSizeConfiguration ..> Product : componentSku
+ComponentSizeConfiguration ..> PizzaSize : pizzaSize
+PredefinedPizza ..> Product : sku\n(and components)
+PredefinedPizza ..> PizzaSize : available sizes
+
+CustomerOrder ..> Customer : customerEmail
+OrderItem ..> Product : catalogueProductSku
+PersonalizedPizzaSnapshot ..> PredefinedPizza : sourcePredefinedPizzaSku
+PersonalizedPizzaSnapshot ..> PizzaSize : chosenSize
+PersonalizedPizzaSnapshot ..> Allergen : allergens
+SnapshotComponent ..> Product : componentSku
+
+PreparationActivity ..> CustomerOrder : orderNumber
+PreparationActivity ..> KitchenResource : allocatedResourceCode
+PreparationActivity ..> PreparationActivity : prerequisites
+
+KitchenConfiguration ..> KitchenResource : resourceCode\n(inside jsonContent)
+
+ConsumptionForecast ..> Product : productSku
+ConsumptionForecast ..> PizzaSize : pizzaSize
+SupplierScenario ..> Product : productSku
+
+PlanningResult ..> ConsumptionForecast : forecastName
+PlanningResult ..> SupplierScenario : scenarioName
+PlanningResult ..> StockItem : productSku
+
+CustomerOrder -[hidden]right- PreparationActivity
+PreparationActivity -[hidden]right- KitchenConfiguration
+
+CustomerOrder -[hidden]down- Customer
+Customer -[hidden]right- User
+RoleChangeLog -[hidden]down- Customer
+User -[hidden]right- PredefinedPizza
+PredefinedPizza -[hidden]right- ComponentSizeConfiguration
+ComponentSizeConfiguration -[hidden]right- PizzaSize
+
+Customer -[hidden]down- Product
+Product -[hidden]right- StockItem
+Product -[hidden]down- ProductCategory
+ProductCategory -[hidden]right- Allergen
+Allergen -[hidden]right- PizzaComponentType
+
+ProductCategory -[hidden]down- ConsumptionForecast
+ConsumptionForecast -[hidden]right- SupplierScenario
+SupplierScenario -[hidden]right- PlanningResult
+
+ConsumptionForecast -[hidden]down- Money
+Money -[hidden]right- PersonName
+PersonName -[hidden]right- Email
+Email -[hidden]right- Timestamp
+
+legend bottom
+  <back:#FFE9A8>  Aggregate root  </back>  <back:#D6E8FF>  Entity (inside an aggregate)  </back>  <back:#DDF3DD>  Value object  </back>  <back:#F0E0F7>  Enumeration  </back>
+  ""──▶"" owned by the aggregate (composition or plain association)      ""┈┈▶"" reference to another aggregate by identity only, never by object
+  «id» marks the identity attribute.  Business identities use **Business Keys** (Usernames, SKUs, Emails, Names) or internal Long IDs. AuthSession uses an unpredictable UUID and references its owner by Username.
+  Sprint 2 additions: KitchenConfiguration (WEB06/VIS02), ConsumptionForecast + SupplierScenario + PlanningResult (WEB07/AI01/AI02/AI06), ActivationInvitation & RoleChangeLog (AA06/AA07).
+endlegend
+
+@enduml
+
+PlantUML version 1.2020.02(Sun Mar 01 10:22:07 WET 2020)
+(GPL source distribution)
+Java Runtime: OpenJDK Runtime Environment
+JVM: OpenJDK 64-Bit Server VM
+Java Version: 21.0.12.1+1-1-24.04.4-Ubuntu
+Operating System: Linux
+Default Encoding: UTF-8
+Language: en
+Country: null
+--></g></svg>

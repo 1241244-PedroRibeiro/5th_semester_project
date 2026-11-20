@@ -1,0 +1,32 @@
+info:
+  name: 13 - Reject Maximum Below Minimum
+  type: http
+  seq: 13
+http:
+  method: POST
+  url: '{{baseUrl}}/pizza-component-types'
+  body:
+    type: json
+    data: |-
+      {
+        "name": "{{bck07ValidationName}}",
+        "assemblyOrder": {{bck07Order}},
+        "minCardinality": 3,
+        "maxCardinality": 2
+      }
+  auth:
+    type: bearer
+    token: '{{bck07ManagerToken}}'
+settings:
+  encodeUrl: true
+runtime:
+  scripts:
+    - type: tests
+      code: |-
+        test("Reject Maximum Below Minimum", function() {
+          expect(res.getStatus()).to.equal(400);
+          expect(typeof res.getBody().error.message).to.equal("string");
+          expect(res.getBody().error.message.length > 0).to.equal(true);
+        });
+    - type: before-request
+      code: 'bru.setVar("bck07ValidationName", "Bruno validation " + Date.now() + "-" + Math.random().toString(36).slice(2));'

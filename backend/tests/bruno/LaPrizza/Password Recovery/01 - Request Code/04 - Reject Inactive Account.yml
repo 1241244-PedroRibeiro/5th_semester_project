@@ -1,0 +1,30 @@
+info:
+  name: 04 - Reject Inactive Account
+  type: http
+  seq: 4
+http:
+  method: POST
+  url: '{{baseUrl}}/password-recovery'
+  body:
+    type: json
+    data: |-
+      {
+        "email": "{{recoveryInactiveEmail}}"
+      }
+runtime:
+  scripts:
+    - type: before-request
+      code: |-
+        bru.setVar("recoveryInactiveEmail", bru.getEnvVar("recoveryInactiveEmail") || "deactivated-customer@laprizza.test");
+    - type: tests
+      code: |-
+        test("Returns HTTP 404", function() {
+          expect(res.getStatus()).to.equal(404);
+        });
+        test("Returns a confirmation or explanation without recovery credentials", function() {
+          const data = res.getBody();
+          expect(data.error.message).to.be.a("string").and.not.empty;
+          expect(data).not.to.have.property("recovery_code");
+          expect(data).not.to.have.property("new_password");
+          expect(data).not.to.have.property("passwordHash");
+        });

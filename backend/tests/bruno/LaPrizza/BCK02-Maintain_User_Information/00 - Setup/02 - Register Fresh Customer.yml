@@ -1,0 +1,35 @@
+info:
+  name: 02 - Register Fresh Customer
+  type: http
+  seq: 2
+http:
+  method: POST
+  url: '{{baseUrl}}/auth/register'
+  body:
+    type: json
+    data: |-
+      {
+      	"firstName": "Bruno",
+      	"lastName": "BckTwo",
+      	"email": "{{bck02CustomerEmail}}",
+      	"password": "BrunoPassword123!"
+      }
+runtime:
+  scripts:
+    - type: before-request
+      code: |-
+        const suffix = Date.now() + "-" + Math.random().toString(36).slice(2);
+        bru.setVar("bck02CustomerEmail", "bck02-2-" + suffix + "@example.com");
+    - type: tests
+      code: |-
+        test("Creates an independent active customer account", function() {
+        	expect(res.getStatus()).to.equal(201);
+        	const data = res.getBody();
+        	expect(data.user.roles).to.deep.equal(["CUSTOMER"]);
+        	expect(data.user.status).to.equal("ACTIVE");
+        	expect(data.user.username).to.be.a("string").and.not.empty;
+        	expect(data.token).to.be.a("string").and.not.empty;
+        	bru.setVar("bck02CustomerCreationDate", data.user.createdAt.slice(0, 10));
+        	bru.setVar("bck02CustomerUsername", data.user.username);
+        	bru.setVar("bck02CustomerToken", data.token);
+        });

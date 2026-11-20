@@ -1,0 +1,21 @@
+info:
+  name: 02 - Search by Name
+  type: http
+  seq: 2
+http:
+  method: GET
+  url: '{{baseUrl}}/pizza-component-types?search={{bck07Name}}&page=1&pageSize=20'
+settings:
+  encodeUrl: true
+runtime:
+  scripts:
+    - type: tests
+      code: |-
+        test("Search by Name", function() {
+          expect(res.getStatus()).to.equal(200);
+          const data = res.getBody();
+          expect(data.page).to.equal(1);
+          expect(data.pageSize).to.equal(20);
+          expect(data.total).to.equal(2);
+          expect(data.items.map(type => type.name)).to.deep.equal([bru.getVar("bck07Name"), bru.getVar("bck07BoundedName")]);
+        });

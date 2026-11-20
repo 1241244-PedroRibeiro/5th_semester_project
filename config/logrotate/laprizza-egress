@@ -1,0 +1,28 @@
+# /etc/logrotate.d/laprizza-egress
+# LaPrizza Egress Log Rotation (SYS03 AC3.4)
+# Rotates egress.log and egress-changes.log daily with 90-day retention
+
+/var/log/laprizza/egress.log {
+    daily
+    missingok
+    rotate 90
+    compress
+    delaycompress
+    notifempty
+    create 0640 root laprizza
+    sharedscripts
+    postrotate
+        systemctl reload rsyslog > /dev/null 2>&1 || true
+    endscript
+}
+
+/var/log/laprizza/egress-changes.log {
+    daily
+    missingok
+    rotate 90
+    compress
+    delaycompress
+    notifempty
+    create 0640 root laprizza
+    sharedscripts
+}

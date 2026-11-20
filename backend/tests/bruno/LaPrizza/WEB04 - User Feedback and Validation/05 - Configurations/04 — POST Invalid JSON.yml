@@ -1,0 +1,33 @@
+info:
+  name: 04 — POST Invalid JSON
+  type: http
+  seq: 4
+
+http:
+  method: POST
+  url: "{{baseUrl}}/kitchen-configurations"
+  body:
+    type: json
+    data: |-
+      {
+        "name": "WEB04 Invalid Configuration",
+        "jsonContent": {
+          "schemaVersion": "1.0",
+          "dimensions": {
+            "x": 12,
+            "y": 4,
+            "z": 9
+          },
+          "equipment": [],
+          "lights": []
+        }
+  auth:
+    type: bearer
+    token: "{{managerToken}}"
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: false

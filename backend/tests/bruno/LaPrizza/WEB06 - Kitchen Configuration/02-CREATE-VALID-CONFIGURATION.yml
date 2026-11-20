@@ -1,0 +1,123 @@
+info:
+  name: 02-CREATE-VALID-CONFIGURATION
+  type: http
+  seq: 3
+
+http:
+  method: POST
+  url: "{{baseUrl}}/kitchen-configurations"
+  body:
+    type: json
+    data: |-
+      {
+        "name": "Teste Bruno",
+        "jsonContent": {
+          "schemaVersion": "1.1",
+          "metadata": {
+            "name": "Teste Bruno",
+            "description": "Configuração de teste criada pela coleção Bruno.",
+            "author": "Manager"
+          },
+          "dimensions": {
+            "x": 12,
+            "y": 4,
+            "z": 9
+          },
+          "equipment": [
+            {
+              "id": "counter-main",
+              "label": "Main Counter",
+              "category": "counter",
+              "modelUrl": "/assets/3d/models/oven.glb",
+              "position": [
+                3,
+                0,
+                2
+              ],
+              "rotation": [
+                0,
+                0,
+                0
+              ],
+              "scale": [
+                1.2,
+                1,
+                1
+              ]
+            }
+          ],
+          "lights": [
+            {
+              "type": "ambient",
+              "color": "#ffeeaa",
+              "intensity": 0.8
+            },
+            {
+              "type": "directional",
+              "color": "#ffffff",
+              "position": [
+                6,
+                9,
+                8
+              ],
+              "target": [
+                6,
+                0,
+                4.5
+              ],
+              "intensity": 2.5,
+              "castShadow": true
+            },
+            {
+              "type": "spot",
+              "color": "#fff1dd",
+              "position": [
+                6,
+                3.5,
+                4.5
+              ],
+              "target": [
+                6,
+                0,
+                4.5
+              ],
+              "intensity": 3.5,
+              "angle": 1.15,
+              "penumbra": 0.65,
+              "distance": 0,
+              "decay": 2,
+              "castShadow": false
+            }
+          ],
+          "animationTriggers": []
+        }
+      }
+  auth:
+    type: bearer
+    token: "{{managerToken}}"
+
+runtime:
+  scripts:
+    - type: after-response
+      code: |-
+        const status = res.getStatus();
+        const data = res.getBody();
+
+        if (status !== 201 && status !== 200) {
+          console.log("Create failed:", status, data);
+          throw new Error("A criação falhou. Verifica a resposta HTTP.");
+        }
+        if (!data || !data.id) {
+          console.log("Unexpected response:", data);
+          throw new Error("A API não devolveu o UUID da configuração.");
+        }
+        bru.setEnvVar("KitchenConfigId", data.id);
+        bru.setEnvVar("KitchenConfigName", data.name);
+        console.log("Configuration UUID:", data.id);
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: false

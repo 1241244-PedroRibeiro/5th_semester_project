@@ -1,0 +1,37 @@
+info:
+  name: 02 - Customer Cannot Read Another Existing Customer
+  type: http
+  seq: 2
+http:
+  method: GET
+  url: '{{baseUrl}}/user/{{bck02DeactivateTargetUsername}}'
+  auth:
+    type: bearer
+    token: '{{bck02CustomerToken}}'
+runtime:
+  scripts:
+    - type: before-request
+      code: |-
+        const value = name => bru.getVar(name) ?? bru.getEnvVar(name);
+        for (const name of ["bck02CustomerToken","bck02CustomerUsername","bck02ManagerUsername","bck02DeactivateTargetUsername"]) {
+        	if (!value(name)) throw new Error("Run BCK02's 00 - Setup before this request: missing " + name);
+        }
+        if (value("bck02CustomerUsername") === value("bck02ManagerUsername")) {
+        	throw new Error("Customer and manager usernames must be different.");
+        }
+        if ([value("bck02CustomerUsername"), value("bck02ManagerUsername")].includes(value("bck02DeactivateTargetUsername"))) {
+        	throw new Error("The existing target must be a separate customer created by 00 - Setup.");
+        }
+    - type: tests
+      code: |-
+        test("Status code is 403", function() {
+        	expect(res.getStatus()).to.equal(403);
+        });
+
+        test("Rejects access without disclosing user information", function() {
+        	const data = res.getBody();
+        	expect(data.error.message).to.equal("You can only view your own user information.");
+        	expect(data).not.to.have.property("username");
+        	expect(data).not.to.have.property("email");
+        	expect(data).not.to.have.property("passwordHash");
+        });

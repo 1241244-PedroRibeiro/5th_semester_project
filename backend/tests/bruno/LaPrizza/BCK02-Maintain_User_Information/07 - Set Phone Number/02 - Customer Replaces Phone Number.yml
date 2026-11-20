@@ -1,0 +1,33 @@
+info:
+  name: 02 - Customer Replaces Phone Number
+  type: http
+  seq: 2
+http:
+  method: PUT
+  url: '{{baseUrl}}/user/me/phone-number'
+  body:
+    type: json
+    data: |-
+      {
+        "phoneNumber": "+351923456789"
+      }
+  auth:
+    type: bearer
+    token: '{{bck02PhoneToken}}'
+settings:
+  encodeUrl: true
+runtime:
+  scripts:
+    - type: tests
+      code: |-
+        test("Customer Replaces Phone Number", function() {
+          expect(res.getStatus()).to.equal(200);
+          const data = res.getBody();
+          expect(data.username).to.equal(bru.getVar("bck02PhoneUsername"));
+          expect(data.roles).to.deep.equal(["CUSTOMER"]);
+          expect(data.status).to.equal("ACTIVE");
+          expect(data).not.to.have.property("passwordHash");
+          expect(data).not.to.have.property("password");
+          expect(data.phoneNumber).to.equal("+351923456789");
+          expect(data.address).to.deep.equal({"street": "Rua do Telefone 1", "postalCode": "1000-002", "city": "Lisbon", "extraDetails": "Door 3"});
+        });

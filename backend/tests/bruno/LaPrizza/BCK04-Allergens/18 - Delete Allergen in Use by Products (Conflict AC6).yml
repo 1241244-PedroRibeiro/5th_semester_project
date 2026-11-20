@@ -1,0 +1,28 @@
+info:
+  name: 18 - Delete Allergen in Use by Products (Conflict AC6)
+  type: http
+  seq: 17
+http:
+  method: DELETE
+  url: '{{baseUrl}}/allergens/{{lactoseAllergenName}}'
+  body: none
+  auth:
+    type: bearer
+    token: '{{managerToken}}'
+runtime:
+  scripts:
+    - type: before-request
+      code: |-
+        const list = bru.getVar("allergenList") || bru.getEnvVar("allergenList");
+        if (Array.isArray(list)) {
+        	const target = list.find(a => a.name === "Lactose");
+        	if (target) {
+        		bru.setVar("lactoseAllergenName", target.name);
+        	}
+        }
+    - type: tests
+      code: |-
+        test("Allergen referenced by business information strictly returns 409 Conflict (AC6)", function() {
+        	expect(res.getStatus()).to.equal(409);
+        	expect(res.getBody().error.message).to.equal("Allergen is referenced by existing business information and cannot be deleted");
+        });

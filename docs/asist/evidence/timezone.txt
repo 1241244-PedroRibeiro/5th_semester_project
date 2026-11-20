@@ -1,0 +1,13 @@
+=== UTC ===
+Sat Nov 14 17:20:36 UTC 2026
+=== LOCAL ===
+Sat Nov 14 17:20:36 WET 2026
+=== TIMEZONE ===
+Europe/Lisbon
+               Local time: Sat 2026-11-14 17:20:36 WET
+           Universal time: Sat 2026-11-14 17:20:36 UTC
+                 RTC time: Sat 2026-11-14 17:20:36
+                Time zone: Europe/Lisbon (WET, +0000)
+System clock synchronized: yes
+              NTP service: active
+          RTC in local TZ: no

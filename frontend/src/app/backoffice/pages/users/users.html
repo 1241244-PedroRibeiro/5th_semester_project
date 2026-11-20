@@ -1,0 +1,283 @@
+<app-page-header
+	[title]="'User Management' | translate"
+	[description]="'A complete overview of the people in your restaurant.' | translate"
+/>
+@if (success()) {
+	<p class="notice success" role="status">{{ success() | translate: successParams() }}</p>
+}
+<app-panel
+	[title]="'Users' | translate"
+	[count]="loading() || error() ? null : total()"
+	[unit]="'registered' | translate"
+	><button panel-actions class="button" (click)="openInvite()">
+		<app-icon name="plus" />{{ 'Invite team member' | translate }}
+	</button>
+	<app-tabs [tabs]="tabs" [active]="role()" (changed)="filter($event)" />
+	@if (loading()) {
+		<app-feedback kind="loading" [title]="'Loading users' | translate" />
+	} @else if (error()) {
+		<app-feedback
+			kind="error"
+			[title]="'Couldn\'t load users' | translate"
+			[message]="error() | translate"
+			[retryable]="true"
+			(retry)="load()"
+		/>
+	} @else {
+		@if (!items().length) {
+			<app-feedback
+				[title]="'No users found' | translate"
+				[message]="'Choose another role or invite a team member.' | translate"
+			/>
+		} @else {
+			<app-data-table
+				[label]="'Users' | translate"
+				[columns]="columns"
+				[rows]="items()"
+				trackKey="username"
+				><ng-template let-user let-column="column">
+					@switch (column) {
+						@case ('username') {
+							@if (auth.administrator()) {
+								<button
+									type="button"
+									class="user-link"
+									aria-haspopup="dialog"
+									(click)="manage(user)"
+								>
+									<span class="sku">{{ user.username }}</span>
+								</button>
+							} @else {
+								<span class="sku">{{ user.username }}</span>
+							}
+						}
+						@case ('name') {
+							@if (auth.administrator()) {
+								<button
+									type="button"
+									class="user-link"
+									aria-haspopup="dialog"
+									(click)="manage(user)"
+								>
+									<span class="cell-title">{{ user.firstName }} {{ user.lastName }}</span>
+								</button>
+							} @else {
+								<span class="cell-title">{{ user.firstName }} {{ user.lastName }}</span>
+							}
+						}
+						@case ('email') {
+							<a [href]="'mailto:' + user.email">{{ user.email }}</a>
+						}
+						@case ('status') {
+							<app-badge
+								[tone]="
+									user.status === 'ACTIVE'
+										? 'teal'
+										: user.status === 'PENDING_REGISTRATION'
+											? 'yellow'
+											: 'neutral'
+								"
+								>{{ user.status }}</app-badge
+							>
+						}
+						@case ('roles') {
+							<div class="check-list">
+								@for (role of user.roles; track role) {
+									<app-badge
+										[tone]="role === 'MANAGER' ? 'yellow' : role === 'EMPLOYEE' ? 'teal' : 'orange'"
+										>{{ role }}</app-badge
+									>
+								}
+							</div>
+						}
+						@case ('createdAt') {
+							<time [attr.datetime]="user.createdAt">{{
+								user.createdAt | localDate: 'dd/MM/yyyy'
+							}}</time>
+						}
+						@case ('actions') {
+							<button
+								class="button small"
+								(click)="manage(user)"
+								[attr.aria-label]="'Manage ' + user.firstName + ' ' + user.lastName"
+							>
+								{{ 'Manage' | translate }}
+							</button>
+						}
+					}
+				</ng-template></app-data-table
+			>
+		}
+		<app-pagination
+			[page]="page()"
+			[pageSize]="pageSize"
+			[total]="total()"
+			[label]="'users' | translate"
+			(changed)="paginate($event)"
+		/>
+	}
+</app-panel>
+@if (inviting()) {
+	<app-modal
+		[title]="'Invite team member' | translate"
+		[description]="'Send an invitation or update the role on a pending invitation.' | translate"
+		[busy]="saving()"
+		(closed)="inviting.set(false)"
+		><form id="invite-form" #form="ngForm" (ngSubmit)="form.valid && invite()">
+			<fieldset class="stack" [disabled]="saving()">
+				<label
+					>{{ 'Work email' | translate
+					}}<input
+						type="email"
+						name="email"
+						[(ngModel)]="draft.email"
+						required
+						email
+						autocomplete="email" /></label
+				><label
+					>{{ 'Role' | translate
+					}}<select name="role" [attr.aria-label]="'Role' | translate" [(ngModel)]="draft.roleName">
+						<option value="ADMINISTRATOR">ADMINISTRATOR</option>
+						<option value="EMPLOYEE">EMPLOYEE</option>
+						<option value="MANAGER">MANAGER</option>
+						<option value="CUSTOMER">CUSTOMER</option>
+					</select></label
+				>
+				<div class="notice">
+					{{
+						'We will email this person instructions to complete registration with the normal Register button using this email. Inviting them again replaces their pending role.'
+							| translate
+					}}
+				</div>
+				@if (formError()) {
+					<p class="notice error" role="alert">{{ formError() | translate }}</p>
+				}
+			</fieldset>
+		</form>
+		<div modal-actions class="row-actions">
+			<button class="button" [disabled]="saving()" (click)="inviting.set(false)">
+				{{ 'Cancel' | translate }}</button
+			><button
+				class="button primary"
+				type="submit"
+				form="invite-form"
+				[disabled]="saving() || form.invalid"
+			>
+				{{ saving() ? ('Saving…' | translate) : ('Send invitation' | translate) }}
+			</button>
+		</div></app-modal
+	>
+}
+@if (selected(); as user) {
+	<app-modal
+		[title]="'Manage user' | translate"
+		[description]="'Update roles, deactivate, or reactivate this account.' | translate"
+		[busy]="saving()"
+		(closed)="selected.set(null)"
+	>
+		<div class="summary">
+			<app-icon name="users" />
+			<div>
+				<strong>{{ user.firstName }} {{ user.lastName }}</strong
+				><small>{{ user.email }}</small>
+			</div>
+		</div>
+		<form id="manage-user-form" (ngSubmit)="saveRoles()">
+			<fieldset
+				class="stack"
+				[disabled]="saving() || confirmingStatusChange() || user.status === 'DEACTIVATED'"
+			>
+				<legend>{{ 'Assigned roles' | translate }}</legend>
+				@for (option of tabs; track option.id) {
+					@if (option.id) {
+						<label class="check-label">
+							<input
+								type="checkbox"
+								[name]="option.id"
+								[ngModel]="roleDraft.includes(option.id)"
+								(ngModelChange)="toggleRole(option.id, $event)"
+								[disabled]="
+									user.username === auth.user()?.username && option.id === 'ADMINISTRATOR'
+								"
+							/>
+							{{ option.id }}
+						</label>
+					}
+				}
+				<p class="notice">
+					{{ 'Select one or more roles. Uncheck a role to remove it.' | translate }}
+				</p>
+				@if (!roleDraft.length) {
+					<p class="notice error" role="alert">{{ 'Select at least one role.' | translate }}</p>
+				}
+			</fieldset>
+		</form>
+		@if (user.status === 'DEACTIVATED') {
+			<p class="notice">
+				{{ 'This account is deactivated. Reactivate it before changing its roles.' | translate }}
+			</p>
+		} @else if (user.username === auth.user()?.username) {
+			<p class="notice">
+				{{
+					'You must keep your Administrator role. You cannot deactivate your own account here.'
+						| translate
+				}}
+			</p>
+		}
+		@if (confirmingStatusChange()) {
+			<p class="notice error" role="alert">
+				{{
+					user.status === 'DEACTIVATED'
+						? ('Reactivate this account? This person will be able to sign in again.' | translate)
+						: ('Deactivate this account? This person will no longer be able to sign in.'
+							| translate)
+				}}
+				{{ 'Unsaved role changes will be discarded.' | translate }}
+			</p>
+		}
+		@if (formError()) {
+			<p class="notice error" role="alert">{{ formError() | translate }}</p>
+		}
+		<div modal-actions class="row-actions management-actions">
+			@if (confirmingStatusChange()) {
+				<button class="button" [disabled]="saving()" (click)="confirmingStatusChange.set(false)">
+					{{ 'Back to roles' | translate }}
+				</button>
+				<button class="button danger" [disabled]="saving()" (click)="changeAccountStatus()">
+					{{
+						saving()
+							? ('Saving…' | translate)
+							: user.status === 'DEACTIVATED'
+								? ('Confirm reactivation' | translate)
+								: ('Confirm deactivation' | translate)
+					}}
+				</button>
+			} @else {
+				<button class="button" [disabled]="saving()" (click)="selected.set(null)">
+					{{ 'Close' | translate }}
+				</button>
+				<button
+					class="button danger"
+					[disabled]="saving() || user.username === auth.user()?.username"
+					(click)="confirmingStatusChange.set(true); formError.set('')"
+				>
+					{{
+						user.status === 'DEACTIVATED'
+							? ('Reactivate account' | translate)
+							: ('Deactivate account' | translate)
+					}}
+				</button>
+				<button
+					class="button primary"
+					type="submit"
+					form="manage-user-form"
+					[disabled]="
+						saving() || user.status === 'DEACTIVATED' || !roleDraft.length || !rolesChanged()
+					"
+				>
+					{{ saving() ? ('Saving…' | translate) : ('Save roles' | translate) }}
+				</button>
+			}
+		</div>
+	</app-modal>
+}

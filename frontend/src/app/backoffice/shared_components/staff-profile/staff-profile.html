@@ -1,0 +1,35 @@
+<div class="profile">
+	<a
+		class="profile-link"
+		routerLink="/backoffice/profile"
+		routerLinkActive="active"
+		ariaCurrentWhenActive="page"
+		[attr.aria-label]="'Edit your profile' | translate"
+		[attr.aria-describedby]="profileHintId()"
+		(pointerenter)="profileHintRequested.emit($event)"
+		(pointerleave)="profileHintDismissed.emit()"
+		(focus)="profileHintRequested.emit($event)"
+		(blur)="profileHintDismissed.emit()"
+		(click)="profileOpened.emit()"
+	>
+		<span class="avatar" [title]="user()?.firstName + ' ' + user()?.lastName">{{
+			initials()
+		}}</span>
+		<div class="profile-details">
+			<strong>{{ user()?.firstName }} {{ user()?.lastName }}</strong>
+			<small>{{ role() }}</small>
+		</div>
+	</a>
+	<button
+		class="icon-button"
+		[attr.aria-label]="'Sign out' | translate"
+		[attr.aria-describedby]="hintId()"
+		(pointerenter)="hintRequested.emit($event)"
+		(pointerleave)="hintDismissed.emit()"
+		(focus)="hintRequested.emit($event)"
+		(blur)="hintDismissed.emit()"
+		(click)="signedOut.emit()"
+	>
+		<app-icon name="logout" />
+	</button>
+</div>

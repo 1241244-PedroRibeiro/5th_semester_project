@@ -1,0 +1,99 @@
+:host {
+	display: flex;
+	flex-direction: column;
+	min-height: calc(100dvh - var(--language-bar-height));
+}
+.shop-header {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	gap: 2rem;
+	min-height: 6rem;
+	padding: 1.4rem clamp(1.2rem, 4.2vw, 5rem);
+	background: var(--surface);
+	border-bottom: 2px solid var(--ink);
+}
+.home-link {
+	text-decoration: none;
+}
+nav {
+	display: flex;
+	align-items: center;
+	gap: clamp(1rem, 2.5vw, 3rem);
+}
+nav > a {
+	position: relative;
+	text-transform: uppercase;
+	text-decoration: none;
+	color: var(--ink);
+	font-size: 0.75rem;
+	font-weight: 700;
+	letter-spacing: 0.1em;
+	padding: 0.5rem 0;
+}
+nav > a.active::after {
+	content: '';
+	position: absolute;
+	bottom: 0;
+	left: 25%;
+	width: 50%;
+	height: 2px;
+	background: var(--accent);
+}
+nav > a.basket {
+	display: flex;
+	gap: 0.6rem;
+	align-items: center;
+	justify-content: center;
+	min-width: 4rem;
+	min-height: 2.5rem;
+	padding: 0.5rem 0.85rem;
+	background: var(--accent);
+	border: 2px solid var(--ink);
+	border-radius: 2rem;
+}
+main {
+	flex: 1;
+	min-width: 0;
+	outline: 0;
+}
+.customer-skip {
+	position: fixed;
+	z-index: 100;
+	top: calc(var(--language-bar-height) + 0.5rem);
+	left: 0.5rem;
+	transform: translateY(-200%);
+	padding: 1rem;
+	background: var(--surface);
+}
+.customer-skip:focus {
+	transform: none;
+}
+@media (max-width: 600px) {
+	.shop-header {
+		gap: 1rem;
+		flex-wrap: wrap;
+		justify-content: center;
+		padding: 1rem;
+		min-height: 0;
+	}
+	.home-link {
+		margin-right: auto;
+	}
+	app-storefront-brand {
+		font-size: 1.45rem;
+	}
+	nav {
+		gap: 1rem;
+		flex: 1 0 100%;
+		justify-content: space-between;
+	}
+	nav > a {
+		font-size: 0.65rem;
+	}
+	nav > a.basket {
+		min-width: 3rem;
+		min-height: 2rem;
+		padding: 0.35rem 0.6rem;
+	}
+}

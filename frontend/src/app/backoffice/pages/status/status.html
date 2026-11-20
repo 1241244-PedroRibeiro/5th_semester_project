@@ -1,0 +1,26 @@
+<section class="status-page" aria-labelledby="status-heading">
+	<h1 id="status-heading">{{ 'LaPrizza connection status' | translate }}</h1>
+	<p>{{ "This page checks the NestJS API through the HTTPS application's proxy." | translate }}</p>
+
+	<button class="button" type="button" (click)="checkHealth()" [disabled]="loading()">
+		{{ loading() ? ('Checking…' | translate) : ('Check API again' | translate) }}
+	</button>
+
+	<div aria-live="polite">
+		@if (error()) {
+			<p role="alert">{{ error() | translate }}</p>
+		}
+		@if (health(); as result) {
+			<dl>
+				<dt>{{ 'Service' | translate }}</dt>
+				<dd>{{ result.service }}</dd>
+				<dt>{{ 'Status' | translate }}</dt>
+				<dd>{{ result.status }}</dd>
+				<dt>{{ 'Response timestamp' | translate }}</dt>
+				<dd>
+					<time [attr.datetime]="result.timestamp">{{ result.timestamp }}</time>
+				</dd>
+			</dl>
+		}
+	</div>
+</section>

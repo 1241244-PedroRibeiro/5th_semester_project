@@ -1,0 +1,31 @@
+info:
+  name: 02 - Auth - Wrong Role (403)
+  type: http
+  seq: 3
+http:
+  method: POST
+  url: "{{baseUrl}}/planning/bom-executions"
+  body:
+    type: json
+    data: |-
+      {
+        "orders": [ { "productSku": "PIZ-MARGHERITA", "pizzaSize": "Medium", "quantity": 1 } ],
+        "isSimulated": true,
+        "source": "simulated"
+      }
+  auth:
+    type: bearer
+    token: "{{customerToken}}"
+runtime:
+  scripts:
+    - type: tests
+      code: |-
+        test("Status is 403 Forbidden", function() {
+          expect(res.getStatus()).to.equal(403);
+        });
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: false

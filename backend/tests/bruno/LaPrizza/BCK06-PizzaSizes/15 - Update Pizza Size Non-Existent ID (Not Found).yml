@@ -1,0 +1,23 @@
+info:
+  name: 15 - Update Pizza Size Non-Existent ID (Not Found)
+  type: http
+  seq: 17
+http:
+  method: PUT
+  url: '{{baseUrl}}/pizza-sizes/Bruno Missing Name'
+  body:
+    type: json
+    data: |-
+      {
+      	"name": "Ghost Size"
+      }
+  auth:
+    type: bearer
+    token: '{{managerToken}}'
+runtime:
+  scripts:
+    - type: tests
+      code: |-
+        test("Updating non-existent pizza size returns 404 Not Found", function() {
+        	expect(res.getStatus()).to.equal(404);
+        });

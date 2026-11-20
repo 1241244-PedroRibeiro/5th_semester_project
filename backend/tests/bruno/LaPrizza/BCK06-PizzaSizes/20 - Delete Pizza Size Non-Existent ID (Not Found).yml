@@ -1,0 +1,19 @@
+info:
+  name: 20 - Delete Pizza Size Non-Existent Name (Not Found)
+  type: http
+  seq: 22
+http:
+  method: DELETE
+  url: '{{baseUrl}}/pizza-sizes/Bruno Missing Name'
+  body: none
+  auth:
+    type: bearer
+    token: '{{managerToken}}'
+runtime:
+  scripts:
+    - type: tests
+      code: |-
+        test("Deleting non-existent pizza size returns 404 Not Found", function() {
+        	expect(res.getStatus()).to.equal(404);
+        	expect(res.getBody().error.message).to.equal("PizzaSize not found");
+        });

@@ -1,0 +1,131 @@
+{
+  "lights": [
+    {
+      "type": "ambient",
+      "color": "#FFFFFF",
+      "intensity": 0.2
+    },
+    {
+      "type": "directional",
+      "color": "#FFF4E5",
+      "target": [
+        4,
+        0,
+        3
+      ],
+      "position": [
+        11,
+        7,
+        9
+      ],
+      "intensity": 3,
+      "castShadow": true
+    },
+    {
+      "type": "spot",
+      "angle": 1,
+      "color": "#FFFFFF",
+      "decay": 2,
+      "target": [
+        6,
+        0,
+        5
+      ],
+      "distance": 0,
+      "penumbra": 0.35,
+      "position": [
+        6,
+        3.4,
+        5
+      ],
+      "intensity": 4,
+      "castShadow": false
+    }
+  ],
+  "metadata": {
+    "name": "Cozinha Tradicional",
+    "author": "Manager",
+    "description": "Cozinha com forno, frigorífico e bancada de preparação."
+  },
+  "equipment": [
+    {
+      "id": "oven-main",
+      "label": "Forno Principal",
+      "scale": [
+        1,
+        1,
+        1
+      ],
+      "category": "oven",
+      "modelUrl": "/assets/3d/models/oven.glb",
+      "position": [
+        2,
+        0,
+        2
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "id": "fridge-main",
+      "label": "Frigorífico",
+      "scale": [
+        1,
+        1,
+        1
+      ],
+      "category": "fridge",
+      "modelUrl": "/assets/3d/models/fridge.glb",
+      "position": [
+        5,
+        0,
+        2
+      ],
+      "rotation": [
+        0,
+        1.57,
+        0
+      ]
+    },
+    {
+      "id": "counter-main",
+      "label": "Bancada de Preparação",
+      "scale": [
+        1.5,
+        1,
+        1
+      ],
+      "category": "counter",
+      "modelUrl": "/assets/3d/models/counter.glb",
+      "position": [
+        3,
+        0,
+        5
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ]
+    }
+  ],
+  "dimensions": {
+    "x": 12,
+    "y": 3.5,
+    "z": 10
+  },
+  "schemaVersion": "1.0",
+  "animationTriggers": [
+    {
+      "id": "oven-start",
+      "loop": false,
+      "name": "Iniciar forno",
+      "delay": 0,
+      "action": "start",
+      "targetEquipmentId": "oven-main"
+    }
+  ]
+}

@@ -1,0 +1,27 @@
+info:
+  name: 04 - Reject Username In Phone Body
+  type: http
+  seq: 4
+http:
+  method: PUT
+  url: '{{baseUrl}}/user/me/phone-number'
+  body:
+    type: json
+    data: |-
+      {
+        "phoneNumber": "+351912345678",
+        "username": "another_user"
+      }
+  auth:
+    type: bearer
+    token: '{{bck02PhoneToken}}'
+settings:
+  encodeUrl: true
+runtime:
+  scripts:
+    - type: tests
+      code: |-
+        test("Reject Username In Phone Body", function() {
+          expect(res.getStatus()).to.equal(400);
+          expect(res.getBody()).to.deep.equal({ error: { message: "Contact details contain unsupported fields" } });
+        });

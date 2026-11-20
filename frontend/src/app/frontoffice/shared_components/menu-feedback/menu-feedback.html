@@ -1,0 +1,37 @@
+@if (state() === 'loading') {
+	<div class="skeleton-grid" role="status" [attr.aria-label]="'Loading menu' | translate">
+		<span class="sr-only">{{ 'Loading menu…' | translate }}</span>
+		@for (index of [0, 1, 2, 3]; track index) {
+			<div class="skeleton-card" aria-hidden="true">
+				<div class="image"></div>
+				<div class="line"></div>
+				<div class="line short"></div>
+				<div class="line"></div>
+			</div>
+		}
+	</div>
+} @else {
+	<div class="feedback" [attr.role]="state() === 'error' ? 'alert' : 'status'">
+		<app-icon [name]="state() === 'error' ? 'alert' : 'pizza'" />
+		<h2>
+			{{
+				state() === 'error'
+					? ('The menu needs a moment.' | translate)
+					: ('No matches on the menu.' | translate)
+			}}
+		</h2>
+		<p>
+			{{
+				message() ||
+					(state() === 'error'
+						? ('We couldn’t load the menu. Give it another try.' | translate)
+						: ('Try another category or search term.' | translate))
+			}}
+		</p>
+		@if (state() === 'error') {
+			<button shopButton (click)="retry.emit()">
+				<app-icon name="refresh" />{{ 'Try again' | translate }}
+			</button>
+		}
+	</div>
+}

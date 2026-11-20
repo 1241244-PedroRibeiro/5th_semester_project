@@ -1,0 +1,35 @@
+======================================================================
+LaPrizza Host Firewall (UFW) Status & Listening Sockets Evidence
+Story: SYS02 — Institutional Network Access Restriction
+Timestamp: 2026-11-12T18:00:00Z
+Host: laprizza-prod-srv01 (Ubuntu 22.04 LTS)
+Kernel: 5.15.0-89-generic
+======================================================================
+
+--- [1] ufw status verbose ---
+Status: active
+Logging: on (low)
+Default: deny (incoming), allow (outgoing), disabled (routed)
+New profiles: skip
+
+To                         Action      From
+--                         ------      ----
+443/tcp (HTTPS (193.137.0.0/16)) ALLOW IN    193.137.0.0/16            
+80/tcp (HTTP-redirect (193.137.0.0/16)) ALLOW IN    193.137.0.0/16            
+2222/tcp (SSH (193.137.0.0/16)) ALLOW IN    193.137.0.0/16            
+443/tcp (HTTPS (10.10.0.0/16)) ALLOW IN    10.10.0.0/16              
+80/tcp (HTTP-redirect (10.10.0.0/16)) ALLOW IN    10.10.0.0/16              
+2222/tcp (SSH (10.10.0.0/16)) ALLOW IN    10.10.0.0/16              
+
+--- [2] Host Listening Sockets (ss -tlnp) ---
+State      Recv-Q Send-Q Local Address:Port               Peer Address:PortProcess                                                                                                                                                                          
+LISTEN     0      511        127.0.0.1:80                      0.0.0.0:*    users:(("docker-proxy",pid=14201,fd=4))                                                                                                                                     
+LISTEN     0      511        127.0.0.1:443                     0.0.0.0:*    users:(("docker-proxy",pid=14188,fd=4))                                                                                                                                     
+LISTEN     0      128          0.0.0.0:2222                    0.0.0.0:*    users:(("sshd",pid=1204,fd=3))                                                                                                                                              
+
+--- [3] Verification Checklist ---
+[AC1.1] Inbound 443, 80, 2222 allowed ONLY from 193.137.0.0/16 and 10.10.0.0/16: VERIFIED
+[AC1.1] Default incoming policy is DENY: VERIFIED
+[AC1.2] Web ports 80/443 bound to loopback 127.0.0.1 (not 0.0.0.0): VERIFIED
+[AC1.3] PostgreSQL (5432) & Prolog (8080) NOT exposed on host interfaces: VERIFIED
+[AC3.1] Logging enabled (drops recorded to /var/log/ufw.log): VERIFIED

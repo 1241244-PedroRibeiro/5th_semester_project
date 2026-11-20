@@ -1,0 +1,20 @@
+### AI02 unavailable Prolog service
+### Preparation: docker compose stop prolog
+POST http://localhost:3000/planning/executions
+Authorization: Bearer {{managerToken}}
+Content-Type: application/json
+
+{
+  "forecastName": "Week-45",
+  "scenarioName": "Autumn-Scenario",
+  "referenceDate": "2026-11-05"
+}
+
+### Expected response (502)
+{
+  "error": {
+    "message": "Planning engine unavailable: fetch failed"
+  }
+}
+
+### Recovery: docker compose start prolog, then repeat the request.

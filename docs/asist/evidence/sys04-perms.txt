@@ -1,0 +1,20 @@
+﻿=== POSIX Modes (find -maxdepth 2 -type d) ===
+0755 PORTATIL-PERRY\pedro C:\var\lib\laprizza\shared\3d-assets
+0755 PORTATIL-PERRY\pedro C:\var\lib\laprizza\shared\documents
+0755 PORTATIL-PERRY\pedro C:\var\lib\laprizza\shared\exports
+0755 PORTATIL-PERRY\pedro C:\var\lib\laprizza\shared\kitchen-schemas
+0755 PORTATIL-PERRY\pedro C:\var\lib\laprizza\shared\planning-inputs
+0755 PORTATIL-PERRY\pedro C:\var\lib\laprizza\shared\planning-outputs
+0755 PORTATIL-PERRY\pedro C:\var\lib\laprizza\shared\tmp
+0755 PORTATIL-PERRY\pedro C:\var\lib\laprizza\shared\3d-assets\env
+0755 PORTATIL-PERRY\pedro C:\var\lib\laprizza\shared\3d-assets\models
+0755 PORTATIL-PERRY\pedro C:\var\lib\laprizza\shared\3d-assets\textures
+0755 PORTATIL-PERRY\pedro C:\var\lib\laprizza\shared\documents\operations
+0755 PORTATIL-PERRY\pedro C:\var\lib\laprizza\shared\documents\reports
+
+=== ACLs on 3d-assets ===
+  System.Security.AccessControl.FileSystemAccessRule
+  System.Security.AccessControl.FileSystemAccessRule
+  System.Security.AccessControl.FileSystemAccessRule
+  System.Security.AccessControl.FileSystemAccessRule
+  System.Security.AccessControl.FileSystemAccessRule

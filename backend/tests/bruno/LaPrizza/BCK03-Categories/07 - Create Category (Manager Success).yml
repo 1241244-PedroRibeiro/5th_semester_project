@@ -1,0 +1,35 @@
+info:
+  name: 07 - Create Category (Manager Success)
+  type: http
+  seq: 9
+http:
+  method: POST
+  url: '{{baseUrl}}/categories'
+  body:
+    type: json
+    data: |-
+      {
+        "categoryName": "{{newCategoryName}}",
+        "description": "Artisanal desserts and sweets"
+      }
+  auth:
+    type: bearer
+    token: '{{managerToken}}'
+runtime:
+  scripts:
+    - type: before-request
+      code: |-
+        if (!bru.getVar("managerToken") && !bru.getEnvVar("managerToken")) {
+          throw new Error("managerToken is required; run request 00 first.");
+        }
+        const suffix = Date.now().toString().slice(-4);
+        bru.setVar("newCategoryName", "Desserts " + suffix);
+    - type: tests
+      code: |-
+        test("Manager creates category returning 201 Created", function() {
+          expect(res.getStatus()).to.equal(201);
+          const data = res.getBody();
+          expect(data.name).to.equal(bru.getVar("newCategoryName"));
+          bru.setVar("createdCategoryName", data.name);
+          bru.setEnvVar("createdCategoryName", data.name);
+        });

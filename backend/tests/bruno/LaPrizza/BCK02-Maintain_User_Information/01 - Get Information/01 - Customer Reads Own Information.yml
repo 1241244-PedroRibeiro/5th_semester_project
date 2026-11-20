@@ -1,0 +1,48 @@
+info:
+  name: 01 - Customer Reads Own Information
+  type: http
+  seq: 1
+http:
+  method: GET
+  url: '{{baseUrl}}/user/{{bck02CustomerUsername}}'
+  auth:
+    type: bearer
+    token: '{{bck02CustomerToken}}'
+runtime:
+  scripts:
+    - type: before-request
+      code: |-
+        const value = name => bru.getVar(name) ?? bru.getEnvVar(name);
+        for (const name of ["bck02CustomerToken","bck02CustomerUsername","bck02ManagerUsername","bck02CustomerEmail"]) {
+        	if (!value(name)) throw new Error("Run BCK02's 00 - Setup before this request: missing " + name);
+        }
+        if (value("bck02CustomerUsername") === value("bck02ManagerUsername")) {
+        	throw new Error("Customer and manager usernames must be different.");
+        }
+    - type: tests
+      code: |-
+        test("Status code is 200", function() {
+        	expect(res.getStatus()).to.equal(200);
+        });
+
+        test("Returns the requested user's public information", function() {
+        	const value = name => bru.getVar(name) ?? bru.getEnvVar(name);
+        	const data = res.getBody();
+        	expect(data).to.have.all.keys("username", "firstName", "lastName", "createdAt", "email", "roles", "status");
+        	expect(data.username).to.equal(value("bck02CustomerUsername"));
+        	expect(data.firstName).to.be.a("string").and.not.empty;
+        	expect(data.lastName).to.be.a("string").and.not.empty;
+        	expect(data.email).to.be.a("string").and.not.empty;
+        	expect(data.email).to.equal(value("bck02CustomerEmail"));
+        	expect(data.roles).to.include("CUSTOMER");
+        	expect(data.status).to.equal("ACTIVE");
+        	expect(data.createdAt).to.be.a("string");
+        	expect(new Date(data.createdAt).toISOString()).to.equal(data.createdAt);
+        });
+
+        test("Excludes password fields and updatedAt", function() {
+        	const data = res.getBody();
+        	for (const field of ["password", "passwordHash", "_passwordHash", "updatedAt", "_updatedAt"]) {
+        		expect(data).not.to.have.property(field);
+        	}
+        });

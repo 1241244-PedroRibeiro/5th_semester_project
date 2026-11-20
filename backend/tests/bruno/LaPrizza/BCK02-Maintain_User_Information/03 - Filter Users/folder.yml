@@ -1,0 +1,6 @@
+info:
+  name: 03 - Filter Users
+  type: folder
+  seq: 4
+request:
+  auth: inherit

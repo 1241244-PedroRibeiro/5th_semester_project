@@ -1,0 +1,53 @@
+info:
+  name: SETUP-NON-COMPONENT-PRODUCT
+  type: http
+  seq: 13
+http:
+  method: POST
+  url: '{{baseUrl}}/products'
+  body:
+    type: json
+    data: |-
+      {
+      	"name": "{{nonComponentName}}",
+      	"description": "Sellable only, for BCK08 tests",
+      	"categoryName": "Beverages",
+      	"isSellable": true,
+      	"isPizzaComponent": false,
+      	"isStockControlled": true,
+      	"directSellingPrice": 2.5,
+      	"sku": "{{nonComponentSku}}"
+      }
+  auth:
+    type: bearer
+    token: '{{managerToken}}'
+runtime:
+  scripts:
+    - type: before-request
+      code: |-
+        const suffix = Date.now().toString() + Math.floor(Math.random() * 1000);
+
+        bru.setVar("nonComponentSku", "PRD-NCP-" + suffix);
+        bru.setVar("nonComponentName", "NonComponent " + suffix);
+    - type: after-response
+      code: |-
+        if (res.status === 201 && res.body.sku) {
+        	const productName = res.body.name;
+
+        	bru.setEnvVar("nonComponentName", productName);
+        	console.log("Produto criado:", productName);
+        }
+    - type: tests
+      code: |-
+        test("creates a non-component product", function () {
+        	expect(res.status).to.equal(201);
+        	expect(res.body).to.be.an("object");
+        	expect(res.body.name).to.exist;
+        	expect(res.body.isPizzaComponent).to.equal(false);
+        });
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: false

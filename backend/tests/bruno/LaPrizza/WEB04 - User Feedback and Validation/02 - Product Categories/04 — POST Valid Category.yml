@@ -1,0 +1,25 @@
+info:
+  name: 04 — POST Valid Category
+  type: http
+  seq: 4
+
+http:
+  method: POST
+  url: "{{baseUrl}}/categories"
+  body:
+    type: json
+    data: |-
+      {
+        "categoryName": "WEB04 Test Category",
+        "description": "Categoria criada para testes WEB04"
+      }
+  auth:
+    type: bearer
+    token: "{{managerToken}}"
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: false

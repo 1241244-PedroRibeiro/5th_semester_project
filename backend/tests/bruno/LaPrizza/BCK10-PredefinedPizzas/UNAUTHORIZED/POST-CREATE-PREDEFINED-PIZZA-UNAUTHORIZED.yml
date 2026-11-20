@@ -1,0 +1,41 @@
+info:
+  name: POST-CREATE-PREDEFINED-PIZZA-UNAUTHORIZED
+  type: http
+  seq: 1
+http:
+  method: POST
+  url: '{{baseUrl}}/predefined-pizzas'
+  body:
+    type: json
+    data: |-
+      {
+      	"recipeName": "BCK10 Pizza Integration Test",
+      	"defaultRecipeLines": [
+      		{
+      			"defaultQuantity": 1,
+      			"componentSku": "PRD-BCK10-DOUGH"
+      		},
+      		{
+      			"defaultQuantity": 1,
+      			"componentSku": "PRD-MOZZ"
+      		}
+      	],
+      	"availableSizes": [
+      		"Small"
+      	],
+      	"pizzaSku": "PRD-BCK10-PIZZA"
+      }
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: false
+runtime:
+  scripts:
+    - type: tests
+      code: |-
+        test("Matches the current API contract", function() {
+        	expect(res.getStatus()).to.equal(401);
+
+        });

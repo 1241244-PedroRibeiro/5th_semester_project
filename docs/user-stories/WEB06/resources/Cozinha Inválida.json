@@ -1,0 +1,30 @@
+{
+  "schemaVersion": "1.0",
+  "metadata": {
+    "name": "Cozinha Inválida",
+    "description": "Configuração para testar a validação."
+  },
+  "dimensions": {
+    "x": 12,
+    "y": 3,
+    "z": 10
+  },
+  "equipment": [
+    {
+      "id": "oven-main",
+      "label": "Forno Principal",
+      "category": "oven",
+      "modelUrl": "/assets/3d/models/oven.glb",
+      "position": [2, 0, 2],
+      "rotation": [0, 0, 0],
+      "scale": [1, 0, 1]
+    }
+  ],
+  "lights": [
+    {
+      "type": "ambient",
+      "color": "#FFFFFF",
+      "intensity": 1.5
+    }
+  ]
+}

@@ -1,0 +1,17 @@
+### AI02 invalid domain data: stock-controlled sellable product without stockUnitsPerSale
+POST http://localhost:3000/planning/executions
+Authorization: Bearer {{managerToken}}
+Content-Type: application/json
+
+{
+  "forecastName": "Week-45",
+  "scenarioName": "Autumn-Scenario",
+  "referenceDate": "2026-11-05"
+}
+
+### Expected response when the forecast references PRD-MISSING-UNITS (422)
+{
+  "error": {
+    "message": "Missing stockUnitsPerSale for SKU: PRD-MISSING-UNITS"
+  }
+}

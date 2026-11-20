@@ -1,0 +1,25 @@
+info:
+  name: 02 - Customer Relates Allergen
+  type: http
+  seq: 2
+http:
+  method: POST
+  url: '{{baseUrl}}/user/{{bck02CustomerUsername}}/allergen'
+  body:
+    type: json
+    data: |-
+      {
+      	"allergens": [
+      		"{{bck02AllergenName}}"
+      	]
+      }
+  auth:
+    type: bearer
+    token: '{{bck02CustomerToken}}'
+runtime:
+  scripts:
+    - type: tests
+      code: |-
+        test("Status code is 201", function() {
+        	expect(res.getStatus()).to.equal(201);
+        });

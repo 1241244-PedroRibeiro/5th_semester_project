@@ -1,0 +1,25 @@
+info:
+  name: 05 - PUT Allergen Valid
+  type: http
+  seq: 6
+
+http:
+  method: PUT
+  url: "{{baseUrl}}/allergens/WEB04%20Test%20Allergen"
+  body:
+    type: json
+    data: |-
+      {
+        "name": "WEB04 Test Allergen",
+        "description": "Descrição atualizada durante os testes WEB04"
+      }
+  auth:
+    type: bearer
+    token: "{{managerToken}}"
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: false

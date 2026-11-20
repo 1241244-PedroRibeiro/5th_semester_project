@@ -1,0 +1,45 @@
+info:
+  name: 00 - Setup (Get Tokens)
+  type: http
+  seq: 1
+http:
+  method: POST
+  url: "{{baseUrl}}/auth/login"
+  body:
+    type: json
+    data: |-
+      {
+        "email": "manager@laprizza.test",
+        "password": "Manager123!"
+      }
+runtime:
+  scripts:
+    - type: post-response
+      code: |-
+        const resBody = res.getBody();
+        if (resBody && resBody.token) {
+            bru.setVar("managerToken", resBody.token);
+            bru.setEnvVar("managerToken", resBody.token);
+        }
+
+        // Precisamos de um Customer para os testes de 403
+        req.setUrl("{{baseUrl}}/auth/login");
+        req.setBody({
+          email: "customer@laprizza.test",
+          password: "Customer123!"
+        });
+    - type: tests
+      code: |-
+        test("Manager login successful", function() {
+          expect(res.getStatus()).to.equal(200);
+          const token = res.getBody().token;
+          expect(token).to.be.a("string").and.not.empty;
+          bru.setVar("managerToken", token);
+          bru.setEnvVar("managerToken", token);
+        });
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: false

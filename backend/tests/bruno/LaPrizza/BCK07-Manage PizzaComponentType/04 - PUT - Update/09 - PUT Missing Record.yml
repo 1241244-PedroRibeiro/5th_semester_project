@@ -1,0 +1,39 @@
+info:
+  name: 09 - PUT Missing Record
+  type: http
+  seq: 9
+http:
+  method: PUT
+  url: '{{baseUrl}}/pizza-component-types/{{bck07PutMissingName}}'
+  body:
+    type: json
+    data: |-
+      {
+        "name": "{{bck07PutName}}",
+        "assemblyOrder": {{bck07PutUpdatedOrder}},
+        "minCardinality": 1,
+        "maxCardinality": 3
+      }
+  auth:
+    type: bearer
+    token: '{{bck07PutManagerToken}}'
+settings:
+  encodeUrl: true
+runtime:
+  scripts:
+    - type: after-response
+      code: |-
+        const cleanup = await bru.sendRequest({
+          method: "DELETE",
+          url: bru.getEnvVar("baseUrl") + "/pizza-component-types/" + encodeURIComponent(bru.getVar("bck07PutName")),
+          headers: { Authorization: "Bearer " + bru.getVar("bck07PutManagerToken") }
+        });
+        if (cleanup.status !== 200) {
+          throw new Error("PUT fixture cleanup failed: HTTP " + cleanup.status);
+        }
+    - type: tests
+      code: |-
+        test("PUT Missing Record", function() {
+          expect(res.getStatus()).to.equal(404);
+          expect(res.getBody().error.message).to.be.a("string").and.not.empty;
+        });

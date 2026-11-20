@@ -1,0 +1,29 @@
+info:
+  name: 02 - PUT as Customer
+  type: http
+  seq: 2
+http:
+  method: PUT
+  url: '{{baseUrl}}/pizza-component-types/{{bck07PutName}}'
+  body:
+    type: json
+    data: |-
+      {
+        "name": "{{bck07PutName}}",
+        "assemblyOrder": {{bck07PutUpdatedOrder}},
+        "minCardinality": 1,
+        "maxCardinality": 3
+      }
+  auth:
+    type: bearer
+    token: '{{bck07PutCustomerToken}}'
+settings:
+  encodeUrl: true
+runtime:
+  scripts:
+    - type: tests
+      code: |-
+        test("PUT as Customer", function() {
+          expect(res.getStatus()).to.equal(403);
+          expect(res.getBody().error.message).to.equal("You do not have permission to do this.");
+        });

@@ -1,0 +1,27 @@
+=== Backup files listing (simulated) ===
+/backups/
+total 1245184
+drwx------ 2 root root      4096 Nov 13 09:30 .
+drwxr-xr-x 1 root root      4096 Nov 13 09:30 ..
+-rw-r--r-- 1 root root  42567892 Nov 13 02:00 db-20261113T020000Z.dump.gz.age
+-rw-r--r-- 1 root root       102 Nov 13 02:00 db-20261113T020000Z.dump.gz.age.sha256
+-rw-r--r-- 1 root root  41892345 Nov 12 02:00 db-20261112T020000Z.dump.gz.age
+-rw-r--r-- 1 root root       102 Nov 12 02:00 db-20261112T020000Z.dump.gz.age.sha256
+-rw-r--r-- 1 root root  43125678 Nov 11 02:00 db-20261111T020000Z.dump.gz.age
+-rw-r--r-- 1 root root       102 Nov 11 02:00 db-20261111T020000Z.dump.gz.age.sha256
+-rw-r--r-- 1 root root  40987654 Nov 10 02:00 db-20261110T020000Z.dump.gz.age
+-rw-r--r-- 1 root root       102 Nov 10 02:00 db-20261110T020000Z.dump.gz.age.sha256
+-rw-r--r-- 1 root root  42345678 Nov 09 02:00 db-20261109T020000Z.dump.gz.age
+-rw-r--r-- 1 root root       102 Nov 09 02:00 db-20261109T020000Z.dump.gz.age.sha256
+-rw-r--r-- 1 root root  41567890 Nov 08 02:00 db-20261108T020000Z.dump.gz.age
+-rw-r--r-- 1 root root       102 Nov 08 02:00 db-20261108T020000Z.dump.gz.age.sha256
+-rw-r--r-- 1 root root  42890123 Nov 07 02:00 db-20261107T020000Z.dump.gz.age
+-rw-r--r-- 1 root root       102 Nov 07 02:00 db-20261107T020000Z.dump.gz.age.sha256
+-rw-r--r-- 1 root root  41234567 Nov 06 03:00 db-20261106T030000Z.dump.gz.age
+-rw-r--r-- 1 root root       102 Nov 06 03:00 db-20261106T030000Z.dump.gz.age.sha256
+-rw-r--r-- 1 root root  43456789 Oct 01 04:00 db-20261001T040000Z.dump.gz.age
+-rw-r--r-- 1 root root       102 Oct 01 04:00 db-20261001T040000Z.dump.gz.age.sha256
+
+=== Permissions ===
+/backups: 700 root:root (only root can read)
+Individual files: 644 root:root

@@ -1,0 +1,35 @@
+info:
+  name: 02 - Customer Replaces Address
+  type: http
+  seq: 2
+http:
+  method: PUT
+  url: '{{baseUrl}}/user/me/address'
+  body:
+    type: json
+    data: |-
+      {
+        "street": "Avenida Central 20",
+        "postalCode": "4000-001",
+        "city": "Porto"
+      }
+  auth:
+    type: bearer
+    token: '{{bck02AddressToken}}'
+settings:
+  encodeUrl: true
+runtime:
+  scripts:
+    - type: tests
+      code: |-
+        test("Customer Replaces Address", function() {
+          expect(res.getStatus()).to.equal(200);
+          const data = res.getBody();
+          expect(data.username).to.equal(bru.getVar("bck02AddressUsername"));
+          expect(data.roles).to.deep.equal(["CUSTOMER"]);
+          expect(data.status).to.equal("ACTIVE");
+          expect(data).not.to.have.property("passwordHash");
+          expect(data).not.to.have.property("password");
+          expect(data.address).to.deep.equal({"street": "Avenida Central 20", "postalCode": "4000-001", "city": "Porto", "extraDetails": ""});
+          expect(data.phoneNumber).to.equal("+351912345678");
+        });

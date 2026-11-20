@@ -1,0 +1,61 @@
+info:
+  name: 05 - Manager Cannot Delete Permanent Types
+  type: http
+  seq: 5
+http:
+  method: DELETE
+  url: '{{baseUrl}}/pizza-component-types/Base Dough'
+  auth:
+    type: bearer
+    token: '{{bck07PermanentTypesManagerToken}}'
+settings:
+  encodeUrl: true
+runtime:
+  scripts:
+    - type: before-request
+      code: |-
+        const login = await bru.sendRequest({
+          method: "POST",
+          url: bru.getEnvVar("baseUrl") + "/auth/login",
+          headers: { "Content-Type": "application/json" },
+          data: { email: "manager@laprizza.test", password: "Manager123!" }
+        });
+        if (login.status !== 200 || !login.data.token ||
+            login.data.user.status !== "ACTIVE" || !login.data.user.roles.includes("MANAGER")) {
+          throw new Error("Permanent component type protection must be tested by an authenticated active manager");
+        }
+        bru.setVar("bck07PermanentTypesManagerToken", login.data.token);
+    - type: after-response
+      code: |-
+        const results = [];
+        const baseUrl = bru.getEnvVar("baseUrl");
+        for (const name of ["Base Dough", "Base Sauce", "Cheese", "Topping"]) {
+          const url = baseUrl + "/pizza-component-types/" + encodeURIComponent(name);
+          const deletion = name === "Base Dough"
+            ? { status: res.getStatus(), data: res.getBody() }
+            : await bru.sendRequest({
+                method: "DELETE",
+                url,
+                headers: { Authorization: "Bearer " + bru.getVar("bck07PermanentTypesManagerToken") }
+              });
+          const available = await bru.sendRequest({ method: "GET", url });
+          results.push({
+            name,
+            deletion: { status: deletion.status, data: deletion.data },
+            available: { status: available.status, data: available.data }
+          });
+        }
+        bru.setVar("bck07PermanentTypesResults", results);
+    - type: tests
+      code: |-
+        test("PizzaComponentUnauthorizedDeletionException keeps all four permanent types available for an active manager", function() {
+          const results = bru.getVar("bck07PermanentTypesResults");
+          expect(results).to.have.lengthOf(4);
+          for (const result of results) {
+            expect(result.deletion.status, result.name + " deletion status").to.equal(401);
+            expect(result.deletion.data.error.message, result.name + " exception message")
+              .to.equal("Given PizzaComponentType cannot be deactivated nor deleted from the application!");
+            expect(result.available.status, result.name + " remains available").to.equal(200);
+            expect(result.available.data.name).to.equal(result.name);
+          }
+        });

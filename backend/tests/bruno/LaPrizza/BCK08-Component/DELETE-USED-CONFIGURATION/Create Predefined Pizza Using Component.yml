@@ -1,0 +1,42 @@
+info:
+  name: 03 - Create Predefined Pizza Using Component
+  type: http
+  seq: 4
+
+http:
+  method: POST
+  url: '{{baseUrl}}/predefined-pizzas'
+  body:
+    type: json
+    data: |-
+      {
+        "recipeName": "Delete Guard Recipe {{deleteGuardSuffix}}",
+        "defaultRecipeLines": [
+          {
+            "defaultQuantity": 1,
+            "componentSku": "{{deleteGuardComponentSku}}"
+          }
+        ],
+        "availableSizes": ["Small"],
+        "pizzaSku": "{{deleteGuardPizzaSku}}"
+      }
+  auth:
+    type: bearer
+    token: '{{managerToken}}'
+
+runtime:
+  scripts:
+    - type: tests
+      code: |-
+        test("Creates a predefined pizza using the component", function () {
+          expect(res.getStatus()).to.equal(201);
+          expect(res.getBody().pizzaSku).to.equal(
+            bru.getVar("deleteGuardPizzaSku")
+          );
+        });
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

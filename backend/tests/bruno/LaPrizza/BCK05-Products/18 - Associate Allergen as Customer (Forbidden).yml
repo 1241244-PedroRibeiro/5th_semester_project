@@ -1,0 +1,30 @@
+info:
+  name: 18 - Associate Allergen as Customer (Forbidden)
+  type: http
+  seq: 21
+http:
+  method: POST
+  url: '{{baseUrl}}/products/{{dualProductSku}}/allergens'
+  body:
+    type: json
+    data: |-
+      {
+      	"allergenName": "Gluten"
+      }
+  auth:
+    type: bearer
+    token: '{{customerToken}}'
+runtime:
+  scripts:
+    - type: tests
+      code: |-
+        test("Customer cannot associate allergen (403 Forbidden)", function() {
+        	expect(res.getStatus()).to.equal(403);
+        	expect(res.getBody().error.message).to.equal("You do not have permission to do this.");
+        });
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: true

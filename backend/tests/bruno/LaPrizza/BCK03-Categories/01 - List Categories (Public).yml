@@ -1,0 +1,22 @@
+info:
+  name: 01 - List Categories (Public)
+  type: http
+  seq: 3
+http:
+  method: GET
+  url: '{{baseUrl}}/categories'
+  body: none
+runtime:
+  scripts:
+    - type: tests
+      code: |-
+        test("Public category listing returns 200 OK", function() {
+        	expect(res.getStatus()).to.equal(200);
+        	const data = res.getBody();
+        	expect(data).to.be.an("array");
+        	bru.setVar("categoryList", data);
+        	if (data.length > 0) {
+        		bru.setVar("seededCategoryName", data[0].name);
+        		bru.setEnvVar("seededCategoryName", data[0].name);
+        	}
+        });

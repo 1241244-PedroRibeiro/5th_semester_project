@@ -1,0 +1,21 @@
+info:
+  name: 05 - Exchange Missing Code (Bad Request)
+  type: http
+  seq: 5
+http:
+  method: POST
+  url: '{{baseUrl}}/auth/external/exchange'
+  body:
+    type: json
+    data: |-
+      {
+        "invalid_field": "hack"
+      }
+runtime:
+  scripts:
+    - type: tests
+      code: |-
+        test("Rejects exchange without a code payload", function() {
+          // O nosso controller tem uma verificação "if (!code) throw Unauthorized"
+          expect([400, 401]).to.include(res.getStatus());
+        });

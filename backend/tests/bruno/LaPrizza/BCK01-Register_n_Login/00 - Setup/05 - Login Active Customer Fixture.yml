@@ -1,0 +1,30 @@
+info:
+  name: 28 - Login Active Customer Fixture
+  type: http
+  seq: 8
+http:
+  method: POST
+  url: '{{baseUrl}}/auth/login'
+  body:
+    type: json
+    data: |-
+      {
+      	"email": "customer@laprizza.test",
+      	"password": "Manager123!"
+      }
+runtime:
+  scripts:
+    - type: tests
+      code: |-
+        test("Status code is 200", function() {
+        	expect(res.getStatus()).to.equal(200);
+        });
+
+        test("Returns an active customer and a token", function() {
+        	const data = res.getBody();
+        	expect(data.user.email).to.equal("customer@laprizza.test");
+        	expect(data.user.status).to.equal("ACTIVE");
+        	expect(data.user.roles).to.deep.equal(["CUSTOMER"]);
+        	expect(data.token).to.be.a("string").and.not.empty;
+        	bru.setVar("fixtureCustomerToken", data.token);
+        });

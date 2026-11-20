@@ -1,0 +1,246 @@
+<app-page-header
+	[title]="'Pizza Management' | translate"
+	[description]="
+		'Predefined recipes, size variants and the ingredients that make them yours.' | translate
+	"
+/>
+@if (success()) {
+	<p class="notice success" role="status">{{ success() | translate }}</p>
+}
+<app-panel
+	[title]="'Predefined pizzas' | translate"
+	[count]="loading() || error() ? null : variants().length"
+	[unit]="'size variants' | translate"
+	><button panel-actions class="button" [disabled]="loading() || !!error()" (click)="open()">
+		<app-icon name="plus" />{{ 'Add pizza recipe' | translate }}
+	</button>
+	<div class="toolbar">
+		<label class="search"
+			><span class="sr-only">{{ 'Search pizza recipes' | translate }}</span
+			><app-icon name="search" /><input
+				type="search"
+				[placeholder]="'Search pizza name or SKU…' | translate"
+				[ngModel]="query()"
+				(ngModelChange)="query.set($event); page.set(1)" /></label
+		><select
+			[attr.aria-label]="'Filter pizza size' | translate"
+			[ngModel]="size()"
+			(ngModelChange)="size.set($event); page.set(1)"
+		>
+			<option value="">{{ 'All sizes' | translate }}</option>
+			@for (s of sizes(); track s.name) {
+				<option [value]="s.name">{{ s.name }}</option>
+			}
+		</select>
+	</div>
+	@if (loading()) {
+		<app-feedback kind="loading" [title]="'Loading pizza recipes' | translate" />
+	} @else if (error()) {
+		<app-feedback
+			kind="error"
+			[title]="'Couldn\'t load recipes' | translate"
+			[message]="error() | translate"
+			[retryable]="true"
+			(retry)="load()"
+		/>
+	} @else {
+		@if (!filtered().length) {
+			<app-feedback
+				[title]="'No pizza recipes found' | translate"
+				[message]="'Add a predefined recipe or adjust your filters.' | translate"
+			/>
+		} @else {
+			<app-data-table
+				[label]="'Predefined pizzas by size' | translate"
+				[columns]="columns"
+				[rows]="rows()"
+				trackKey="key"
+				><ng-template let-pizza let-column="column">
+					@switch (column) {
+						@case ('sku') {
+							<span class="sku">{{ pizza.pizzaSku }}</span>
+						}
+						@case ('recipe') {
+							<span class="cell-title">{{ pizza.recipeName }}</span
+							><span class="cell-subtitle">{{ productName(pizza.pizzaSku) }}</span>
+						}
+						@case ('size') {
+							<app-badge tone="yellow">{{ pizza.size }}</app-badge>
+						}
+						@case ('components') {
+							<div class="recipe-summary">
+								@for (line of pizza.defaultRecipeLines; track line.componentSku) {
+									<span>{{ line.defaultQuantity }} × {{ productName(line.componentSku) }}</span>
+								}
+							</div>
+						}
+						@case ('status') {
+							<app-badge [tone]="pizza.supportedSizes.includes(pizza.size) ? 'teal' : 'neutral'">{{
+								pizza.supportedSizes.includes(pizza.size)
+									? ('Available' | translate)
+									: ('Needs configuration' | translate)
+							}}</app-badge>
+						}
+						@case ('actions') {
+							<button
+								class="button small"
+								[attr.aria-label]="'Configure ' + pizza.recipeName + ', ' + pizza.size"
+								(click)="open(pizza.pizzaSku)"
+							>
+								{{ 'Configure recipe' | translate }}
+							</button>
+						}
+					}
+				</ng-template></app-data-table
+			>
+		}
+		<app-pagination
+			[page]="page()"
+			[pageSize]="pageSize"
+			[total]="filtered().length"
+			[label]="'pizza variants' | translate"
+			(changed)="page.set($event)"
+		/>
+	}
+</app-panel>
+@if (editing()) {
+	<app-modal
+		[title]="
+			(selected() ? ('Configure pizza recipe' | translate) : ('Add pizza recipe' | translate))
+				| translate
+		"
+		[description]="'Choose the default ingredients, quantities and available sizes.' | translate"
+		[busy]="saving() || detailLoading()"
+		(closed)="editing.set(false)"
+	>
+		@if (detailLoading()) {
+			<app-feedback kind="loading" [title]="'Loading configuration' | translate" />
+		} @else {
+			<form id="pizza-form" #form="ngForm" (ngSubmit)="form.valid && save()">
+				<fieldset class="stack" [disabled]="saving() || (!draft.pizzaSku && !!selected())">
+					<div class="notice">
+						{{
+							'The default recipe is shared by every size of this pizza. Saving replaces the full recipe and selected sizes. Each ingredient needs a size configuration for every chosen size.'
+								| translate
+						}}
+					</div>
+					<div class="form-grid">
+						<label
+							>{{ 'Sellable product' | translate
+							}}<select
+								name="pizzaSku"
+								[(ngModel)]="draft.pizzaSku"
+								required
+								[disabled]="!!selected()"
+							>
+								<option value="" disabled>{{ 'Select a pizza product' | translate }}</option>
+								@for (product of sellable(); track product.sku) {
+									<option [value]="product.sku">{{ product.name }} · {{ product.sku }}</option>
+								}
+							</select></label
+						><label
+							>{{ 'Recipe name' | translate
+							}}<input name="recipeName" [(ngModel)]="draft.recipeName" required maxlength="100"
+						/></label>
+					</div>
+					<label
+						>{{ 'Picture' | translate
+						}}<input
+							type="file"
+							name="image"
+							accept="image/jpeg,image/png,image/webp,image/gif"
+							(change)="imageSelected($event)"
+						/><small>{{
+							(selected()
+								? 'Optional · choose a new picture to replace the current one (JPEG, PNG, WEBP or GIF, max 5 MB).'
+								: 'Required · JPEG, PNG, WEBP or GIF, max 5 MB.'
+							) | translate
+						}}</small></label
+					>
+					@if (imagePreview(); as preview) {
+						<img class="image-preview" [src]="preview" [alt]="draft.recipeName" width="160" height="160" />
+					}
+					<fieldset>
+						<legend>{{ 'Available sizes' | translate }}</legend>
+						<div class="check-list">
+							@for (s of sizes(); track s.name) {
+								<label class="check-label"
+									><input
+										type="checkbox"
+										[name]="'size-' + s.name"
+										[ngModel]="draft.availableSizes.includes(s.name)"
+										(ngModelChange)="toggleSize(s.name, $event)"
+										[disabled]="s.active === false"
+									/>{{ s.name }} {{ s.active === false ? ('(disabled)' | translate) : '' }}</label
+								>
+							}
+						</div>
+						@if (!sizes().length) {
+							<small>{{ 'Create a pizza size before adding a recipe.' | translate }}</small>
+						}
+					</fieldset>
+					<fieldset>
+						<legend>{{ 'Recipe components' | translate }}</legend>
+						<div class="recipe-lines">
+							@for (line of draft.defaultRecipeLines; track $index; let index = $index) {
+								<div class="recipe-line">
+									<label
+										><span class="sr-only">{{ 'Ingredient' | translate }} {{ index + 1 }}</span
+										><select [name]="'component-' + index" [(ngModel)]="line.componentSku" required>
+											<option value="" disabled>{{ 'Select ingredient' | translate }}</option>
+											@for (component of components(); track component.sku) {
+												<option [value]="component.sku">
+													{{ component.name }} · {{ component.componentTypeName }}
+												</option>
+											}
+										</select></label
+									><label
+										><span class="sr-only"
+											>{{ 'Quantity for ingredient' | translate }} {{ index + 1 }}</span
+										><input
+											type="number"
+											[name]="'quantity-' + index"
+											[(ngModel)]="line.defaultQuantity"
+											required
+											min="1"
+											step="1"
+											pattern="[0-9]+" /></label
+									><button
+										class="icon-button"
+										type="button"
+										[attr.aria-label]="('Remove ingredient ' | translate) + (index + 1) | translate"
+										[disabled]="draft.defaultRecipeLines.length === 1"
+										(click)="removeLine(index)"
+									>
+										<app-icon name="close" />
+									</button>
+								</div>
+							}
+						</div>
+						<button class="button small add-line" type="button" (click)="addLine()">
+							<app-icon name="plus" />{{ 'Add ingredient' | translate }}
+						</button>
+					</fieldset>
+					@if (formError()) {
+						<p class="notice error" role="alert">{{ formError() | translate }}</p>
+					}
+				</fieldset>
+				<button class="sr-only" type="submit" tabindex="-1">
+					{{ 'Save configuration' | translate }}
+				</button>
+			</form>
+		}
+		<div modal-actions class="row-actions">
+			<button class="button" [disabled]="saving() || detailLoading()" (click)="editing.set(false)">
+				{{ 'Cancel' | translate }}</button
+			><button
+				class="button primary"
+				type="submit"
+				form="pizza-form"
+				[disabled]="saving() || detailLoading() || !validDraft()"
+			>
+				{{ saving() ? ('Saving…' | translate) : ('Save configuration' | translate) }}
+			</button>
+		</div></app-modal
+	>
+}

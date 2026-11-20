@@ -1,0 +1,288 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://laprizza.local/schemas/kitchen-configuration.schema.json",
+  "title": "LaPrizza Kitchen Configuration Layout",
+  "description": "JSON Schema for the KitchenConfiguration.json_content column (ADR-011). Validated at the application boundary by KitchenConfigValidationService (a Pure Fabrication per GRASP Information Expert) before persisting. Backend does not interpret semantic coordinates; it guarantees structural and referential integrity only. The Angular + Three.js SPA is the sole consumer of the payload for rendering (ADR-014).",
+  "type": "object",
+  "required": ["schemaVersion", "dimensions", "equipment", "lights","animationTriggers"],
+  "additionalProperties": false,
+  "properties": {
+    "schemaVersion": {
+      "type": "string",
+      "pattern": "^\\d+\\.\\d+$",
+      "description": "Forward-compatible schema version (major.minor). Enables the Three.js viewer to select a parser. Bump minor for additive changes; bump major for breaking changes.",
+      "examples": ["1.0"]
+    },
+    "metadata": {
+      "$ref": "#/$defs/metadata"
+    },
+    "dimensions": {
+      "$ref": "#/$defs/dimensions"
+    },
+    "equipment": {
+      "type": "array",
+      "description": "Ordered collection of physical equipment placed in the 3D scene. Each entry maps 1:1 to a GLB asset (ADR-014). IDs must be unique within the array; the backend validator enforces this at the application layer because JSON Schema cannot express uniqueness by property.",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/equipmentItem"
+      }
+    },
+    "lights": {
+      "type": "array",
+      "description": "Scene lighting scheme. At least one ambient (or hemisphere) light is strongly recommended to prevent fully-black zones (SGRAI best practice §53.3).",
+      "minItems": 1,
+      "items": {
+        "oneOf": [
+          { "$ref": "#/$defs/ambientLight" },
+          { "$ref": "#/$defs/hemisphereLight" },
+          { "$ref": "#/$defs/directionalLight" },
+          { "$ref": "#/$defs/pointLight" },
+          { "$ref": "#/$defs/spotLight" }
+        ]
+      }
+    },
+    "animationTriggers": {
+      "type": "array",
+      "description": "Sprint 3 readiness — declarative animation triggers consumed by the Three.js AnimationMixer. Empty in Sprint 2.",
+      "items": {
+        "$ref": "#/$defs/animationTrigger"
+      },
+      "default": []
+    }
+  },
+  "$defs": {
+    "metadata": {
+      "type": "object",
+      "description": "Optional human-readable context. Not consumed by the renderer; used by the Manager UI and audit trail.",
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "type": "string",
+          "maxLength": 100,
+          "description": "Human label. May differ from the KitchenConfiguration.name (business key) if the layout is duplicated."
+        },
+        "description": {
+          "type": "string",
+          "maxLength": 500
+        },
+        "author": {
+          "type": "string",
+          "maxLength": 75
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      }
+    },
+    "dimensions": {
+      "type": "object",
+      "description": "Axis-aligned bounding box of the kitchen floor in metres. Three.js right-handed convention: +X right, +Y up, +Z toward observer.",
+      "required": ["x", "y", "z"],
+      "additionalProperties": false,
+      "properties": {
+        "x": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "maximum": 100,
+          "description": "Width in metres. Upper bound protects against accidental huge values that break shadow-map scaling."
+        },
+        "y": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "maximum": 10,
+          "description": "Ceiling height in metres."
+        },
+        "z": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "maximum": 100,
+          "description": "Depth in metres."
+        }
+      }
+    },
+    "vec3": {
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 3,
+      "items": { "type": "number" },
+      "description": "Three-component vector. Order is [x, y, z]. Rotation components are in radians (Three.js Euler convention)."
+    },
+    "colorHex": {
+      "type": "string",
+      "pattern": "^#[0-9a-fA-F]{6}$",
+      "description": "6-digit hexadecimal RGB colour. Alpha is expressed via the 'intensity' field on lights, never in the colour itself."
+    },
+    "equipmentCategory": {
+      "type": "string",
+      "enum": [
+        "counter",
+        "receiving_platform",
+        "oven",
+        "conveyor",
+        "robot_arm",
+        "dispenser",
+        "fridge",
+        "sink",
+        "storage",
+        "other"
+      ],
+      "description": "Semantic category used by the Three.js scene for grouping, shadow bias tweaks, and animation targeting. Defaults to 'other' when omitted."
+    },
+    "equipmentItem": {
+      "type": "object",
+      "required": ["id", "modelUrl", "position", "rotation", "scale"],
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9-]{1,62}[a-z0-9]$",
+          "description": "Stable identifier. Kebab-case, lowercase. Referenced by animationTriggers.targetEquipmentId. Uniqueness across the equipment array is enforced by KitchenConfigValidationService."
+        },
+        "label": {
+          "type": "string",
+          "maxLength": 100,
+          "description": "Display label shown in the Manager UI and in tooltips (Sprint 3)."
+        },
+        "category": {
+          "$ref": "#/$defs/equipmentCategory"
+        },
+        "modelUrl": {
+          "type": "string",
+          "pattern": "^/assets/3d/models/[A-Za-z0-9_\\-/]+\\.glb$",
+          "description": "Relative URL of the GLB asset. Enforces ADR-014: exclusively GLTF 2.0 binary format. In the current deployment the SPA serves these from frontend/public/assets/3d/models/ via Nginx."
+        },
+        "position": {
+          "$ref": "#/$defs/vec3",
+          "description": "Translation in metres, relative to the kitchen floor origin."
+        },
+        "rotation": {
+          "$ref": "#/$defs/vec3",
+          "description": "Euler rotation in radians, XYZ order (Three.js default)."
+        },
+        "scale": {
+          "type": "array",
+          "minItems": 3,
+          "maxItems": 3,
+          "items": { "type": "number", "exclusiveMinimum": 0, "maximum": 100 },
+          "description": "Per-axis scale. All components must be strictly positive. Values above 100 are rejected to catch unit-mismatch mistakes (cm vs m) at the boundary."
+        }
+      }
+    },
+    "ambientLight": {
+      "type": "object",
+      "required": ["type", "color", "intensity"],
+      "additionalProperties": false,
+      "properties": {
+        "type": { "const": "ambient" },
+        "color": { "$ref": "#/$defs/colorHex" },
+        "intensity": { "type": "number", "minimum": 0, "maximum": 10 }
+      }
+    },
+    "hemisphereLight": {
+      "type": "object",
+      "required": ["type", "skyColor", "groundColor", "intensity"],
+      "additionalProperties": false,
+      "properties": {
+        "type": { "const": "hemisphere" },
+        "skyColor": { "$ref": "#/$defs/colorHex" },
+        "groundColor": { "$ref": "#/$defs/colorHex" },
+        "intensity": { "type": "number", "minimum": 0, "maximum": 10 }
+      }
+    },
+    "directionalLight": {
+      "type": "object",
+      "required": ["type", "color", "intensity", "position"],
+      "additionalProperties": false,
+      "properties": {
+        "type": { "const": "directional" },
+        "color": { "$ref": "#/$defs/colorHex" },
+        "intensity": { "type": "number", "minimum": 0, "maximum": 10 },
+        "position": { "$ref": "#/$defs/vec3" },
+        "target": {
+          "$ref": "#/$defs/vec3",
+          "description": "Optional look-at target. Defaults to origin."
+        },
+        "castShadow": {
+          "type": "boolean",
+          "default": false,
+          "description": "Enables shadow casting. Only one directional light should cast shadows to keep the N+1 re-render budget under control (§54.1)."
+        }
+      }
+    },
+    "pointLight": {
+      "type": "object",
+      "required": ["type", "color", "intensity", "position"],
+      "additionalProperties": false,
+      "properties": {
+        "type": { "const": "point" },
+        "color": { "$ref": "#/$defs/colorHex" },
+        "intensity": { "type": "number", "minimum": 0, "maximum": 10 },
+        "position": { "$ref": "#/$defs/vec3" },
+        "distance": {
+          "type": "number",
+          "minimum": 0,
+          "description": "Maximum reach in metres; 0 means infinite."
+        },
+        "decay": { "type": "number", "minimum": 0, "default": 2 }
+      }
+    },
+    "spotLight": {
+      "type": "object",
+      "required": ["type", "color", "intensity", "position", "angle"],
+      "additionalProperties": false,
+      "properties": {
+        "type": { "const": "spot" },
+        "color": { "$ref": "#/$defs/colorHex" },
+        "intensity": { "type": "number", "minimum": 0, "maximum": 10 },
+        "position": { "$ref": "#/$defs/vec3" },
+        "target": { "$ref": "#/$defs/vec3" },
+        "angle": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "maximum": 1.5708,
+          "description": "Outer cone angle in radians (max π/2). Use THREE.MathUtils.degToRad() at authoring time."
+        },
+        "penumbra": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "default": 0,
+          "description": "Fraction of the outer cone covered by the inner (softer) cone."
+        },
+        "distance": { "type": "number", "minimum": 0, "default": 0 },
+        "decay": { "type": "number", "minimum": 0, "default": 2 },
+        "castShadow": { "type": "boolean", "default": false }
+      }
+    },
+    "animationTrigger": {
+      "type": "object",
+      "required": ["id", "targetEquipmentId", "action"],
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9-]{1,62}[a-z0-9]$"
+        },
+        "name": {
+          "type": "string",
+          "maxLength": 100
+        },
+        "targetEquipmentId": {
+          "type": "string",
+          "description": "Must reference an equipment[].id. Referential integrity is validated by KitchenConfigValidationService at the application layer."
+        },
+        "action": {
+          "type": "string",
+          "enum": ["start", "stop", "loop", "pulse"]
+        },
+        "loop": { "type": "boolean", "default": false },
+        "delay": {
+          "type": "number",
+          "minimum": 0,
+          "description": "Delay in seconds before the trigger fires."
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,16 @@
+info:
+  name: 19 - Delete Pizza Size Without Token (Unauthorized)
+  type: http
+  seq: 21
+http:
+  method: DELETE
+  url: '{{baseUrl}}/pizza-sizes/{{createdSizeName}}'
+  body: none
+runtime:
+  scripts:
+    - type: tests
+      code: |-
+        test("Deleting pizza size without token returns 401 Unauthorized", function() {
+        	expect(res.getStatus()).to.equal(401);
+        	expect(res.getBody().error.message).to.equal("Authentication required.");
+        });

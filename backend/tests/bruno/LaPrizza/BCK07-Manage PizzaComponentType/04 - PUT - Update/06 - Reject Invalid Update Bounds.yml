@@ -1,0 +1,29 @@
+info:
+  name: 06 - Reject Invalid Update Bounds
+  type: http
+  seq: 6
+http:
+  method: PUT
+  url: '{{baseUrl}}/pizza-component-types/{{bck07PutName}}'
+  body:
+    type: json
+    data: |-
+      {
+        "name": "{{bck07PutName}}",
+        "assemblyOrder": {{bck07PutUpdatedOrder}},
+        "minCardinality": 1,
+        "maxCardinality": 0
+      }
+  auth:
+    type: bearer
+    token: '{{bck07PutManagerToken}}'
+settings:
+  encodeUrl: true
+runtime:
+  scripts:
+    - type: tests
+      code: |-
+        test("Reject Invalid Update Bounds", function() {
+          expect(res.getStatus()).to.equal(400);
+          expect(res.getBody().error.message).to.be.a("string").and.not.empty;
+        });

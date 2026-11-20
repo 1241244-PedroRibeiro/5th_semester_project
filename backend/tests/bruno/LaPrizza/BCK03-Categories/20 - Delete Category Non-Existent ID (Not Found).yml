@@ -1,0 +1,19 @@
+info:
+  name: 20 - Delete Category Non-Existent Name (Not Found)
+  type: http
+  seq: 20
+http:
+  method: DELETE
+  url: '{{baseUrl}}/categories/Bruno Missing Name'
+  body: none
+  auth:
+    type: bearer
+    token: '{{managerToken}}'
+runtime:
+  scripts:
+    - type: tests
+      code: |-
+        test("Deleting non-existent category returns 404 Not Found", function() {
+        	expect(res.getStatus()).to.equal(404);
+        	expect(res.getBody().error.message).to.equal("Category not found");
+        });

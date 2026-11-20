@@ -1,0 +1,40 @@
+info:
+  name: 00 - Setup Available Product
+  type: http
+  seq: 1
+http:
+  method: POST
+  url: '{{baseUrl}}/products'
+  body:
+    type: json
+    data: |-
+      {
+      	"name": "BCK11 Available Drink {{bck11ProductSku}}",
+      	"description": "Available product for BCK11 catalogue tests",
+      	"categoryName": "Beverages",
+      	"isSellable": true,
+      	"isPizzaComponent": false,
+      	"isStockControlled": false,
+      	"directSellingPrice": 1.75,
+      	"sku": "{{bck11ProductSku}}"
+      }
+  auth:
+    type: bearer
+    token: '{{managerToken}}'
+runtime:
+  scripts:
+    - type: before-request
+      code: 'bru.setVar("bck11ProductSku", "PRD-B11-AVAILABLE-" + Date.now());'
+    - type: tests
+      code: |-
+        test("Matches the current API contract", function() {
+        	expect(res.getStatus()).to.equal(201);
+        	expect(res.getBody().sku).to.equal(bru.getVar("bck11ProductSku"));
+        	expect(res.getBody().directSellingPrice).to.equal(1.75);
+        });
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: true

@@ -1,0 +1,28 @@
+info:
+  name: 29 - Login Deactivated Manager
+  type: http
+  seq: 29
+http:
+  method: POST
+  url: "{{baseUrl}}/auth/login"
+  body:
+    type: json
+    data: |-
+      {
+      	"email": "deactivated-manager@laprizza.test",
+      	"password": "Manager123!"
+      }
+runtime:
+  scripts:
+    - type: tests
+      code: |-
+        test("Status code is 403", function() {
+        	expect(res.getStatus()).to.equal(403);
+        });
+
+        test("Rejects login without exposing credentials", function() {
+        	const data = res.getBody();
+        	expect(data.error.message).to.equal("User account is deactivated");
+        	expect(data).not.to.have.property("token");
+        	expect(data).not.to.have.property("user");
+        });

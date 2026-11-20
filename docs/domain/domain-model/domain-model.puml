@@ -1,0 +1,801 @@
+# Ficheiros a actualizar face às clarificações #29–#36
+
+Identifico **3 ficheiros com alterações de conteúdo substantivas** (o `client-questions.md` já foi tratado no turno anterior). Adicionalmente, o `laprizza-knowledge-base.md` (contagem de clarificações) e o `glossary.md` (novos termos) precisam de ajustes menores — listo-os no final para aplicação pontual, dado o seu tamanho.
+
+Os três ficheiros completos e corrigidos seguem abaixo.
+
+---
+
+## 1. `@startuml domain-model-general.txt` — completo e corrigido
+
+```plantuml
+@startuml domain-model-general
+skinparam backgroundColor white
+skinparam shadowing false
+skinparam roundCorner 8
+skinparam classAttributeIconSize 0
+skinparam defaultFontName Helvetica
+skinparam defaultFontSize 13
+skinparam nodesep 40
+skinparam ranksep 70
+skinparam packageStyle rectangle
+skinparam ArrowColor #555555
+skinparam ArrowFontSize 11
+skinparam ArrowFontColor #444444
+skinparam titleFontSize 22
+skinparam legendBackgroundColor #FAFAFA
+skinparam legendBorderColor #CCCCCC
+skinparam package {
+  FontStyle bold
+  FontSize 15
+  BorderColor #AAAAAA
+}
+skinparam class {
+  BackgroundColor<<Root>> #FFE9A8
+  BorderColor<<Root>> #C99700
+  BorderThickness<<Root>> 2
+  BackgroundColor<<Entity>> #D6E8FF
+  BorderColor<<Entity>> #3B78C4
+  BackgroundColor<<VO>> #DDF3DD
+  BorderColor<<VO>> #3C9A3C
+  BackgroundColor<<Enum>> #F0E0F7
+  BorderColor<<Enum>> #8E44AD
+}
+hide empty methods
+hide empty fields
+hide circle
+hide stereotype
+
+title Pizzeria Domain Model - General View (Sprint 2)
+
+' =====================================================================
+' ORDERING  (updated to use business keys)
+' =====================================================================
+package "ORDERING" #FDECEC {
+
+  package "Customer Order Aggregate" #FFFFFF {
+    class CustomerOrder <<Root>> {
+      orderNumber : Long «id»
+      customerEmail : Email [0..1]
+      placementTime : Timestamp
+      status : OrderStatus
+      totalAmount : Money
+      items : List<OrderItem>
+      --
+      addItem(OrderItem)
+      place() / confirm() / cancel()
+      recalculateTotal() : Money
+    }
+    class OrderItem <<Entity>> {
+      orderNumber : Long «id»
+      lineNumber : int «id»
+      itemType : OrderItemType
+      catalogueProductSku : Sku [0..1]
+      quantity : int
+      unitPrice : Money
+      fulfillmentStatus : FulfillmentStatus
+      --
+      markBeingPrepared()
+      markReady()
+      markServed()
+    }
+    class PersonalizedPizzaSnapshot <<VO>> {
+      orderNumber : Long «id»
+      lineNumber : int «id»
+      sourcePredefinedPizzaSku : Sku [0..1]
+      chosenSize : PizzaSizeName
+      computedPrice : Money
+      allergens : Set<AllergenName>
+    }
+    class SnapshotComponent <<VO>> {
+      componentSku : Sku
+      quantity : int
+    }
+    enum OrderStatus <<Enum>> {
+      SIMULATED
+      PLACED
+      CONFIRMED
+      IN_PREPARATION
+      READY
+      DELIVERED
+      CANCELLED
+    }
+    enum OrderItemType <<Enum>> {
+      STANDARD_PRODUCT
+      PERSONALIZED_PIZZA
+    }
+    enum FulfillmentStatus <<Enum>> {
+      WAITING_PREPARATION
+      BEING_PREPARED
+      READY_TO_SERVE
+      SERVED
+    }
+  }
+}
+
+' =====================================================================
+' KITCHEN  (updated to use business keys / Long IDs)
+' =====================================================================
+package "KITCHEN" #EEF0F2 {
+
+  package "Preparation Activity Aggregate" #FFFFFF {
+    class PreparationActivity <<Root>> {
+      activityId : Long «id»
+      orderNumber : Long
+      orderItemLineNumber : int
+      activityType : String
+      expectedDuration : ActivityDuration
+      status : ActivityStatus
+      allocatedResourceCode : ResourceCode [0..1]
+      prerequisites : Set<Long>
+      --
+      addPrerequisite(Long)
+      allocateResource(ResourceCode)
+      start() / complete()
+      isReady(Set<Long>) : boolean
+    }
+    class ActivityDuration <<VO>> {
+      seconds : int
+    }
+    enum ActivityStatus <<Enum>> {
+      WAITING
+      SCHEDULED
+      IN_PROGRESS
+      COMPLETED
+    }
+  }
+
+  package "Kitchen Resource Aggregate" #FFFFFF {
+    class KitchenResource <<Root>> {
+      resourceCode : ResourceCode «id»
+      name : String
+      resourceType : String
+      capacity : SlotCapacity
+      operational : boolean
+      --
+      markOperational()
+      markOutOfService()
+    }
+    class SlotCapacity <<VO>> {
+      slots : int
+    }
+  }
+}
+
+' =====================================================================
+' KITCHEN CONFIGURATION  (NEW - uses business name as ID)
+' =====================================================================
+package "KITCHEN CONFIGURATION" #E8F5E9 {
+
+  package "Kitchen Configuration Aggregate" #FFFFFF {
+    class KitchenConfiguration <<Root>> {
+      name : ConfigurationName «id»
+      jsonContent : String
+      isActive : boolean
+      createdAt : Timestamp
+      updatedAt : Timestamp
+      --
+      activate() / deactivate()
+      replaceJson(String)
+      validate() : ValidationReport
+    }
+    class ConfigurationName <<VO>> {
+      value : String
+    }
+  }
+}
+
+' =====================================================================
+' IDENTITY & CUSTOMERS  (updated to use business keys + #29/#34 session)
+' =====================================================================
+package "IDENTITY & CUSTOMERS" #EAF2FB {
+
+  package "Authentication Session Aggregate" #FFFFFF {
+    class AuthSession <<Root>> {
+      id : UUID «id»
+      username : Username
+      lastActivityAt : Timestamp
+      expiresAt : Timestamp
+      revokedAt : Timestamp [0..1]
+      --
+      isActive(Date) : boolean
+      isActiveFor(String, Date) : boolean
+      recordActivity(Date)
+      revoke(Date)
+    }
+    note right of AuthSession
+      Session lifetime is inactivity-based
+      (SESSION_INACTIVITY_MINUTES).
+      Access-token lifetime is JWT_EXPIRES_IN.
+      Logout revokes ONLY this session;
+      other sessions of the same account
+      remain valid.
+      (Clarifications #29, #34)
+    end note
+  }
+
+  package "User Aggregate" #FFFFFF {
+    class User <<Root>> {
+      username : Username «id»
+      name : PersonName
+      email : Email
+      passwordHash : PasswordHash [0..1]
+      externalIdpSubject : String [0..1]
+      status : UserStatus
+      roles : Set<RoleName>
+      dietaryRestrictions : Set<DietaryRestriction>
+      invitations : List<ActivationInvitation>
+      createdAt : Timestamp
+      updatedAt : Timestamp
+      --
+      changePassword(PasswordHash)
+      activate() / deactivate()
+      assignRole(RoleName) / revokeRole(RoleName)
+      hasRole(RoleName) : boolean
+      recordDietaryRestriction(AllergenName)
+      clearDietaryRestriction(AllergenName)
+      issueInvitation(InvitationPurpose) : String
+      consumeInvitation(String) : Result
+    }
+    note right of User
+      Login identifier = email, case-insensitive.
+      Password recovery uses single-use link
+      with configurable TTL; same password
+      policy applies to create / change / recover.
+      PENDING_REGISTRATION blocks login and
+      exposes a resend-activation action.
+      (Clarification #32)
+    end note
+    class PasswordHash <<VO>> {
+      hashedValue : String
+    }
+    class RoleName <<VO>> {
+      name : String
+    }
+    class Address <<VO>> {
+      street : String
+      postalCode : String
+      city : String
+      extraDetails : String
+    }
+    class PhoneNumber <<VO>> {
+      value : String
+    }
+    class DietaryRestriction <<VO>> {
+      allergenName : AllergenName
+      recordedAt : Timestamp
+    }
+    class ActivationInvitation <<Entity>> {
+      token : InvitationToken «id»
+      purpose : InvitationPurpose
+      expiresAt : Timestamp
+      usedAt : Timestamp [0..1]
+      revokedAt : Timestamp [0..1]
+      createdAt : Timestamp
+    }
+    enum UserStatus <<Enum>> {
+      ACTIVE
+      DEACTIVATED
+      PENDING_REGISTRATION
+    }
+    enum InvitationPurpose <<Enum>> {
+      LOCAL_ACCOUNT_ACTIVATION
+      EXTERNAL_IDP_MATCH
+      PASSWORD_RESET
+    }
+  }
+
+  package "Customer Aggregate" #FFFFFF {
+    class Customer <<Root>> {
+      email : Email «id»
+      username : Username [0..1]
+      name : PersonName
+      contactInfo : ContactInformation
+      vatNumber : VatNumber [0..1]
+      consent : ConsentPreferences
+      addresses : List<CustomerAddress>
+      createdAt : Timestamp
+      updatedAt : Timestamp
+      --
+      updateContactInformation(ContactInformation)
+      addAddress(DeliveryAddress, boolean)
+      removeAddress(AddressId)
+      setDefaultAddress(AddressId)
+      updateConsent(boolean)
+    }
+    class CustomerAddress <<Entity>> {
+      id : Long «id»
+      isDefault : boolean
+    }
+    class DeliveryAddress <<VO>> {
+      street : String
+      postalCode : String
+      city : String
+      extraDetails : String
+    }
+    class ContactInformation <<VO>> {
+      phone : PhoneNumber
+      email : Email
+    }
+    class ConsentPreferences <<VO>> {
+      marketingConsent : boolean
+      consentTimestamp : Timestamp
+    }
+  }
+
+  package "Role Change Log Aggregate" #FFFFFF {
+    class RoleChangeLog <<Root>> {
+      logId : Long «id»
+      actorUsername : Username
+      targetUsername : Username
+      previousRoles : Set<RoleName>
+      newRoles : Set<RoleName>
+      changedAt : Timestamp
+      reason : String [0..1]
+    }
+  }
+}
+
+' =====================================================================
+' PIZZA CONFIGURATION  (updated to use composite business keys)
+' =====================================================================
+package "PIZZA CONFIGURATION" #F6ECFA {
+
+  package "Pizza Size Aggregate" #FFFFFF {
+    class PizzaSize <<Root>> {
+      name : PizzaSizeName «id»
+      active : boolean
+      --
+      activate() / deactivate()
+    }
+  }
+
+  package "Component Size Configuration Aggregate" #FFFFFF {
+    class ComponentSizeConfiguration <<Root>> {
+      componentSku : Sku «id»
+      pizzaSize : PizzaSizeName «id»
+      price : Money
+      stockUnitsConsumed : StockQuantity
+      --
+      changePrice(Money)
+      changeConsumption(StockQuantity)
+    }
+  }
+
+  package "Predefined Pizza Aggregate" #FFFFFF {
+    class PredefinedPizza <<Root>> {
+      sku : Sku «id»
+      recipeName : String
+      recipe : Set<RecipeLine>
+      --
+      addRecipeLine(Sku, int)
+      removeRecipeLine(Sku)
+      changeQuantity(Sku, int)
+    }
+    note right of PredefinedPizza
+      PredefinedPizza is prepared on demand.
+      Its backing Product MUST NOT be
+      isStockControlled = true.
+      Stock is tracked at the COMPONENT level,
+      deducted on order confirmation.
+      (Clarification #35)
+    end note
+    class RecipeLine <<VO>> {
+      componentSku : Sku
+      defaultQuantity : int
+    }
+  }
+}
+
+' =====================================================================
+' CATALOGUE & INVENTORY  (Product gets +1 field)
+' =====================================================================
+package "CATALOGUE & INVENTORY" #FFF6E0 {
+
+  package "Product Category Aggregate" #FFFFFF {
+    class ProductCategory <<Root>> {
+      name : CategoryName «id»
+      description : String
+      --
+      updateDescription(String)
+    }
+  }
+
+  package "Allergen Aggregate" #FFFFFF {
+    class Allergen <<Root>> {
+      name : AllergenName «id»
+      description : String
+      --
+      updateDescription(String)
+    }
+  }
+
+  package "Pizza Component Type Aggregate" #FFFFFF {
+    class PizzaComponentType <<Root>> {
+      name : ComponentTypeName «id»
+      assemblyOrder : AssemblyOrder
+      cardinality : CardinalityBounds
+      --
+      changeAssemblyOrder(AssemblyOrder)
+      changeCardinality(CardinalityBounds)
+    }
+    class AssemblyOrder <<VO>> {
+      sequenceNumber : int
+    }
+    class CardinalityBounds <<VO>> {
+      minimum : int
+      maximum : int
+      isSatisfiedBy(int) : boolean
+    }
+  }
+
+  package "Product Aggregate" #FFFFFF {
+    class Product <<Root>> {
+      sku : Sku «id»
+      name : ProductName
+      description : String
+      category : CategoryName
+      flags : ProductFlags
+      componentType : ComponentTypeName [0..1]
+      directSellingPrice : Money
+      stockUnitsPerSale : Integer [0..1]
+      active : boolean
+      allergens : Set<AllergenName>
+      --
+      changeCategory(CategoryName)
+      addAllergen(AllergenName) / removeAllergen(AllergenName)
+      setDirectSellingPrice(Money)
+      setStockUnitsPerSale(Integer)
+      designateAsPizzaComponent(ComponentTypeName)
+      activate() / deactivate()
+    }
+    note right of Product
+      stockUnitsPerSale is REQUIRED for
+      isStockControlled AND isSellable.
+      Its absence is a hard planning error,
+      not a silent default of 1.
+      (Clarification #28 §2, reinforced by #36)
+    end note
+    class ProductFlags <<VO>> {
+      sellable : boolean
+      pizzaComponent : boolean
+      stockControlled : boolean
+      isConsistent() : boolean
+    }
+  }
+
+  package "Stock Aggregate" #FFFFFF {
+    class StockItem <<Root>> {
+      productSku : Sku «id»
+      currentUnits : StockQuantity
+      movements : List<StockMovement>
+      createdAt : Timestamp
+      updatedAt : Timestamp
+      --
+      replenish(StockQuantity, String)
+      consume(StockQuantity, String)
+      adjust(StockQuantity, String)
+      hasSufficientStock(StockQuantity) : boolean
+    }
+    class StockMovement <<Entity>> {
+      movementId : Long «id»
+      type : StockMovementType
+      amount : StockQuantity
+      reason : String
+      recordedAt : Timestamp
+    }
+    class StockQuantity <<VO>> {
+      units : int
+      add(StockQuantity) : StockQuantity
+      subtract(StockQuantity) : StockQuantity
+      isGreaterThanOrEqual(StockQuantity) : boolean
+    }
+    enum StockMovementType <<Enum>> {
+      REPLENISHMENT
+      CONSUMPTION
+      ADJUSTMENT
+    }
+  }
+}
+
+' =====================================================================
+' AI PLANNING  (uses business keys; #30 #36 refinements)
+' =====================================================================
+package "AI PLANNING" #F3E5F5 {
+
+  package "Consumption Forecast Aggregate" #FFFFFF {
+    class ConsumptionForecast <<Root>> {
+      name : ForecastName «id»
+      startDate : Date
+      endDate : Date
+      entries : List<ForecastEntry>
+      createdAt : Timestamp
+      updatedAt : Timestamp
+      --
+      addEntry(Date, Sku, PizzaSizeName, int)
+      removeEntry(ForecastEntryId)
+      validateAgainstReferences(Set<Sku>, Set<PizzaSizeName>)
+    }
+    note right of ConsumptionForecast
+      Covers ALL sellable products:
+      pizzas (with pizza_size) AND non-pizza
+      products (pizza_size = null).
+      Pizzas → BOM expansion; non-pizza →
+      stockUnitsPerSale per unit sold.
+      (Clarification #36)
+    end note
+    class ForecastEntry <<Entity>> {
+      entryId : Long «id»
+      date : Date
+      productSku : Sku
+      pizzaSize : PizzaSizeName [0..1]
+      quantity : int
+    }
+  }
+
+  package "Supplier Scenario Aggregate" #FFFFFF {
+    class SupplierScenario <<Root>> {
+      name : ScenarioName «id»
+      suppliers : List<Supplier>
+      offers : List<SupplierOffer>
+      isSimulated : boolean
+      confirmedAt : Timestamp [0..1]
+      createdAt : Timestamp
+      --
+      addSupplier(Supplier)
+      addOffer(SupplierOffer)
+      confirm()
+    }
+    class Supplier <<Entity>> {
+      supplierCode : SupplierCode «id»
+      name : String [0..1]
+    }
+    class SupplierOffer <<Entity>> {
+      supplierCode : SupplierCode
+      productSku : Sku
+      priceEUR : Money
+      stockUnitQuantity : int
+      leadTimeDays : int
+      dailySupplyLimit : int [0..1]
+    }
+    note right of SupplierOffer
+      stockUnitQuantity is an INDIVISIBLE
+      purchase lot. The plan rounds the
+      required qty UP to a multiple of it.
+      dailySupplyLimit is per-offer per-day,
+      not shared across products of the supplier.
+      (Clarifications #28 follow-up, #30)
+    end note
+  }
+
+  package "Planning Result Aggregate" #FFFFFF {
+    class PlanningResult <<Root>> {
+      executionId : Long «id»
+      forecastName : ForecastName
+      scenarioName : ScenarioName
+      forecastSnapshot : ForecastSnapshot
+      supplierScenarioSnapshot : SupplierScenarioSnapshot
+      stockSnapshot : StockSnapshot
+      bomReference : String
+      referenceDate : Date
+      isReplay : boolean
+      isSimulated : boolean
+      executedAt : Timestamp
+      requirements : List<DailyRequirement>
+      proposals : List<PurchaseProposal>
+      unmetNeeds : List<UnmetNeed>
+    }
+    class ForecastSnapshot <<VO>> {
+      forecastName : ForecastName
+      capturedEntries : List<ForecastEntry>
+    }
+    class SupplierScenarioSnapshot <<VO>> {
+      scenarioName : ScenarioName
+      capturedOffers : List<SupplierOffer>
+    }
+    class StockSnapshot <<VO>> {
+      capturedAt : Timestamp
+      quantities : Map<Sku, Integer>
+    }
+    class DailyRequirement <<VO>> {
+      date : Date
+      productSku : Sku
+      requiredQuantity : int
+    }
+    class PurchaseProposal <<VO>> {
+      productSku : Sku
+      supplierCode : SupplierCode
+      quantity : int
+      orderDate : Date
+      deliveryDate : Date
+      priceEUR : Money
+      meetsRequiredDate : boolean
+      lateByDays : int
+    }
+    note right of PurchaseProposal
+      quantity is a multiple of the
+      SupplierOffer.stockUnitQuantity
+      (indivisible lot).
+      lateByDays = 0 ⇔ meetsRequiredDate.
+      A late proposal does NOT satisfy the
+      original unmet need.
+      (Clarification #30)
+    end note
+    class UnmetNeed <<VO>> {
+      date : Date
+      productSku : Sku
+      shortfall : int
+      reason : String
+    }
+  }
+}
+
+' =====================================================================
+' SHARED KERNEL  (unchanged)
+' =====================================================================
+package "SHARED KERNEL" #F2F2F2 {
+  class PersonName <<VO>> {
+    firstName : String
+    lastName : String
+    fullName() : String
+  }
+  class Email <<VO>> {
+    address : String
+  }
+  class Money <<VO>> {
+    amount : BigDecimal
+    currency : String
+    add(Money) : Money
+    subtract(Money) : Money
+    multiply(int) : Money
+  }
+  class Timestamp <<VO>> {
+    value : Instant
+  }
+  class ConfigurationName <<VO>> {
+    value : String
+  }
+  class ForecastName <<VO>> {
+    value : String
+  }
+  class ScenarioName <<VO>> {
+    value : String
+  }
+  class SupplierCode <<VO>> {
+    value : String
+  }
+  class InvitationToken <<VO>> {
+    value : String
+  }
+  class ResourceCode <<VO>> {
+    value : String
+  }
+}
+
+' =====================================================================
+' RELATIONS INSIDE AGGREGATES  (solid)
+' =====================================================================
+User "1" <-- "0..*" AuthSession : belongs to
+User *--> "0..*" DietaryRestriction
+User *--> "0..*" ActivationInvitation
+User --> "1..*" RoleName
+User --> "0..1" PasswordHash
+User --> "1" Address
+User --> "1" PhoneNumber
+User --> "1" UserStatus
+
+Customer *--> "0..*" CustomerAddress
+CustomerAddress --> "1" DeliveryAddress
+Customer --> "1" ContactInformation
+Customer --> "1" ConsentPreferences
+
+PizzaComponentType --> "1" AssemblyOrder
+PizzaComponentType --> "1" CardinalityBounds
+Product --> "1" ProductFlags
+
+StockItem *--> "0..*" StockMovement
+StockItem --> "1" StockQuantity
+StockMovement --> "1" StockMovementType
+
+PredefinedPizza *--> "1..*" RecipeLine
+
+CustomerOrder --> "1" OrderStatus
+CustomerOrder *--> "1..*" OrderItem
+OrderItem --> "1" OrderItemType
+OrderItem --> "1" FulfillmentStatus
+OrderItem *--> "0..1" PersonalizedPizzaSnapshot
+PersonalizedPizzaSnapshot *--> "1..*" SnapshotComponent
+
+PreparationActivity --> "1" ActivityDuration
+PreparationActivity --> "1" ActivityStatus
+KitchenResource --> "1" SlotCapacity
+
+KitchenConfiguration --> "1" ConfigurationName
+ActivationInvitation --> "1" InvitationToken
+ActivationInvitation --> "1" InvitationPurpose
+
+ConsumptionForecast *--> "0..*" ForecastEntry
+SupplierScenario *--> "0..*" Supplier
+SupplierScenario *--> "0..*" SupplierOffer
+PlanningResult *--> "1" ForecastSnapshot
+PlanningResult *--> "1" SupplierScenarioSnapshot
+PlanningResult *--> "1" StockSnapshot
+PlanningResult *--> "0..*" DailyRequirement
+PlanningResult *--> "0..*" PurchaseProposal
+PlanningResult *--> "0..*" UnmetNeed
+
+' =====================================================================
+' REFERENCES BETWEEN AGGREGATES  (dashed, by business key only)
+' =====================================================================
+Customer ..> User : username
+User ..> Allergen : dietary\nrestrictions
+RoleChangeLog ..> User : targetUsername
+
+Product ..> ProductCategory : categoryName
+Product ..> PizzaComponentType : componentTypeName
+Product ..> Allergen : allergens
+StockItem ..> Product : sku
+
+ComponentSizeConfiguration ..> Product : componentSku
+ComponentSizeConfiguration ..> PizzaSize : pizzaSize
+PredefinedPizza ..> Product : sku\n(and components)
+PredefinedPizza ..> PizzaSize : available sizes
+
+CustomerOrder ..> Customer : customerEmail
+OrderItem ..> Product : catalogueProductSku
+PersonalizedPizzaSnapshot ..> PredefinedPizza : sourcePredefinedPizzaSku
+PersonalizedPizzaSnapshot ..> PizzaSize : chosenSize
+PersonalizedPizzaSnapshot ..> Allergen : allergens
+SnapshotComponent ..> Product : componentSku
+
+PreparationActivity ..> CustomerOrder : orderNumber
+PreparationActivity ..> KitchenResource : allocatedResourceCode
+PreparationActivity ..> PreparationActivity : prerequisites
+
+KitchenConfiguration ..> KitchenResource : resourceCode\n(inside jsonContent)
+
+ConsumptionForecast ..> Product : productSku
+ConsumptionForecast ..> PizzaSize : pizzaSize
+SupplierScenario ..> Product : productSku
+
+PlanningResult ..> ConsumptionForecast : forecastName
+PlanningResult ..> SupplierScenario : scenarioName
+PlanningResult ..> StockItem : productSku
+
+' =====================================================================
+' LAYOUT HINTS
+' =====================================================================
+CustomerOrder -[hidden]right- PreparationActivity
+PreparationActivity -[hidden]right- KitchenConfiguration
+
+CustomerOrder -[hidden]down- Customer
+Customer -[hidden]right- User
+RoleChangeLog -[hidden]down- Customer
+User -[hidden]right- PredefinedPizza
+PredefinedPizza -[hidden]right- ComponentSizeConfiguration
+ComponentSizeConfiguration -[hidden]right- PizzaSize
+
+Customer -[hidden]down- Product
+Product -[hidden]right- StockItem
+Product -[hidden]down- ProductCategory
+ProductCategory -[hidden]right- Allergen
+Allergen -[hidden]right- PizzaComponentType
+
+ProductCategory -[hidden]down- ConsumptionForecast
+ConsumptionForecast -[hidden]right- SupplierScenario
+SupplierScenario -[hidden]right- PlanningResult
+
+ConsumptionForecast -[hidden]down- Money
+Money -[hidden]right- PersonName
+PersonName -[hidden]right- Email
+Email -[hidden]right- Timestamp
+
+legend bottom
+  <back:#FFE9A8>  Aggregate root  </back>  <back:#D6E8FF>  Entity (inside an aggregate)  </back>  <back:#DDF3DD>  Value object  </back>  <back:#F0E0F7>  Enumeration  </back>
+  ""──▶"" owned by the aggregate (composition or plain association)      ""┈┈▶"" reference to another aggregate by identity only, never by object
+  «id» marks the identity attribute.  Business identities use **Business Keys** (Usernames, SKUs, Emails, Names) or internal Long IDs. AuthSession uses an unpredictable UUID and references its owner by Username.
+  Sprint 2 additions: KitchenConfiguration (WEB06/VIS02), ConsumptionForecast + SupplierScenario + PlanningResult (WEB07/AI01/AI02/AI06), ActivationInvitation & RoleChangeLog (AA06/AA07), AuthSession (AA04).
+  Sprint 2 refinements (#29–#36): session inactivity + per-device logout, indivisible purchase lots + late proposals, email login + password recovery, resource-level authorization for multi-role users, PredefinedPizza not stock-controlled, non-pizza products included in forecasts.
+endlegend
+
+@enduml

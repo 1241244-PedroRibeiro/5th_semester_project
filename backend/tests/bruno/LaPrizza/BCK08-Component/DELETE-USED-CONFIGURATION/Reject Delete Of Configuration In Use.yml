@@ -1,0 +1,25 @@
+info:
+  name: 04 - Reject Delete Of Configuration In Use
+  type: http
+  seq: 5
+
+http:
+  method: DELETE
+  url: '{{baseUrl}}/component-size-configurations/{{deleteGuardConfigId}}'
+  auth:
+    type: bearer
+    token: '{{managerToken}}'
+
+runtime:
+  scripts:
+    - type: tests
+      code: |-
+        test("Rejects deletion of a configuration used by a predefined pizza", function () {
+          expect(res.getStatus()).to.equal(409);
+        });
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

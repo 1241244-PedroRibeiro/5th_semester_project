@@ -1,0 +1,76 @@
+info:
+  name: 00 - Prepare Update Fixture
+  type: http
+  seq: 0
+http:
+  method: POST
+  url: '{{baseUrl}}/pizza-component-types'
+  body:
+    type: json
+    data: |-
+      {
+        "name": "{{bck07PutName}}",
+        "assemblyOrder": {{bck07PutOrder}},
+        "minCardinality": 0,
+        "maxCardinality": null
+      }
+  auth:
+    type: bearer
+    token: '{{bck07PutManagerToken}}'
+settings:
+  encodeUrl: true
+runtime:
+  scripts:
+    - type: before-request
+      code: |-
+        const baseUrl = bru.getEnvVar("baseUrl");
+        for (const [email, tokenVariable] of [
+          ["manager@laprizza.test", "bck07PutManagerToken"],
+          ["customer@laprizza.test", "bck07PutCustomerToken"]
+        ]) {
+          const response = await bru.sendRequest({
+            method: "POST",
+            url: baseUrl + "/auth/login",
+            headers: { "Content-Type": "application/json" },
+            data: { email, password: "Manager123!" }
+          });
+          if (response.status !== 200 || !response.data.token) {
+            throw new Error("Cannot prepare PUT fixture: login failed for " + email);
+          }
+          bru.setVar(tokenVariable, response.data.token);
+        }
+        const types = [];
+        let totalPages = 1;
+        for (let page = 1; page <= totalPages; page++) {
+          const response = await bru.sendRequest({
+            method: "GET",
+            url: baseUrl + "/pizza-component-types?page=" + page + "&pageSize=20"
+          });
+          if (response.status !== 200) {
+            throw new Error("Cannot prepare PUT fixture: component type listing failed");
+          }
+          types.push(...response.data.items);
+          totalPages = response.data.totalPages;
+        }
+        if (!types.length) {
+          throw new Error("Cannot prepare occupied-order test: seed the component type catalogue first");
+        }
+        const suffix = Date.now().toString(36) + "-" + Math.random().toString(36).slice(2, 8);
+        const nextOrder = Math.max(...types.map(type => type.assemblyOrder)) + 1;
+        bru.setVar("bck07PutName", "Bruno BCK07 PUT " + suffix);
+        bru.setVar("bck07PutMissingName", "Bruno BCK07 missing " + suffix);
+        bru.setVar("bck07PutOrder", nextOrder);
+        bru.setVar("bck07PutUpdatedOrder", nextOrder + 1);
+        bru.setVar("bck07PutExistingName", types[0].name);
+        bru.setVar("bck07PutExistingOrder", types[0].assemblyOrder);
+    - type: tests
+      code: |-
+        test("Creates a fresh independent PUT fixture", function() {
+          expect(res.getStatus()).to.equal(201);
+          expect(res.getBody()).to.deep.equal({
+            name: bru.getVar("bck07PutName"),
+            assemblyOrder: bru.getVar("bck07PutOrder"),
+            minCardinality: 0,
+            maxCardinality: null
+          });
+        });

@@ -1,0 +1,6 @@
+#%PAM-1.0
+# laprizza SYS05 - MFA gate sub-stack for SSH
+# Kept as a separate reference file for host audits.
+# The active SSH stack in config/pam/sshd invokes this module directly.
+
+auth      required   pam_google_authenticator.so

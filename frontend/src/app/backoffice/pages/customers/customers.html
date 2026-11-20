@@ -1,0 +1,254 @@
+<app-page-header [title]="'Customer Management' | translate"
+	[description]="'Manage commercial customer profiles independently from login accounts.' | translate" />
+
+<app-panel [title]="'Customers' | translate" [unit]="(total() === 1 ? 'Customer' : 'Customers') | translate"
+	[count]="loading() || error() ? null : total()">
+	<button panel-actions class="button primary" (click)="startCreate()" [disabled]="saving()">
+		<app-icon name="plus" />{{ 'Add customer' | translate }}
+	</button>
+	<div class="toolbar customer-toolbar">
+		<label class="search">
+			<app-icon name="search" />
+			<span class="sr-only">{{ 'Search customers by name, email, phone or VAT number' | translate }}</span>
+			<input type="search" [placeholder]="'Search customers by name, email, phone or VAT number' | translate"
+				[ngModel]="search()" (ngModelChange)="searchChanged($event)" />
+		</label>
+	</div>
+	@if (loading()) {
+		<app-feedback kind="loading" [title]="'Loading customers' | translate" />
+	} @else if (error()) {
+		<app-feedback kind="error" [title]="'Could not load customers' | translate" [message]="error() | translate"
+			[retryable]="true" (retry)="load()" />
+	} @else if (!items().length) {
+		<app-feedback [title]="'No customers found' | translate"
+			[message]="(search() ? 'Try another search term.' : 'Add your first customer to get started.') | translate" />
+	} @else {
+		<app-data-table [label]="'Customers' | translate" [columns]="columns" [rows]="items()" trackKey="id">
+			<ng-template let-customer let-column="column">
+				@switch (column) {
+					@case ('name') {
+						<div class="customer-identity">
+							<span class="identity-icon"><app-icon name="users" /></span>
+							<span><strong class="cell-title">{{ customer.firstName }} {{ customer.lastName }}</strong>
+								<small class="cell-subtitle">{{ customer.username ? ('Account linked' | translate) : ('No account linked' | translate) }}</small></span>
+						</div>
+					}
+					@case ('email') { <a class="customer-email" [href]="'mailto:' + customer.email">{{ customer.email }}</a> }
+					@case ('phone') { <span class="customer-phone">{{ customer.phone }}</span> }
+					@case ('vatNumber') {
+						@if (customer.vatNumber) { <span class="vat-value">{{ customer.vatNumber }}</span> }
+						@else { <span class="muted-value">{{ 'Not provided' | translate }}</span> }
+					}
+					@case ('actions') {
+						<button class="button small details-button" type="button" (click)="view(customer)" [attr.aria-label]="('View details for' | translate) + ' ' + customer.firstName + ' ' + customer.lastName">
+							<app-icon name="eye" />{{ 'Details' | translate }}
+						</button>
+					}
+				}
+			</ng-template>
+		</app-data-table>
+		<app-pagination [page]="page()" [pageSize]="pageSize" [total]="total()"
+			[label]="(total() === 1 ? 'Customer' : 'Customers') | translate" (changed)="paginate($event)" />
+	}
+</app-panel>
+
+@if (creating()) {
+	<app-modal [title]="'Add customer' | translate" [description]="'A commercial profile can exist without a login account.' | translate"
+		[busy]="saving()" (closed)="editing.set(false); creating.set(false)">
+		<form id="customer-form" #createForm="ngForm" (ngSubmit)="createForm.valid && isValidVat(draft.vatNumber) && saveProfile()" novalidate>
+			<fieldset class="stack" [disabled]="saving()">
+				<div class="form-grid">
+					<label>
+						<span class="field-label">{{ 'First name' | translate }} <span class="required-marker" aria-hidden="true">*</span></span>
+						<input name="firstName" [(ngModel)]="draft.firstName" #createFirstName="ngModel" required minlength="2" maxlength="75"
+							[class.field-invalid]="createFirstName.invalid && (createFirstName.touched || createForm.submitted)"
+							[attr.aria-invalid]="createFirstName.invalid && (createFirstName.touched || createForm.submitted)" [attr.aria-describedby]="createFirstName.invalid && (createFirstName.touched || createForm.submitted) ? 'create-first-name-error' : null" />
+						@if (createFirstName.hasError('required') && (createFirstName.touched || createForm.submitted)) { <span class="field-error" id="create-first-name-error" role="alert">{{ 'This field is required.' | translate }}</span> }
+						@else if (createFirstName.hasError('minlength') && (createFirstName.touched || createForm.submitted)) { <span class="field-error" id="create-first-name-error" role="alert">{{ 'Enter at least 2 characters.' | translate }}</span> }
+					</label>
+					<label>
+						<span class="field-label">{{ 'Last name' | translate }} <span class="required-marker" aria-hidden="true">*</span></span>
+						<input name="lastName" [(ngModel)]="draft.lastName" #createLastName="ngModel" required minlength="2" maxlength="75"
+							[class.field-invalid]="createLastName.invalid && (createLastName.touched || createForm.submitted)"
+							[attr.aria-invalid]="createLastName.invalid && (createLastName.touched || createForm.submitted)" [attr.aria-describedby]="createLastName.invalid && (createLastName.touched || createForm.submitted) ? 'create-last-name-error' : null" />
+						@if (createLastName.hasError('required') && (createLastName.touched || createForm.submitted)) { <span class="field-error" id="create-last-name-error" role="alert">{{ 'This field is required.' | translate }}</span> }
+						@else if (createLastName.hasError('minlength') && (createLastName.touched || createForm.submitted)) { <span class="field-error" id="create-last-name-error" role="alert">{{ 'Enter at least 2 characters.' | translate }}</span> }
+					</label>
+				</div>
+				<div class="form-grid">
+					<label>
+						<span class="field-label">{{ 'Email' | translate }} <span class="required-marker" aria-hidden="true">*</span></span>
+						<input type="email" name="email" [(ngModel)]="draft.email" #createEmail="ngModel" required email maxlength="255"
+							[class.field-invalid]="createEmail.invalid && (createEmail.touched || createForm.submitted)"
+							[attr.aria-invalid]="createEmail.invalid && (createEmail.touched || createForm.submitted)" [attr.aria-describedby]="createEmail.invalid && (createEmail.touched || createForm.submitted) ? 'create-email-error' : null" />
+						@if (createEmail.hasError('required') && (createEmail.touched || createForm.submitted)) { <span class="field-error" id="create-email-error" role="alert">{{ 'This field is required.' | translate }}</span> }
+						@else if (createEmail.invalid && (createEmail.touched || createForm.submitted)) { <span class="field-error" id="create-email-error" role="alert">{{ 'Enter a valid email address.' | translate }}</span> }
+					</label>
+					<label>
+						<span class="field-label">{{ 'Phone' | translate }} <span class="required-marker" aria-hidden="true">*</span></span>
+						<input type="tel" name="phone" [(ngModel)]="draft.phone" #createPhone="ngModel" required pattern="\+[1-9][0-9]{7,14}" maxlength="16" autocomplete="tel" placeholder="+351912345678"
+							[class.field-invalid]="createPhone.invalid && (createPhone.touched || createForm.submitted)"
+							[attr.aria-invalid]="createPhone.invalid && (createPhone.touched || createForm.submitted)" [attr.aria-describedby]="createPhone.invalid && (createPhone.touched || createForm.submitted) ? 'create-phone-error' : null" />
+						@if (createPhone.hasError('required') && (createPhone.touched || createForm.submitted)) { <span class="field-error" id="create-phone-error" role="alert">{{ 'This field is required.' | translate }}</span> }
+						@else if (createPhone.invalid && (createPhone.touched || createForm.submitted)) { <span class="field-error" id="create-phone-error" role="alert">{{ 'Enter an international phone number starting with +, e.g. +351912345678.' | translate }}</span> }
+					</label>
+				</div>
+				<label>
+					<span class="field-label">{{ 'VAT number' | translate }} <span class="field-optional">{{ 'Optional' | translate }}</span></span>
+					<input name="vatNumber" [(ngModel)]="draft.vatNumber" #createVat="ngModel" maxlength="20"
+						[class.field-invalid]="showVatError(draft.vatNumber, createVat.touched, createForm.submitted)"
+						[attr.aria-invalid]="showVatError(draft.vatNumber, createVat.touched, createForm.submitted)" [attr.aria-describedby]="showVatError(draft.vatNumber, createVat.touched, createForm.submitted) ? 'create-vat-error' : null" />
+					@if (showVatError(draft.vatNumber, createVat.touched, createForm.submitted)) { <span class="field-error" id="create-vat-error" role="alert">{{ 'Enter a valid Portuguese NIF or international VAT number.' | translate }}</span> }
+				</label>
+				<label>{{ 'Link to existing user (optional)' | translate }}<input name="username" [(ngModel)]="draft.username" /></label>
+				<label class="check-label"><input type="checkbox" name="marketingConsent" [(ngModel)]="draft.marketingConsent" />{{ 'Marketing consent' | translate }}</label>
+				@if (formError()) { <p class="notice error" role="alert">{{ formError() | translate }}</p> }
+			</fieldset>
+		</form>
+		<div modal-actions class="row-actions">
+			<button class="button" [disabled]="saving()" (click)="editing.set(false); creating.set(false)">{{ 'Cancel' | translate }}</button>
+			<button class="button primary" type="submit" form="customer-form" [disabled]="saving()">{{ 'Save customer' | translate }}</button>
+		</div>
+	</app-modal>
+}
+
+@if (selected(); as customer) {
+	<app-modal [title]="'Customer details' | translate" [description]="customer.firstName + ' ' + customer.lastName"
+		[busy]="saving() || detailsLoading()" (closed)="selected.set(null); editing.set(false)">
+		@if (detailsLoading()) { <p role="status">{{ 'Loading customer details' | translate }}</p> }
+		@if (formError()) { <p class="notice error" role="alert">{{ formError() | translate }}</p> }
+		@if (editing()) {
+			<form id="customer-edit-form" #editForm="ngForm" (ngSubmit)="editForm.valid && isValidVat(draft.vatNumber) && saveProfile()" novalidate>
+				<fieldset class="stack" [disabled]="saving()">
+					<div class="form-grid">
+						<label>
+							<span class="field-label">{{ 'First name' | translate }} <span class="required-marker" aria-hidden="true">*</span></span>
+							<input name="firstName" [(ngModel)]="draft.firstName" #editFirstName="ngModel" required minlength="2" maxlength="75"
+								[class.field-invalid]="editFirstName.invalid && (editFirstName.touched || editForm.submitted)"
+								[attr.aria-invalid]="editFirstName.invalid && (editFirstName.touched || editForm.submitted)" [attr.aria-describedby]="editFirstName.invalid && (editFirstName.touched || editForm.submitted) ? 'edit-first-name-error' : null" />
+							@if (editFirstName.hasError('required') && (editFirstName.touched || editForm.submitted)) { <span class="field-error" id="edit-first-name-error" role="alert">{{ 'This field is required.' | translate }}</span> }
+							@else if (editFirstName.hasError('minlength') && (editFirstName.touched || editForm.submitted)) { <span class="field-error" id="edit-first-name-error" role="alert">{{ 'Enter at least 2 characters.' | translate }}</span> }
+						</label>
+						<label>
+							<span class="field-label">{{ 'Last name' | translate }} <span class="required-marker" aria-hidden="true">*</span></span>
+							<input name="lastName" [(ngModel)]="draft.lastName" #editLastName="ngModel" required minlength="2" maxlength="75"
+								[class.field-invalid]="editLastName.invalid && (editLastName.touched || editForm.submitted)"
+								[attr.aria-invalid]="editLastName.invalid && (editLastName.touched || editForm.submitted)" [attr.aria-describedby]="editLastName.invalid && (editLastName.touched || editForm.submitted) ? 'edit-last-name-error' : null" />
+							@if (editLastName.hasError('required') && (editLastName.touched || editForm.submitted)) { <span class="field-error" id="edit-last-name-error" role="alert">{{ 'This field is required.' | translate }}</span> }
+							@else if (editLastName.hasError('minlength') && (editLastName.touched || editForm.submitted)) { <span class="field-error" id="edit-last-name-error" role="alert">{{ 'Enter at least 2 characters.' | translate }}</span> }
+						</label>
+					</div>
+					<div class="form-grid">
+						<label>
+							<span class="field-label">{{ 'Email' | translate }} <span class="required-marker" aria-hidden="true">*</span></span>
+							<input type="email" name="email" [(ngModel)]="draft.email" #editEmail="ngModel" required email maxlength="255"
+								[class.field-invalid]="editEmail.invalid && (editEmail.touched || editForm.submitted)"
+								[attr.aria-invalid]="editEmail.invalid && (editEmail.touched || editForm.submitted)" [attr.aria-describedby]="editEmail.invalid && (editEmail.touched || editForm.submitted) ? 'edit-email-error' : null" />
+							@if (editEmail.hasError('required') && (editEmail.touched || editForm.submitted)) { <span class="field-error" id="edit-email-error" role="alert">{{ 'This field is required.' | translate }}</span> }
+							@else if (editEmail.invalid && (editEmail.touched || editForm.submitted)) { <span class="field-error" id="edit-email-error" role="alert">{{ 'Enter a valid email address.' | translate }}</span> }
+						</label>
+						<label>
+							<span class="field-label">{{ 'Phone' | translate }} <span class="required-marker" aria-hidden="true">*</span></span>
+							<input type="tel" name="phone" [(ngModel)]="draft.phone" #editPhone="ngModel" required pattern="\+[1-9][0-9]{7,14}" maxlength="16" autocomplete="tel" placeholder="+351912345678"
+								[class.field-invalid]="editPhone.invalid && (editPhone.touched || editForm.submitted)"
+								[attr.aria-invalid]="editPhone.invalid && (editPhone.touched || editForm.submitted)" [attr.aria-describedby]="editPhone.invalid && (editPhone.touched || editForm.submitted) ? 'edit-phone-error' : null" />
+							@if (editPhone.hasError('required') && (editPhone.touched || editForm.submitted)) { <span class="field-error" id="edit-phone-error" role="alert">{{ 'This field is required.' | translate }}</span> }
+							@else if (editPhone.invalid && (editPhone.touched || editForm.submitted)) { <span class="field-error" id="edit-phone-error" role="alert">{{ 'Enter an international phone number starting with +, e.g. +351912345678.' | translate }}</span> }
+						</label>
+					</div>
+					<label>
+						<span class="field-label">{{ 'VAT number' | translate }} <span class="field-optional">{{ 'Optional' | translate }}</span></span>
+						<input name="vatNumber" [(ngModel)]="draft.vatNumber" #editVat="ngModel" maxlength="20"
+							[class.field-invalid]="showVatError(draft.vatNumber, editVat.touched, editForm.submitted)"
+							[attr.aria-invalid]="showVatError(draft.vatNumber, editVat.touched, editForm.submitted)" [attr.aria-describedby]="showVatError(draft.vatNumber, editVat.touched, editForm.submitted) ? 'edit-vat-error' : null" />
+						@if (showVatError(draft.vatNumber, editVat.touched, editForm.submitted)) { <span class="field-error" id="edit-vat-error" role="alert">{{ 'Enter a valid Portuguese NIF or international VAT number.' | translate }}</span> }
+					</label>
+					<label class="check-label"><input type="checkbox" name="marketingConsent" [(ngModel)]="draft.marketingConsent" />{{ 'Marketing consent' | translate }}</label>
+				</fieldset>
+			</form>
+		} @else {
+			<dl class="detail-list profile-summary">
+				<dt>{{ 'Email' | translate }}</dt><dd>{{ customer.email }}</dd>
+				<dt>{{ 'Phone' | translate }}</dt><dd>{{ customer.phone }}</dd>
+				<dt>{{ 'VAT number' | translate }}</dt><dd>{{ customer.vatNumber || ('Not provided' | translate) }}</dd>
+				<dt>{{ 'Profile created' | translate }}</dt><dd>{{ customer.createdAt | date:'mediumDate' }}</dd>
+			</dl>
+			<section class="stack detail-section">
+				<h3>{{ 'User account link' | translate }}</h3>
+				<p>{{ customer.username || ('No account linked' | translate) }}</p>
+				<div class="row-actions">
+					<label>{{ 'Username (leave blank to unlink)' | translate }}<input name="usernameLink" [(ngModel)]="draft.username" /></label>
+					<button class="button small" (click)="saveUserLink()" [disabled]="saving()">{{ 'Save link' | translate }}</button>
+				</div>
+			</section>
+
+			<section class="stack detail-section">
+				<h3>{{ 'Delivery addresses' | translate }}</h3>
+				@if (!customer.addresses.length) { <p>{{ 'No addresses recorded' | translate }}</p> }
+				@for (address of customer.addresses; track address.id) {
+					<div class="notice address-card">
+						<strong>{{ address.street }}, {{ address.postalCode }} {{ address.city }}</strong>
+						@if (address.isDefault) { <span> · {{ 'Default' | translate }}</span> }
+						@if (address.extraDetails) { <p>{{ address.extraDetails }}</p> }
+						<div class="row-actions">
+							<button class="button small" (click)="startAddress(address)">{{ 'Edit' | translate }}</button>
+							@if (!address.isDefault) { <button class="button small" (click)="setDefaultAddress(address.id)">{{ 'Make default' | translate }}</button> }
+							<button class="button small danger" (click)="deleteAddress(address.id)">{{ 'Remove' | translate }}</button>
+						</div>
+					</div>
+				}
+				<form #addressForm="ngForm" (ngSubmit)="addressForm.valid && saveAddress()">
+					<h4>{{ addressId() ? ('Edit address' | translate) : ('Add address' | translate) }}</h4>
+					<div class="form-grid">
+						<label>{{ 'Street' | translate }}<input name="street" [ngModel]="addressDraft().street" (ngModelChange)="addressDraft.set({...addressDraft(), street: $event})" required /></label>
+						<label>{{ 'Postal code' | translate }}<input name="postalCode" [ngModel]="addressDraft().postalCode" (ngModelChange)="addressDraft.set({...addressDraft(), postalCode: $event})" required /></label>
+					</div>
+					<label>{{ 'City' | translate }}<input name="city" [ngModel]="addressDraft().city" (ngModelChange)="addressDraft.set({...addressDraft(), city: $event})" required /></label>
+					<label>{{ 'Extra details' | translate }}<input name="extraDetails" [ngModel]="addressDraft().extraDetails" (ngModelChange)="addressDraft.set({...addressDraft(), extraDetails: $event})" /></label>
+					<label class="check-label"><input type="checkbox" name="isDefault" [ngModel]="addressDraft().isDefault" (ngModelChange)="addressDraft.set({...addressDraft(), isDefault: $event})" />{{ 'Default address' | translate }}</label>
+					<div class="row-actions"><button class="button primary" type="submit" [disabled]="saving() || addressForm.invalid">{{ 'Save address' | translate }}</button>
+						@if (addressId()) { <button class="button" type="button" (click)="startAddress()">{{ 'Cancel edit' | translate }}</button> }</div>
+				</form>
+			</section>
+
+			<section class="stack detail-section">
+				<h3>{{ 'Dietary restrictions' | translate }}</h3>
+				<p>{{ 'Dietary details are shown only on this customer profile.' | translate }}</p>
+				<div class="form-grid allergen-options">
+					@for (allergen of allergens(); track allergen.name) {
+						<label class="check-label"><input type="checkbox" [checked]="selectedAllergens().includes(allergen.name)" (change)="toggleAllergen(allergen.name, $event)" />{{ allergen.name }}</label>
+					}
+				</div>
+				@for (allergenName of selectedAllergens(); track allergenName) {
+					<label>{{ allergenLabel(allergenName) }} · {{ 'Additional details' | translate }}
+						<textarea [name]="'restriction-' + allergenName" [ngModel]="restrictionDescriptions()[allergenName] || ''"
+							(ngModelChange)="setRestrictionDescription(allergenName, $event)" maxlength="500" rows="2"></textarea>
+					</label>
+				}
+				@if (dietarySaved()) { <p class="notice success" role="status">{{ 'Dietary restrictions saved.' | translate }}</p> }
+				<button class="button" (click)="saveDietaryRestrictions()" [disabled]="saving()">{{ 'Save dietary restrictions' | translate }}</button>
+			</section>
+		}
+		<div modal-actions class="row-actions">
+			@if (editing()) {
+				<button class="button" (click)="editing.set(false)">{{ 'Cancel' | translate }}</button>
+				<button class="button primary" type="submit" form="customer-edit-form" [disabled]="saving()">{{ 'Save changes' | translate }}</button>
+			} @else {
+				<button class="button" (click)="editing.set(true)">{{ 'Edit profile' | translate }}</button>
+				<button class="button danger" (click)="askRemove()">{{ 'Delete customer' | translate }}</button>
+				<button class="button" (click)="selected.set(null)">{{ 'Close' | translate }}</button>
+			}
+		</div>
+	</app-modal>
+}
+
+@if (removeTarget(); as target) {
+	<app-modal [title]="'Delete customer?' | translate" [description]="target.firstName + ' ' + target.lastName" [busy]="saving()" (closed)="removeTarget.set(null)">
+		<p>{{ 'This removes the commercial profile and its addresses and dietary details. Historical orders prevent deletion.' | translate }}</p>
+		@if (formError()) { <p class="notice error" role="alert">{{ formError() | translate }}</p> }
+		<div modal-actions class="row-actions">
+			<button class="button" (click)="removeTarget.set(null)">{{ 'Cancel' | translate }}</button>
+			<button class="button danger" (click)="confirmRemove()" [disabled]="saving()">{{ 'Delete customer' | translate }}</button>
+		</div>
+	</app-modal>
+}

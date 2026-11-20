@@ -1,0 +1,23 @@
+info:
+  name: 02 - Get Pizza Size by Seed Name (Public)
+  type: http
+  seq: 4
+http:
+  method: GET
+  url: '{{baseUrl}}/pizza-sizes/{{seededSizeName}}'
+  body: none
+runtime:
+  scripts:
+    - type: before-request
+      code: |-
+        if (!bru.getVar("seededSizeName") && !bru.getEnvVar("seededSizeName")) {
+        	throw new Error("seededSizeName is required; run request 01 first.");
+        }
+    - type: tests
+      code: |-
+        test("Returns seeded pizza size details with 200 OK", function() {
+        	expect(res.getStatus()).to.equal(200);
+        	const data = res.getBody();
+        	expect(data).to.have.property("name");
+        	expect(data).to.have.property("active");
+        });

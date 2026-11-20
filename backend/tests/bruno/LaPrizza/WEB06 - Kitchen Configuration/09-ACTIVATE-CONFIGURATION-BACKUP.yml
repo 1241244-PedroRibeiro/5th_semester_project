@@ -1,0 +1,18 @@
+info:
+  name: 09-ACTIVATE-CONFIGURATION-BACKUP
+  type: http
+  seq: 10
+
+http:
+  method: POST
+  url: "{{baseUrl}}/kitchen-configurations/{{OriginalActiveKitchenConfigId}}/activate"
+  auth:
+    type: bearer
+    token: "{{managerToken}}"
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: false

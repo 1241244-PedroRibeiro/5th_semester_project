@@ -1,0 +1,34 @@
+info:
+  name: 06 - Business - Non-Pizza Product (422)
+  type: http
+  seq: 7
+http:
+  method: POST
+  url: "{{baseUrl}}/planning/bom-executions"
+  body:
+    type: json
+    data: |-
+      {
+        "orders": [ { "productSku": "BEV-COLA", "pizzaSize": "Medium", "quantity": 1 } ],
+        "isSimulated": true,
+        "source": "simulated"
+      }
+  auth:
+    type: bearer
+    token: "{{managerToken}}"
+runtime:
+  scripts:
+    - type: tests
+      code: |-
+        test("Status is 422 Unprocessable", function() {
+          expect(res.getStatus()).to.equal(422);
+        });
+        test("Error states it is not a pizza", function() {
+          expect(res.getBody().error.message).to.include("not a pizza");
+        });
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: false

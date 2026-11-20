@@ -1,0 +1,55 @@
+info:
+  name: 05 - Create Sellable Product (Manager Success)
+  type: http
+  seq: 7
+http:
+  method: POST
+  url: '{{baseUrl}}/products'
+  body:
+    type: json
+    data: |-
+      {
+      	"name": "{{sellableProductName}}",
+      	"description": "Can of artisanal lemonade",
+      	"categoryName": "Beverages",
+      	"isSellable": true,
+      	"isPizzaComponent": false,
+      	"isStockControlled": true,
+      	"directSellingPrice": 2.5,
+      	"sku": "{{sellableProductSku}}"
+      }
+  auth:
+    type: bearer
+    token: '{{managerToken}}'
+runtime:
+  scripts:
+    - type: before-request
+      code: |-
+        if (!bru.getVar("managerToken") && !bru.getEnvVar("managerToken")) {
+        	throw new Error("managerToken is required; run request 00 first.");
+        }
+        const suffix = Date.now().toString().slice(-4);
+        bru.setVar("sellableProductSku", "PRD-LEM-" + suffix);
+        bru.setVar("sellableProductName", "Lemonade " + suffix);
+    - type: after-response
+      code: |-
+        if (res.status === 201) {
+        	bru.setVar("productSku", res.body.sku);
+        }
+    - type: tests
+      code: |-
+        test("Manager creates sellable product with 201 Created", function() {
+        	expect(res.getStatus()).to.equal(201);
+        	const data = res.getBody();
+        	expect(data.sku).to.equal(bru.getVar("sellableProductSku"));
+        	expect(data.isSellable).to.be.true;
+        	expect(data.isPizzaComponent).to.be.false;
+        	expect(data.directSellingPrice).to.equal(2.50);
+        	expect(data.active).to.be.true;
+        });
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: true

@@ -1,0 +1,41 @@
+{
+	"name": "laprizza-frontend",
+	"version": "0.0.0",
+	"scripts": {
+		"ng": "ng",
+		"start": "ng serve",
+		"dev": "ng serve --host localhost --ssl --ssl-cert ../certs/site.crt --ssl-key ../certs/site.key --proxy-config proxy.conf.json",
+		"build": "ng build",
+		"watch": "ng build --watch --configuration development",
+		"test": "playwright test",
+		"test:e2e": "playwright test",
+		"test:e2e:install": "playwright install chromium"
+	},
+	"private": true,
+	"packageManager": "npm@11.19.1",
+	"dependencies": {
+		"@angular/common": "^22.2.0",
+		"@angular/compiler": "^22.2.0",
+		"@angular/core": "^22.2.0",
+		"@angular/forms": "^22.2.0",
+		"@angular/platform-browser": "^22.2.0",
+		"@angular/router": "^22.2.0",
+		"@ngx-translate/core": "^18.1.0",
+		"@ngx-translate/http-loader": "^18.1.0",
+		"ajv": "^8.20.0",
+		"ajv-formats": "^3.0.1",
+		"lil-gui": "^0.21.0",
+		"rxjs": "~7.8.0",
+		"three": "^0.187.0",
+		"tslib": "^2.3.0"
+	},
+	"devDependencies": {
+		"@angular/build": "^22.2.5",
+		"@angular/cli": "^22.2.5",
+		"@angular/compiler-cli": "^22.2.0",
+		"@playwright/test": "^1.64.1",
+		"@types/three": "^0.187.0",
+		"prettier": "^3.8.1",
+		"typescript": "~6.0.2"
+	}
+}

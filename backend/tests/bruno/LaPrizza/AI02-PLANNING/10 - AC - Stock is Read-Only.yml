@@ -1,0 +1,25 @@
+info:
+  name: 10 - AC - Stock is Read-Only
+  type: http
+  seq: 11
+http:
+  method: GET
+  url: "{{baseUrl}}/stock"
+  auth:
+    type: bearer
+    token: "{{managerToken}}"
+runtime:
+  scripts:
+    - type: tests
+      code: |-
+        test("Status is 200", function() { expect(res.getStatus()).to.equal(200); });
+        test("Stock balance is still 10 (from seed)", function() {
+          const stock = res.getBody().find(s => s.productSku === "PRD-MOZZ");
+          expect(stock.currentUnits).to.equal(10); // O planeamento não altera este valor
+        });
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: false

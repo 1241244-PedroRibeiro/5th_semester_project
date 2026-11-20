@@ -1,0 +1,12 @@
+[Unit]
+Description=Track SSH authentication failures for SYS05
+After=ssh.service
+Requires=ssh.service
+
+[Service]
+Type=simple
+ExecStart=/usr/local/sbin/laprizza-ssh-failure-monitor
+Restart=always
+RestartSec=2
+User=root
+Group=root

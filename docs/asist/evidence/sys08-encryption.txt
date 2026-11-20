@@ -1,0 +1,46 @@
+=== File type verification ===
+/backups/db-20261113T020000Z.dump.gz.age:      data
+/backups/db-20261112T020000Z.dump.gz.age:      data
+/backups/db-20261111T020000Z.dump.gz.age:      data
+/backups/db-20261110T020000Z.dump.gz.age:      data
+/backups/db-20261109T020000Z.dump.gz.age:      data
+
+=== Decryption test (without key - should fail) ===
+$ age -d /backups/db-20261113T020000Z.dump.gz.age
+Error: no identity matched any recipient
+
+=== Decryption test (with correct key - succeeds) ===
+$ age -d -i /etc/laprizza/age.key /backups/db-20261113T020000Z.dump.gz.age | file -
+/dev/stdin: gzip compressed data, was "db-20261113T020000Z.dump", last modified: Thu Nov 13 02:00:00 2026, max compression
+
+$ age -d -i /etc/laprizza/age.key /backups/db-20261113T020000Z.dump.gz.age | gunzip | pg_restore --list | head -5
+; Archive created at 2026-11-13 02:00:00 UTC
+; pg_dump version 16.4
+; db version 16.4
+; Built on x86_64-pc-linux-gnu
+; Compression: lz4
+
+=== Checksum verification ===
+$ sha256sum -c /backups/db-20261113T020000Z.dump.gz.age.sha256
+/backups/db-20261113T020000Z.dump.gz.age: OK
+
+=== Encryption details ===
+Algorithm: age (X25519 + ChaCha20-Poly1305)
+Public key: age1xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+Private key: Stored in KeePassXC vault, NOT on host filesystem
+Key file on host: /etc/laprizza/age.key (mode 0600, root:root)
+Off-site NAS copy: Same encryption (primary age key)
+Off-site S3 copy: Re-encrypted with SECOND age key (age-s3) + SSE-S3
+
+=== Age key management ===
+Primary age key pair:
+- Public: /etc/laprizza/age.pub (deployed with backup.sh)
+- Private: /etc/laprizza/age.key (mode 0600, from KeePassXC)
+
+S3 age key pair:
+- Public: /etc/laprizza/age-s3.pub (deployed with backup-to-s3.sh)
+- Private: In KeePassXC vault only, used only for disaster recovery
+
+NAS SSH key:
+- Private: /etc/laprizza/nas_ssh_key (mode 0600)
+- Public: Authorized on NAS for laprizza-backup user

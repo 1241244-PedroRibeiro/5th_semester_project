@@ -1,0 +1,47 @@
+info:
+  name: 07 - Create Dual Role Product (Manager Success)
+  type: http
+  seq: 10
+http:
+  method: POST
+  url: '{{baseUrl}}/products'
+  body:
+    type: json
+    data: |-
+      {
+      	"name": "{{dualProductName}}",
+      	"description": "Artisanal buffalo mozzarella",
+      	"categoryName": "Ingredients",
+      	"isSellable": true,
+      	"isPizzaComponent": true,
+      	"isStockControlled": true,
+      	"componentTypeName": "Cheese",
+      	"directSellingPrice": 3,
+      	"sku": "{{dualProductSku}}"
+      }
+  auth:
+    type: bearer
+    token: '{{managerToken}}'
+runtime:
+  scripts:
+    - type: before-request
+      code: |-
+        const suffix = Date.now().toString().slice(-4);
+        bru.setVar("dualProductSku", "PRD-BUF-" + suffix);
+        bru.setVar("dualProductName", "Buffalo Mozzarella " + suffix);
+    - type: tests
+      code: |-
+        test("Manager creates dual-role product with 201 Created", function() {
+        	expect(res.getStatus()).to.equal(201);
+        	const data = res.getBody();
+        	expect(data.isSellable).to.be.true;
+        	expect(data.isPizzaComponent).to.be.true;
+        	expect(data.componentTypeName).to.equal("Cheese");
+        	expect(data.directSellingPrice).to.equal(3.00);
+        });
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: true

@@ -1,0 +1,57 @@
+info:
+  name: 01 - Register User
+  type: http
+  seq: 2
+http:
+  method: POST
+  url: '{{baseUrl}}/auth/register'
+  body:
+    type: json
+    data: |-
+      {
+      	"firstName": "Bruno",
+      	"lastName": "Customer",
+      	"email": "{{authTestEmail}}",
+      	"password": "{{authTestPassword}}"
+      }
+runtime:
+  scripts:
+    - type: before-request
+      code: |-
+        const suffix = Date.now() + "-" + Math.random().toString(36).slice(2);
+        bru.setVar("authTestEmail", "bruno-" + suffix + "@example.com");
+        bru.setVar("authTestPassword", "BrunoPassword123!");
+    - type: tests
+      code: |-
+        test("Status code is 201", function() {
+        	expect(res.getStatus()).to.equal(201);
+        });
+
+        test("Returns an active customer and JWT without exposing the password", function() {
+        	const data = res.getBody();
+        	expect(data.token).to.be.a("string").and.not.empty;
+        	expect(data.token.split(".")).to.have.lengthOf(3);
+        	expect(data.user.username).to.be.a("string").and.not.empty;
+        	expect(data.user.firstName).to.equal("Bruno");
+        	expect(data.user.lastName).to.equal("Customer");
+        	expect(data.user.email).to.equal(bru.getVar("authTestEmail"));
+        	expect(data.user.roles).to.deep.equal(["CUSTOMER"]);
+        	expect(data.user.status).to.equal("ACTIVE");
+        	expect(Number.isFinite(Date.parse(data.user.createdAt))).to.equal(true);
+        	expect(Number.isFinite(Date.parse(data.user.updatedAt))).to.equal(true);
+        	expect(data.user).not.to.have.property("password");
+        	expect(data.user).not.to.have.property("passwordHash");
+        	bru.setVar("authTestUsername", data.user.username);
+        	bru.setVar("customerToken", data.token);
+        });
+
+        test("Generates the username from the email", function() {
+        	const [local, domain] = bru.getVar("authTestEmail").split("@");
+        	expect(res.getBody().user.username).to.equal(local + "_" + domain[0]);
+        });
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: true

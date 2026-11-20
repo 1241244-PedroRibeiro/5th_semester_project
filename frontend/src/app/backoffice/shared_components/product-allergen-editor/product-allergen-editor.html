@@ -1,0 +1,51 @@
+<fieldset [disabled]="busy()">
+	<legend>{{ 'Product allergens' | translate }}</legend>
+	<p class="muted">
+		{{
+			'Add allergens from the database. Existing associations cannot be removed through the current API.'
+				| translate
+		}}
+	</p>
+	@if (product().associatedAllergens.length) {
+		<div class="saved" [attr.aria-label]="'Associated allergens' | translate">
+			@for (name of product().associatedAllergens; track name) {
+				<span>{{ name }}</span>
+			}
+		</div>
+	}
+	@if (loading()) {
+		<p role="status">{{ 'Loading allergens…' | translate }}</p>
+	} @else if (lookupError()) {
+		<p class="notice error" role="alert">{{ lookupError() | translate }}</p>
+		<button type="button" class="button" (click)="load()">
+			{{ 'Retry allergens' | translate }}
+		</button>
+	} @else {
+		<div class="options">
+			@for (option of options(); track option.name) {
+				<label class="check-label">
+					<input
+						type="checkbox"
+						[checked]="associated(option.name) || pending().includes(option.name)"
+						[disabled]="associated(option.name)"
+						(change)="select(option.name, $any($event.target).checked)"
+					/>
+					{{ option.name }}{{ associated(option.name) ? (' (saved)' | translate) : '' }}
+				</label>
+			} @empty {
+				<p>{{ 'No allergens are configured yet.' | translate }}</p>
+			}
+		</div>
+		<button type="button" class="button" [disabled]="!pending().length || busy()" (click)="save()">
+			{{ busy() ? ('Adding allergens…' | translate) : ('Add selected allergens' | translate) }}
+		</button>
+	}
+	@if (error()) {
+		<p class="notice error" role="alert">
+			{{ error() | translate: { count: confirmedCount(), reason: (errorDetail() | translate) } }}
+		</p>
+	}
+	@if (notice()) {
+		<p class="notice success" role="status">{{ notice() | translate }}</p>
+	}
+</fieldset>

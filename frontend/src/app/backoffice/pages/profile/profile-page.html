@@ -1,0 +1,172 @@
+<app-page-header
+	[title]="'My profile' | translate"
+	[description]="'Your account and contact information.' | translate"
+/>
+<div class="profile-grid">
+	<app-panel [title]="'Account details' | translate">
+		<div class="panel-body">
+			<div class="identity">
+				<span class="profile-avatar" aria-hidden="true"
+					>{{ auth.user()?.firstName?.[0] }}{{ auth.user()?.lastName?.[0] }}</span
+				>
+				<div>
+					<h3>{{ auth.user()?.firstName }} {{ auth.user()?.lastName }}</h3>
+					<p class="muted">
+						@for (role of auth.user()?.roles; track role) {
+							<span>{{ role }}</span>
+						}
+					</p>
+				</div>
+			</div>
+			<dl>
+				<div>
+					<dt>{{ 'Name' | translate }}</dt>
+					<dd class="account-value">
+						<span>{{ auth.user()?.firstName }} {{ auth.user()?.lastName }}</span>
+						<button
+							class="button small"
+							[disabled]="phoneBusy() || addressBusy()"
+							(click)="openAccount('name')"
+						>
+							{{ 'Change name' | translate }}
+						</button>
+					</dd>
+				</div>
+				<div>
+					<dt>{{ 'Username' | translate }}</dt>
+					<dd>{{ auth.user()?.username }}</dd>
+				</div>
+				<div>
+					<dt>{{ 'Email' | translate }}</dt>
+					<dd class="account-value">
+						<span>{{ auth.user()?.email }}</span>
+						<button
+							class="button small"
+							[disabled]="phoneBusy() || addressBusy()"
+							(click)="openAccount('email')"
+						>
+							{{ 'Change email' | translate }}
+						</button>
+					</dd>
+				</div>
+				<div>
+					<dt>{{ 'Password' | translate }}</dt>
+					<dd class="account-value">
+						<button
+							class="button small"
+							[disabled]="phoneBusy() || addressBusy()"
+							(click)="openAccount('password')"
+						>
+							{{ 'Change password' | translate }}
+						</button>
+					</dd>
+				</div>
+				<div>
+					<dt>{{ 'Account status' | translate }}</dt>
+					<dd>{{ auth.user()?.status }}</dd>
+				</div>
+			</dl>
+			@if (accountNotice()) {
+				<p class="notice success" role="status">{{ accountNotice() | translate }}</p>
+			}
+		</div>
+	</app-panel>
+	<app-panel [title]="'Phone number' | translate">
+		<form #phoneForm="ngForm" class="panel-body stack" (ngSubmit)="phoneForm.valid && savePhone()">
+			<fieldset class="stack" [disabled]="phoneBusy() || addressBusy()">
+				<label
+					>{{ 'Phone number' | translate
+					}}<input
+						type="tel"
+						name="phone"
+						[(ngModel)]="phone"
+						required
+						pattern="\+[1-9][0-9]{1,14}"
+						autocomplete="tel"
+						placeholder="+351912345678"
+				/></label>
+				<small>{{ 'Enter your number with its country code.' | translate }}</small>
+				@if (phoneError()) {
+					<p class="notice error" role="alert">{{ phoneError() | translate }}</p>
+				}
+				@if (phoneNotice()) {
+					<p class="notice success" role="status">{{ phoneNotice() | translate }}</p>
+				}
+				<button class="button primary" type="submit" [disabled]="phoneForm.invalid || phoneBusy()">
+					{{ phoneBusy() ? ('Saving…' | translate) : ('Save phone number' | translate) }}
+				</button>
+			</fieldset>
+		</form>
+	</app-panel>
+	<app-panel [title]="'Address' | translate" class="address-panel">
+		<form
+			#addressForm="ngForm"
+			class="panel-body stack"
+			(ngSubmit)="addressForm.valid && saveAddress()"
+		>
+			<fieldset class="stack" [disabled]="phoneBusy() || addressBusy()">
+				<div class="form-grid">
+					<label class="full"
+						>{{ 'Street address' | translate
+						}}<input
+							name="street"
+							[(ngModel)]="address.street"
+							required
+							maxlength="255"
+							autocomplete="address-line1"
+					/></label>
+					<label
+						>{{ 'City' | translate
+						}}<input
+							name="city"
+							[(ngModel)]="address.city"
+							required
+							maxlength="100"
+							autocomplete="address-level2"
+					/></label>
+					<label
+						>{{ 'Postal code' | translate
+						}}<input
+							name="postalCode"
+							[(ngModel)]="address.postalCode"
+							required
+							maxlength="20"
+							autocomplete="postal-code"
+					/></label>
+					<label class="full"
+						>{{ 'Additional details' | translate
+						}}<textarea
+							name="extraDetails"
+							[(ngModel)]="address.extraDetails"
+							maxlength="500"
+							rows="2"
+						></textarea>
+					</label>
+				</div>
+				@if (addressError()) {
+					<p class="notice error" role="alert">{{ addressError() | translate }}</p>
+				}
+				@if (addressNotice()) {
+					<p class="notice success" role="status">{{ addressNotice() | translate }}</p>
+				}
+				<button
+					class="button primary"
+					type="submit"
+					[disabled]="addressForm.invalid || addressBusy()"
+				>
+					{{ addressBusy() ? ('Saving…' | translate) : ('Save address' | translate) }}
+				</button>
+			</fieldset>
+		</form>
+	</app-panel>
+</div>
+@if (editing(); as mode) {
+	@if (auth.user(); as user) {
+		<app-account-details-editor
+			[mode]="mode"
+			[user]="user"
+			(closed)="editing.set(null)"
+			(saved)="accountSaved($event)"
+		/>
+	}
+}

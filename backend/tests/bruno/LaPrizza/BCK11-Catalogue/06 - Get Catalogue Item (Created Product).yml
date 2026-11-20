@@ -1,0 +1,32 @@
+info:
+  name: 06 - Get Catalogue Item (Created Product)
+  type: http
+  seq: 7
+http:
+  method: GET
+  url: '{{baseUrl}}/catalogue/{{bck11ProductSku}}'
+  auth: inherit
+runtime:
+  scripts:
+    - type: tests
+      code: |-
+        test("returns HTTP 200", function () {
+        	expect(res.status).to.equal(200);
+        });
+
+        test("returns the expected catalogue fields", function () {
+        	expect(res.body).to.be.an("object");
+        	expect(res.body).to.have.property("productSku");
+        	expect(res.body).to.have.property("name");
+        	expect(res.body).to.have.property("description");
+        	expect(res.body).to.have.property("categoryName");
+        	expect(res.body).to.have.property("allergens");
+        	expect(res.body).to.have.property("isPredefinedPizza");
+        	expect(res.body).to.have.property("isAvailable");
+        });
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: false

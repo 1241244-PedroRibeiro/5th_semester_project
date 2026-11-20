@@ -1,0 +1,6 @@
+info:
+  name: 02 - GET - List
+  type: folder
+  seq: 3
+request:
+  auth: inherit

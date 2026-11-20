@@ -1,0 +1,9 @@
+# /etc/cron.d/laprizza-ufw-report
+# LaPrizza Information System — Daily Denied Connections Report (SYS02 AC3.3)
+# Discipline: ASIST — Sprint 2
+# Runs every day at 07:00 UTC/local time as root and generates daily denied connection report
+SHELL=/bin/bash
+PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
+REPORT_EMAIL=laprizzag05@gmail.com
+
+0 7 * * * root /opt/laprizza/scripts/ufw-report.sh >> /var/log/laprizza-ufw-report.log 2>&1

@@ -1,0 +1,64 @@
+info:
+  name: 01 - Customer Sets Phone Number
+  type: http
+  seq: 1
+http:
+  method: PUT
+  url: '{{baseUrl}}/user/me/phone-number'
+  body:
+    type: json
+    data: |-
+      {
+        "phoneNumber": "+351912345678"
+      }
+  auth:
+    type: bearer
+    token: '{{bck02PhoneToken}}'
+settings:
+  encodeUrl: true
+runtime:
+  scripts:
+    - type: before-request
+      code: |-
+        const suffix = Date.now().toString(36) + "-" + Math.random().toString(36).slice(2, 8);
+        const registration = await bru.sendRequest({
+          method: "POST",
+          url: bru.getEnvVar("baseUrl") + "/auth/register",
+          headers: { "Content-Type": "application/json" },
+          data: { firstName: "Bruno", lastName: "Contact", email: "bck02phone-" + suffix + "@example.com", password: "BrunoPassword123!" }
+        });
+        if (registration.status !== 201 || !registration.data.token) {
+          throw new Error("Cannot prepare contact tests: customer registration failed");
+        }
+        bru.setVar("bck02PhoneToken", registration.data.token);
+        bru.setVar("bck02PhoneUsername", registration.data.user.username);
+    - type: after-response
+      code: |-
+        if (res.getStatus() === 200) {
+          const verification = await bru.sendRequest({
+            method: "PUT",
+            url: bru.getEnvVar("baseUrl") + "/user/me/address",
+            headers: { Authorization: "Bearer " + bru.getVar("bck02PhoneToken"), "Content-Type": "application/json" },
+            data: {"street": "Rua do Telefone 1", "postalCode": "1000-002", "city": "Lisbon", "extraDetails": "Door 3"}
+          });
+          if (verification.status !== 200) {
+            throw new Error("Cannot verify the saved phone number through a subsequent profile update");
+          }
+          bru.setVar("bck02PhoneSavedProfile", verification.data);
+        }
+    - type: tests
+      code: |-
+        test("Customer Sets Phone Number", function() {
+          expect(res.getStatus()).to.equal(200);
+          const data = res.getBody();
+          expect(data.username).to.equal(bru.getVar("bck02PhoneUsername"));
+          expect(data.roles).to.deep.equal(["CUSTOMER"]);
+          expect(data.status).to.equal("ACTIVE");
+          expect(data).not.to.have.property("passwordHash");
+          expect(data).not.to.have.property("password");
+          expect(data.phoneNumber).to.equal("+351912345678");
+          const saved = bru.getVar("bck02PhoneSavedProfile");
+          expect(saved.username).to.equal(data.username);
+          expect(saved.phoneNumber).to.equal(data.phoneNumber);
+          expect(saved.address).to.deep.equal({"street": "Rua do Telefone 1", "postalCode": "1000-002", "city": "Lisbon", "extraDetails": "Door 3"});
+        });

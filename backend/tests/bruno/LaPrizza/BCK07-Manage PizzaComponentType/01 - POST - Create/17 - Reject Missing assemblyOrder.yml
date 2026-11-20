@@ -1,0 +1,31 @@
+info:
+  name: 17 - Reject Missing assemblyOrder
+  type: http
+  seq: 17
+http:
+  method: POST
+  url: '{{baseUrl}}/pizza-component-types'
+  body:
+    type: json
+    data: |-
+      {
+        "name": "{{bck07ValidationName}}",
+        "minCardinality": 0,
+        "maxCardinality": null
+      }
+  auth:
+    type: bearer
+    token: '{{bck07ManagerToken}}'
+settings:
+  encodeUrl: true
+runtime:
+  scripts:
+    - type: tests
+      code: |-
+        test("Reject Missing assemblyOrder", function() {
+          expect(res.getStatus()).to.equal(400);
+          expect(typeof res.getBody().error.message).to.equal("string");
+          expect(res.getBody().error.message.length > 0).to.equal(true);
+        });
+    - type: before-request
+      code: 'bru.setVar("bck07ValidationName", "Bruno validation " + Date.now() + "-" + Math.random().toString(36).slice(2));'

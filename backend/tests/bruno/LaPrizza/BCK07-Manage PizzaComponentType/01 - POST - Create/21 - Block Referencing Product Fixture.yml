@@ -1,0 +1,20 @@
+info:
+  name: 21 - Block Referencing Product Fixture
+  type: http
+  seq: 21
+http:
+  method: PATCH
+  url: '{{baseUrl}}/products/{{bck07ProductSku}}/block'
+  auth:
+    type: bearer
+    token: '{{bck07ManagerToken}}'
+settings:
+  encodeUrl: true
+runtime:
+  scripts:
+    - type: tests
+      code: |-
+        test("Block Referencing Product", function() {
+          expect(res.getStatus()).to.equal(200);
+          expect(res.getBody().active).to.equal(false);
+        });

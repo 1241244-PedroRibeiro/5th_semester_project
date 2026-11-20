@@ -1,0 +1,122 @@
+.shop-container {
+	padding-bottom: 5rem;
+}
+.account-card {
+	background: var(--teal-soft);
+	padding: clamp(1.3rem, 2.5vw, 2.5rem);
+	min-height: 30rem;
+}
+header {
+	display: flex;
+	align-items: center;
+	gap: 1.2rem;
+	padding-bottom: 1.4rem;
+}
+header > div {
+	flex: 1;
+	min-width: 0;
+}
+.account-avatar {
+	display: grid;
+	place-items: center;
+	width: 7.5rem;
+	height: 7.5rem;
+	flex-shrink: 0;
+	background: var(--surface);
+	border: 1.5px solid var(--ink);
+	border-radius: 50%;
+	font-size: 2rem;
+	font-family: Georgia, 'Times New Roman', serif;
+}
+h1 {
+	font-size: 2.1rem;
+	margin: 0 0 0.6rem;
+}
+header p {
+	font-size: 0.85rem;
+	color: var(--muted);
+	margin: 0;
+}
+.account-row {
+	display: flex;
+	align-items: center;
+	gap: 1rem;
+	border-top: 1px solid var(--border);
+	padding: 1.5rem 0;
+}
+.account-row > app-icon {
+	font-size: 1.5rem;
+	background: var(--surface);
+	padding: 0.4rem;
+	box-sizing: content-box;
+	border: 1px solid var(--ink);
+	border-radius: 50%;
+}
+.account-row > div {
+	flex: 1;
+	min-width: 0;
+}
+h2 {
+	font-family: Arial, Helvetica, sans-serif;
+	font-size: 0.85rem;
+	letter-spacing: 0;
+	margin: 0 0 0.5rem;
+}
+.account-row p {
+	font-size: 0.8rem;
+	color: var(--muted);
+	margin: 0;
+	line-height: 1.7;
+}
+.allergy-row {
+	border-top: 1px solid var(--border);
+	padding: 1.5rem 0;
+}
+.row-heading {
+	display: flex;
+	justify-content: space-between;
+	gap: 1rem;
+	margin-bottom: 1.2rem;
+}
+.row-heading h2 {
+	margin: 0;
+}
+.account-actions {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.8rem;
+	border-top: 1px solid var(--border);
+	padding-top: 1.5rem;
+}
+.account-card .shop-label {
+	margin-bottom: 0.6rem;
+}
+.account-card .shop-link {
+	font-size: 0.7rem;
+	white-space: nowrap;
+}
+@media (max-width: 600px) {
+	header {
+		flex-wrap: wrap;
+	}
+	.account-avatar {
+		width: 4.5rem;
+		height: 4.5rem;
+		font-size: 1.5rem;
+	}
+	h1 {
+		font-size: 1.6rem;
+	}
+	.sign-out {
+		margin-left: auto;
+	}
+	.account-row {
+		flex-wrap: wrap;
+	}
+	.account-row > .shop-link {
+		margin-left: auto;
+	}
+	.account-actions {
+		gap: 0.65rem;
+	}
+}

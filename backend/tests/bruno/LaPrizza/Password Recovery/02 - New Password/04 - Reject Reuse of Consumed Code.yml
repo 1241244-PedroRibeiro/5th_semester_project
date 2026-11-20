@@ -1,0 +1,36 @@
+info:
+  name: 04 - Reject Reuse of Consumed Code
+  type: http
+  seq: 4
+http:
+  method: POST
+  url: '{{baseUrl}}/password-recovery/new_pass'
+  body:
+    type: json
+    data: |-
+      {
+        "recovery_code": "{{recoveryUsedCode}}",
+        "new_password": "{{recoveryNewPassword}}"
+      }
+runtime:
+  scripts:
+    - type: before-request
+      code: |-
+        const password = bru.getEnvVar("recoveryNewPassword");
+        if (!password) throw new Error("Set recoveryNewPassword locally; use 8–128 characters with uppercase, lowercase, a number, and a symbol.");
+        bru.setVar("recoveryNewPassword", password);
+        const code = bru.getVar("recoveryUsedCode") || bru.getEnvVar("recoveryUsedCode");
+        if (!code) throw new Error("Run successful reset 03 first, or set recoveryUsedCode to a consumed code.");
+        bru.setVar("recoveryUsedCode", code);
+    - type: tests
+      code: |-
+        test("Returns HTTP 409", function() {
+          expect(res.getStatus()).to.equal(409);
+        });
+        test("Returns a confirmation or explanation without recovery credentials", function() {
+          const data = res.getBody();
+          expect(data.error.message).to.be.a("string").and.not.empty;
+          expect(data).not.to.have.property("recovery_code");
+          expect(data).not.to.have.property("new_password");
+          expect(data).not.to.have.property("passwordHash");
+        });

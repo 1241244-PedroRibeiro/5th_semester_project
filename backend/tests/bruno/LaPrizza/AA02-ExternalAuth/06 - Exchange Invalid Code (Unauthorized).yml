@@ -1,0 +1,22 @@
+info:
+  name: 06 - Exchange Invalid Code (Unauthorized)
+  type: http
+  seq: 6
+http:
+  method: POST
+  url: '{{baseUrl}}/auth/external/exchange'
+  body:
+    type: json
+    data: |-
+      {
+        "code": "123e4567-e89b-12d3-a456-426614174000"
+      }
+runtime:
+  scripts:
+    - type: tests
+      code: |-
+        test("Rejects an invalid or expired exchange code (401)", function() {
+          expect(res.getStatus()).to.equal(401);
+          const data = res.getBody();
+          expect(data.error.message).to.equal("Invalid or expired exchange code.");
+        });

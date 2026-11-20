@@ -1,0 +1,30 @@
+<div class="scroll" role="region" [attr.aria-label]="label() | translate" tabindex="0">
+	<table>
+		<caption class="sr-only">
+			{{
+				label() | translate
+			}}
+		</caption>
+		<thead>
+			<tr>
+				@for (column of columns(); track column.key) {
+					<th scope="col">{{ column.label | translate }}</th>
+				}
+			</tr>
+		</thead>
+		<tbody>
+			@for (row of rows(); track identity(row)) {
+				<tr>
+					@for (column of columns(); track column.key) {
+						<td>
+							<ng-container
+								[ngTemplateOutlet]="cell()"
+								[ngTemplateOutletContext]="{ $implicit: row, column: column.key }"
+							/>
+						</td>
+					}
+				</tr>
+			}
+		</tbody>
+	</table>
+</div>

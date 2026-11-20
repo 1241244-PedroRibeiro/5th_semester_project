@@ -1,0 +1,27 @@
+info:
+  name: 09 - Duplicate Category Name (Conflict)
+  type: http
+  seq: 10
+http:
+  method: POST
+  url: '{{baseUrl}}/categories'
+  body:
+    type: json
+    data: |-
+      {
+        "categoryName": "Beverages",
+        "description": "Testing duplicate name against seed"
+      }
+  auth:
+    type: bearer
+    token: '{{managerToken}}'
+runtime:
+  scripts:
+    - type: before-request
+      code: ''
+    - type: tests
+      code: |-
+        test("Duplicate category name returns 409 Conflict", function() {
+          expect(res.getStatus()).to.equal(409);
+          expect(res.getBody().error.message).to.equal("Category already exists.");
+        });

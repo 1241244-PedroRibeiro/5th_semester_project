@@ -1,0 +1,25 @@
+info:
+  name: 04 - POST Allergen Valid
+  type: http
+  seq: 4
+
+http:
+  method: POST
+  url: "{{baseUrl}}/allergens"
+  body:
+    type: json
+    data: |-
+      {
+        "name": "WEB04 Test Allergen",
+        "description": "Alergénio criado durante os testes WEB04"
+      }
+  auth:
+    type: bearer
+    token: "{{managerToken}}"
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: false

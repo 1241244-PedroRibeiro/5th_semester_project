@@ -1,0 +1,49 @@
+# .pre-commit-config.yaml
+# LaPrizza Pre-commit Hooks (SYS01 / AC7.2, AC7.3)
+# Install: pip install pre-commit && pre-commit install
+# Run manually: pre-commit run --all-files
+
+repos:
+  # Gitleaks secret detection
+  - repo: https://github.com/gitleaks/gitleaks
+    rev: v8.18.2
+    hooks:
+      - id: gitleaks
+        name: "Gitleaks Secret Scan"
+        description: "Detect hardcoded secrets in staged changes"
+        entry: gitleaks protect --staged --verbose --redact
+        language: system
+        types: [text]
+        stages: [pre-commit, pre-push]
+        fail_fast: true
+
+  # Basic file hygiene
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.6.0
+    hooks:
+      - id: trailing-whitespace
+        name: "Remove Trailing Whitespace"
+      - id: end-of-file-fixer
+        name: "Ensure Files End with Newline"
+      - id: check-yaml
+        name: "Validate YAML Syntax"
+      - id: check-json
+        name: "Validate JSON Syntax"
+      - id: check-merge-conflict
+        name: "Check for Merge Conflict Markers"
+      - id: detect-private-key
+        name: "Detect Private Keys"
+      - id: no-commit-to-branch
+        name: "Prevent Direct Commits to Protected Branches"
+        args: ["--branch", "main", "--branch", "develop"]
+
+  # Docker Compose validation
+  - repo: local
+    hooks:
+      - id: docker-compose-config
+        name: "Validate Docker Compose Config"
+        entry: docker compose -p laprizza -f docker-compose.yml config --quiet
+        language: system
+        stages: [pre-commit]
+        pass_filenames: false
+        always_run: true

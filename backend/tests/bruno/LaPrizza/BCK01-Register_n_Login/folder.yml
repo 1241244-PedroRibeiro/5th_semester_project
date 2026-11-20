@@ -1,0 +1,6 @@
+info:
+  name: BCK01-Register_n_Login
+  type: folder
+  seq: 1
+request:
+  auth: inherit

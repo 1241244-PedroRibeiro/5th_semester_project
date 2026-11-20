@@ -1,0 +1,143 @@
+<section class="shop-container">
+	<div class="account-card shop-panel">
+		<header>
+			<span class="account-avatar" aria-hidden="true">{{ initials() }}</span>
+			<div>
+				<span class="shop-label">{{ 'My account' | translate }}</span>
+				<h1>{{ auth.user()?.firstName }} {{ auth.user()?.lastName }}</h1>
+				<p>{{ auth.user()?.email }}</p>
+			</div>
+			<button class="shop-link sign-out" [disabled]="auth.loggingOut()" (click)="logout()">
+				{{ 'Sign out' | translate }}
+			</button>
+		</header>
+		@if (notice()) {
+			<p class="shop-notice" role="status">{{ notice() | translate }}</p>
+		}
+		@if (loading()) {
+			<p class="shop-muted" role="status">{{ 'Loading your account…' | translate }}</p>
+		}
+		@if (error()) {
+			<p class="shop-notice error" role="alert">
+				{{ error() | translate }}
+				<button class="shop-link" (click)="load()">{{ 'Try again' | translate }}</button>
+			</p>
+		}
+		<section class="account-row">
+			<app-icon name="pin" />
+			<div>
+				<h2>{{ 'Delivery address' | translate }}</h2>
+				@if (profile.contact()?.address; as address) {
+					<p>
+						{{ address.street }}<br />{{ address.postalCode }} · {{ address.city }}
+						@if (address.extraDetails) {
+							<br />{{ address.extraDetails }}
+						}
+					</p>
+				} @else {
+					<p>
+						{{
+							loading()
+								? ('Loading your address…' | translate)
+								: error()
+									? ('Your saved address could not be loaded.' | translate)
+									: ('No saved address. Add your delivery details.' | translate)
+						}}
+					</p>
+				}
+			</div>
+			<button class="shop-link" [disabled]="loading()" (click)="dialog.set('address')">
+				{{ 'Edit address' | translate }}
+			</button>
+		</section>
+		<section class="account-row">
+			<app-icon name="users" />
+			<div>
+				<h2>{{ 'Phone number' | translate }}</h2>
+				<p>
+					{{ profile.contact()?.phoneNumber || ('Add or update your contact number.' | translate) }}
+				</p>
+			</div>
+			<button class="shop-link" [disabled]="loading()" (click)="dialog.set('phone')">
+				{{ 'Edit phone' | translate }}
+			</button>
+		</section>
+		<section class="allergy-row">
+			<div class="row-heading">
+				<h2>{{ 'Your allergies' | translate }}</h2>
+				<button
+					class="shop-link"
+					[disabled]="
+						loading() || !!error() || !!allergyError() || !auth.user()?.roles?.includes('CUSTOMER')
+					"
+					(click)="dialog.set('allergies')"
+				>
+					{{ 'Edit allergies' | translate }}
+				</button>
+			</div>
+			@if (allergyError()) {
+				<p class="shop-notice error" role="alert">
+					{{ 'Allergies could not be loaded:' | translate }} {{ allergyError() | translate }}
+					<button class="shop-link" (click)="load()">{{ 'Try again' | translate }}</button>
+				</p>
+			} @else if (allergies().length) {
+				<app-allergen-chips [names]="allergies()" />
+			} @else if (!loading()) {
+				<p class="shop-muted">
+					{{ 'No recorded allergies are returned for this account.' | translate }}
+				</p>
+			}
+		</section>
+		<section class="account-actions" [attr.aria-label]="'Account actions' | translate">
+			<button shopButton small (click)="dialog.set('history')">
+				{{ 'Order history' | translate }}</button
+			><button shopButton small [disabled]="loading()" (click)="dialog.set('address')">
+				{{ 'Update address' | translate }}</button
+			><button shopButton small (click)="dialog.set('password')">
+				{{ 'Change password' | translate }}</button
+			><button shopButton small (click)="dialog.set('email')">
+				{{ 'Change email' | translate }}
+			</button>
+			@if (auth.staff()) {
+				<a shopButton tone="secondary" small routerLink="/backoffice">{{
+					'Open backoffice' | translate
+				}}</a>
+			}
+		</section>
+	</div>
+</section>
+@switch (dialog()) {
+	@case ('address') {
+		<app-address-editor
+			[initial]="profile.contact()?.address ?? null"
+			(closed)="dialog.set(null)"
+			(saved)="saved('Your address has been saved.')"
+		/>
+	}
+	@case ('phone') {
+		<app-phone-editor
+			(closed)="dialog.set(null)"
+			(saved)="saved('Your phone number has been saved.')"
+		/>
+	}
+	@case ('allergies') {
+		<app-allergy-editor
+			[initial]="allergies()"
+			(closed)="dialog.set(null)"
+			(saved)="savedAllergies($event)"
+		/>
+	}
+	@case ('password') {
+		<app-credential-editor kind="password" (closed)="dialog.set(null)" />
+	}
+	@case ('email') {
+		<app-credential-editor kind="email" (closed)="dialog.set(null)" />
+	}
+	@case ('history') {
+		<app-service-unavailable-dialog
+			title="Order history"
+			message="Order history is not available yet. Your draft order stays on this browser and has not been submitted to the restaurant."
+			(closed)="dialog.set(null)"
+		/>
+	}
+}

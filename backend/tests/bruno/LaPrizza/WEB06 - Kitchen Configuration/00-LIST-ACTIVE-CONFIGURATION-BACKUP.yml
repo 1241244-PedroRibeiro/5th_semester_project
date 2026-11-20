@@ -1,0 +1,30 @@
+info:
+  name: 00-LIST-ACTIVE-CONFIGURATION-BACKUP
+  type: http
+  seq: 1
+
+http:
+  method: GET
+  url: "{{baseUrl}}/kitchen-configurations/active"
+  auth:
+    type: bearer
+    token: "{{managerToken}}"
+
+runtime:
+  scripts:
+    - type: after-response
+      code: |-
+        const data = res.getBody();
+
+        if (!data || !data.id) {
+          throw new Error("Não existe configuração ativa inicial.");
+        }
+
+        bru.setEnvVar("OriginalActiveKitchenConfigId", data.id);
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: false

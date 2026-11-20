@@ -1,0 +1,33 @@
+info:
+  name: DUPLICATE-CONFIG
+  type: http
+  seq: 5
+http:
+  method: POST
+  url: '{{baseUrl}}/component-size-configurations'
+  body:
+    type: json
+    data: |-
+      {
+      	"pizzaSize": "Small",
+      	"price": 1.5,
+      	"stockUnitsConsumed": 2,
+      	"componentSku": "{{componentProductSku}}"
+      }
+  auth:
+    type: bearer
+    token: '{{managerToken}}'
+runtime:
+  scripts:
+    - type: tests
+      code: |-
+        test("Matches the current API contract", function() {
+        	expect(res.getStatus()).to.equal(409);
+
+        });
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: false

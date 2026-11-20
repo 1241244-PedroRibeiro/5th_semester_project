@@ -1,0 +1,31 @@
+info:
+  name: 02 - Callback Missing Params (Bad Request)
+  type: http
+  seq: 2
+
+http:
+  method: GET
+  url: "{{baseUrl}}/auth/external/callback"
+
+runtime:
+  scripts:
+    - type: tests
+      code: |-
+        test("Rejects callback missing code and state (400 or Redirect Error)", function() {
+          // O controller deve intercetar a falta de parâmetros
+          expect([400, 302]).to.include(res.getStatus());
+          
+          if (res.getStatus() === 302) {
+            const location = res.getHeader("Location");
+            expect(location).to.include("error=invalid_request");
+          } else {
+            expect(res.getBody().error.message).to.include("code");
+          }
+        });
+
+settings:
+  encodeUrl: false
+  timeout: inherit
+  followRedirects: false
+  maxRedirects: 5
+  forwardAuthorizationHeader: true

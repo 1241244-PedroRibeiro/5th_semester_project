@@ -1,0 +1,25 @@
+info:
+  name: 06 - Create Allergen as Customer (Forbidden)
+  type: http
+  seq: 8
+http:
+  method: POST
+  url: '{{baseUrl}}/allergens'
+  body:
+    type: json
+    data: |-
+      {
+      	"name": "Customer Allergen",
+      	"description": "Forbidden attempt"
+      }
+  auth:
+    type: bearer
+    token: '{{customerToken}}'
+runtime:
+  scripts:
+    - type: tests
+      code: |-
+        test("Rejects creation by Customer with 403 Forbidden", function() {
+        	expect(res.getStatus()).to.equal(403);
+        	expect(res.getBody().error.message).to.equal("You do not have permission to do this.");
+        });

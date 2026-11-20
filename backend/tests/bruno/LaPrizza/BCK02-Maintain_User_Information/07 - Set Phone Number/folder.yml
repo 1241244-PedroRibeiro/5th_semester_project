@@ -1,0 +1,6 @@
+info:
+  name: 07 - Set Phone Number
+  type: folder
+  seq: 8
+request:
+  auth: inherit

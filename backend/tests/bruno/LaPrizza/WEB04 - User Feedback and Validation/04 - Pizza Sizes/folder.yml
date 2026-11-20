@@ -1,0 +1,7 @@
+info:
+  name: 04 - Pizza Sizes
+  type: folder
+  seq: 4
+
+request:
+  auth: inherit

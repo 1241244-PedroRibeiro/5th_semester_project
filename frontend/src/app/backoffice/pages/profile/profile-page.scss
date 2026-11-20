@@ -1,0 +1,90 @@
+.profile-grid {
+	display: grid;
+	grid-template-columns: repeat(2, minmax(0, 1fr));
+	gap: 1.25rem;
+}
+.address-panel {
+	grid-column: 1 / -1;
+}
+.panel-body {
+	padding: 0 1.5rem 1.5rem;
+}
+.identity {
+	display: flex;
+	align-items: center;
+	gap: 1rem;
+}
+.identity h3 {
+	margin: 0;
+	font-size: 1.1rem;
+}
+.identity p {
+	margin: 0.3rem 0;
+}
+.profile-avatar {
+	display: grid;
+	place-items: center;
+	flex-shrink: 0;
+	width: 3rem;
+	height: 3rem;
+	border-radius: 50%;
+	background: var(--yellow);
+}
+dl > div {
+	display: grid;
+	align-items: center;
+	grid-template-columns: 7rem minmax(0, 1fr);
+	gap: 0.75rem;
+	padding: 0.75rem 0;
+	border-bottom: 1px solid var(--border);
+}
+dt {
+	color: var(--muted);
+	font-size: 0.8rem;
+}
+dd {
+	margin: 0;
+	font-size: 0.85rem;
+	overflow-wrap: anywhere;
+}
+.muted {
+	font-size: 0.8rem;
+}
+.account-value {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 0.65rem;
+}
+.account-value > span {
+	flex: 1 1 8rem;
+	min-width: 0;
+}
+.account-value > .button {
+	margin-inline-start: auto;
+	max-width: 100%;
+	min-height: 2.75rem;
+	flex-shrink: 0;
+}
+button {
+	justify-self: start;
+	min-height: 2.75rem;
+	white-space: normal;
+}
+@media (max-width: 1000px) {
+	.profile-grid {
+		grid-template-columns: minmax(0, 1fr);
+	}
+}
+@media (max-width: 540px) {
+	.panel-body {
+		padding: 0 1rem 1rem;
+	}
+	dl > div {
+		grid-template-columns: minmax(0, 1fr);
+		gap: 0.3rem;
+	}
+	.identity {
+		flex-wrap: wrap;
+	}
+}

@@ -1,0 +1,6 @@
+info:
+  name: AA02 - External Auth (OIDC)
+  type: folder
+  seq: 2
+request:
+  auth: inherit

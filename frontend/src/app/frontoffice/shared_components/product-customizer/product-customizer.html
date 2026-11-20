@@ -1,0 +1,114 @@
+<app-modal
+	[title]="item().name"
+	[description]="'Customize your order' | translate"
+	(closed)="closed.emit()"
+	><div class="customizer stack">
+		@if (image(); as image) {
+			<img class="customizer-photo" [src]="image" [alt]="item().name" width="1024" height="1024" />
+		}
+		@if (allergens().length) {
+			<div>
+				<h3>{{ 'Allergens' | translate }}</h3>
+				<app-allergen-chips [names]="allergens()" />
+			</div>
+		}
+		@if (item().isPredefinedPizza) {
+			<fieldset>
+				<legend>{{ 'Size' | translate }}</legend>
+				<div class="sizes">
+					@for (variant of item().sizeVariants ?? []; track variant.pizzaSize) {
+						<label class="size-option"
+							><span
+								><input
+									type="radio"
+									name="pizzaSize"
+									[checked]="size() === variant.pizzaSize"
+									[disabled]="!variant.isAvailable"
+									(change)="setSize(variant.pizzaSize)"
+								/>{{ variant.sizeName }}</span
+							><strong>{{
+								variant.computedPrice.amount | localCurrency: variant.computedPrice.currency
+							}}</strong>
+							@if (!variant.isAvailable) {
+								<small>{{ 'Unavailable' | translate }}</small>
+							}
+						</label>
+					}
+				</div>
+			</fieldset>
+			@if (loading()) {
+				<p class="shop-muted" role="status">{{ 'Loading ingredient options…' | translate }}</p>
+			} @else if (error()) {
+				<div class="shop-notice error" role="alert">
+					{{ error() | translate }}
+					<button class="shop-link" (click)="load()">{{ 'Try again' | translate }}</button>
+				</div>
+			} @else {
+				<div class="ingredient-groups">
+					@for (group of groups(); track group.name) {
+						<fieldset>
+							<legend>{{ group.name }}</legend>
+							<p class="group-limit">
+								{{ group.minCardinality || 0 }}–{{ group.maxCardinality ?? 'unlimited' }}
+								{{ 'different ingredients' | translate }}
+							</p>
+							@for (option of group.options; track option.sku) {
+								<div class="ingredient">
+									<div>
+										<strong>{{ option.name }}</strong
+										><small
+											>{{ option.price | localCurrency: price()?.currency }}
+											{{ 'per unit' | translate }}</small
+										>
+									</div>
+									<app-quantity-control
+										[label]="option.name"
+										[min]="0"
+										[value]="amounts()[option.sku] || 0"
+										(changed)="setAmount(option.sku, $event)"
+									/>
+								</div>
+							}
+							@if (!group.options.length) {
+								<p class="shop-muted">
+									{{ 'No ingredients configured for this size.' | translate }}
+								</p>
+							}
+						</fieldset>
+					}
+				</div>
+			}
+		} @else {
+			<p class="shop-muted">{{ item().description }}</p>
+			<p class="shop-muted">
+				{{
+					'This product has a fixed configuration. Choose how many you’d like to add.' | translate
+				}}
+			</p>
+		}
+		<div class="servings">
+			<h3>{{ 'Quantity' | translate }}</h3>
+			<app-quantity-control
+				[value]="quantity()"
+				[label]="item().name + (' quantity' | translate) | translate"
+				(changed)="quantity.set($event)"
+			/>
+		</div>
+		@if (validation() && !loading() && !error()) {
+			<p class="shop-notice" role="status">{{ validation() | translate }}</p>
+		}
+	</div>
+	<div modal-actions class="customizer-actions">
+		<button shopButton tone="secondary" (click)="closed.emit()">{{ 'Cancel' | translate }}</button
+		><button
+			shopButton
+			[disabled]="loading() || !!error() || !!validation() || !price()"
+			(click)="add()"
+		>
+			{{ 'Add to order' | translate }}
+			@if (price(); as price) {
+				— {{ price.amount * quantity() | localCurrency: price.currency }}
+			}
+		</button>
+	</div></app-modal
+>

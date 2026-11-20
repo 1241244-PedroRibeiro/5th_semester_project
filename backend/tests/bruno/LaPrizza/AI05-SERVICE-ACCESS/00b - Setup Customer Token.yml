@@ -1,0 +1,34 @@
+info:
+  name: 00b - Setup Customer Token
+  type: http
+  seq: 1
+http:
+  method: POST
+  url: "{{baseUrl}}/auth/login"
+  body:
+    type: json
+    data: |-
+      { "email": "customer@laprizza.test", "password": "Manager123!" }
+runtime:
+  scripts:
+    - type: post-response
+      code: |-
+        if (res.getBody().token) {
+          bru.setVar("customerToken", res.getBody().token);
+          bru.setEnvVar("customerToken", res.getBody().token);
+        }
+    - type: tests
+      code: |-
+        test("Stores customer token", function() {
+          expect(res.getStatus()).to.equal(200);
+          const token = res.getBody().token;
+          expect(token).to.be.a("string").and.not.empty;
+          bru.setVar("customerToken", token);
+          bru.setEnvVar("customerToken", token);
+        });
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: false

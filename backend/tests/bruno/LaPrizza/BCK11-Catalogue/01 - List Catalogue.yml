@@ -1,0 +1,43 @@
+info:
+  name: 01 - List Catalogue
+  type: http
+  seq: 2
+http:
+  method: GET
+  url: '{{baseUrl}}/catalogue'
+  auth: inherit
+runtime:
+  scripts:
+    - type: tests
+      code: |-
+        test("returns HTTP 200", function () {
+        	expect(res.status).to.equal(200);
+        });
+
+        test("lists existing sellable products", function () {
+        	expect(res.body).to.be.an("array");
+
+        	const productSkus = res.body.map(
+        		product => product.productSku
+        	);
+
+        	expect(productSkus).to.include(bru.getVar("dualProductSku"));
+        });
+
+        test("returns required catalogue fields", function () {
+        	expect(
+        		res.body.every(product =>
+        			typeof product.productSku === "string" &&
+        			typeof product.name === "string" &&
+        			typeof product.categoryName === "string" &&
+        			Array.isArray(product.allergens) &&
+        			typeof product.isAvailable === "boolean"
+        		)
+        	).to.equal(true);
+        });
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: false

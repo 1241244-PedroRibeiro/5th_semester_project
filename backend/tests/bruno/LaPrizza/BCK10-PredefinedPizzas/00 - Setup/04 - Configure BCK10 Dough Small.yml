@@ -1,0 +1,34 @@
+info:
+  name: 04 - Configure BCK10 Dough Small
+  type: http
+  seq: 6
+http:
+  method: POST
+  url: '{{baseUrl}}/component-size-configurations'
+  body:
+    type: json
+    data: |-
+      {
+      	"pizzaSize": "Small",
+      	"price": 2,
+      	"stockUnitsConsumed": 1,
+      	"componentSku": "{{bck10DoughSku}}"
+      }
+  auth:
+    type: bearer
+    token: '{{managerToken}}'
+runtime:
+  scripts:
+    - type: tests
+      code: |-
+        test("Matches the current API contract", function() {
+        	expect(res.getStatus()).to.equal(201);
+        	expect(res.getBody().componentSku).to.equal(bru.getVar("bck10DoughSku"));
+        	expect(res.getBody().pizzaSize).to.equal("Small");
+        });
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: false

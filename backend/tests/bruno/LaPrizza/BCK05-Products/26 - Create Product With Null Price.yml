@@ -1,0 +1,32 @@
+info:
+  name: 26 - Create Product With Null Price
+  type: http
+  seq: 29
+http:
+  method: POST
+  url: '{{baseUrl}}/products'
+  body:
+    type: json
+    data: |-
+      {
+          "sku": "{{nullPriceSku}}",
+          "name": "Unpriced Product",
+          "description": "Nullable price contract",
+          "categoryName": "Beverages",
+          "isSellable": true,
+          "isPizzaComponent": false,
+          "isStockControlled": false,
+          "directSellingPrice": null
+      }
+  auth:
+    type: bearer
+    token: '{{managerToken}}'
+runtime:
+  scripts:
+    - type: before-request
+      code: 'bru.setVar("nullPriceSku", "PRD-NULL-" + Date.now() + "-" + Math.floor(Math.random() * 1000));'
+    - type: tests
+      code: |-
+        test("Manager creates product with null price returning 400 Bad Request", function() {
+            expect(res.getStatus()).to.equal(400);
+        });

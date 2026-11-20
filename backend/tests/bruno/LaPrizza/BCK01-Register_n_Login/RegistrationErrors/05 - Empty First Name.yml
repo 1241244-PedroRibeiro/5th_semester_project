@@ -1,0 +1,36 @@
+info:
+  name: 05 - Empty First Name
+  type: http
+  seq: 5
+http:
+  method: POST
+  url: '{{baseUrl}}/auth/register'
+  body:
+    type: json
+    data: |-
+      {
+      	"firstName": "   ",
+      	"lastName": "Customer",
+      	"email": "first-{{authTestEmail}}",
+      	"password": "{{authTestPassword}}"
+      }
+runtime:
+  scripts:
+    - type: tests
+      code: |-
+        test("Status code is 400", function() {
+        	expect(res.getStatus()).to.equal(400);
+        });
+
+        test("Returns the expected error without credentials", function() {
+        	const data = res.getBody();
+        	expect(data.error.message).to.equal("First name cannot be empty");
+        	expect(data).not.to.have.property("token");
+        	expect(data).not.to.have.property("user");
+        });
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: true

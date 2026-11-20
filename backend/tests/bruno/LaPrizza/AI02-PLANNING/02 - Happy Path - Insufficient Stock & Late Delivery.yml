@@ -1,0 +1,31 @@
+info:
+  name: 02 - Happy Path - Insufficient Stock & Late
+  type: http
+  seq: 3
+http:
+  method: POST
+  url: "{{baseUrl}}/planning/executions"
+  body:
+    type: json
+    data: |-
+      { "forecastName": "Week-Late", "scenarioName": "Late-Scenario", "referenceDate": "2026-11-05" }
+  auth:
+    type: bearer
+    token: "{{managerToken}}"
+runtime:
+  scripts:
+    - type: tests
+      code: |-
+        test("Status is 201", function() { expect(res.getStatus()).to.equal(201); });
+        test("Has proposals", function() { expect(res.getBody().proposals).to.be.an('array').that.is.not.empty; });
+        test("Has unmet needs due to late delivery", function() {
+          expect(res.getBody().unmetNeeds).to.be.an('array').that.is.not.empty;
+          expect(res.getBody().proposals[0].meetsRequiredDate).to.be.false;
+          expect(res.getBody().proposals[0].lateByDays).to.be.above(0);
+        });
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: false

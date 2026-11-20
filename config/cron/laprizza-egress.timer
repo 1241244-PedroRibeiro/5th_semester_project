@@ -1,0 +1,16 @@
+# /etc/systemd/system/laprizza-egress.timer
+# LaPrizza Egress Allowlist DNS Refresh Timer (SYS03 AC1.5)
+# Triggers the egress service every 6 hours to refresh DNS-resolved IPs
+[Unit]
+Description=LaPrizza Egress Allowlist DNS Refresh Timer (every 6 hours)
+Documentation=https://github.com/LEI-SEM5-PI-2026-27-3DJ-05/docs/asist/sys-network-config.md
+Requires=laprizza-egress.service
+
+[Timer]
+OnUnitActiveSec=6h
+Persistent=true
+RandomizedDelaySec=15m
+Unit=laprizza-egress.service
+
+[Install]
+WantedBy=timers.target

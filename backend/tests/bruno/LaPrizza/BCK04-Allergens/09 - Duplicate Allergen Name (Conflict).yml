@@ -1,0 +1,27 @@
+info:
+  name: 09 - Duplicate Allergen Name (Conflict)
+  type: http
+  seq: 10
+http:
+  method: POST
+  url: '{{baseUrl}}/allergens'
+  body:
+    type: json
+    data: |-
+      {
+      	"name": "{{newAllergenName}}",
+      	"description": "Testing duplicate name against recently created allergen"
+      }
+  auth:
+    type: bearer
+    token: '{{managerToken}}'
+runtime:
+  scripts:
+    - type: before-request
+      code: ''
+    - type: tests
+      code: |-
+        test("Duplicate allergen name returns 409 Conflict", function() {
+        	expect(res.getStatus()).to.equal(409);
+        	expect(res.getBody().error.message).to.equal("Allergen name already exists");
+        });

@@ -1,0 +1,15 @@
+{
+	"name": "Local",
+	"variables": [
+		{
+			"name": "baseUrl",
+			"value": "https://localhost/api",
+			"enabled": true
+		},
+		{
+			"name": "JWT_SECRET",
+			"secret": true,
+			"enabled": true
+		}
+	]
+}

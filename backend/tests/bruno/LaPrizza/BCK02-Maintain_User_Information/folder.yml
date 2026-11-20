@@ -1,0 +1,7 @@
+info:
+  name: BCK02-Maintain_User_Information
+  type: folder
+  seq: 3
+
+request:
+  auth: inherit

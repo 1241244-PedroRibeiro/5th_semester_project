@@ -1,0 +1,96 @@
+:host {
+	display: block;
+}
+article {
+	display: flex;
+	align-items: center;
+	gap: 1.2rem;
+	padding: 0.8rem;
+	border: 1.5px solid var(--ink);
+	border-radius: 0.85rem;
+	background: var(--surface);
+}
+.line-photo {
+	width: 7rem;
+	aspect-ratio: 1;
+	flex-shrink: 0;
+	display: grid;
+	place-items: center;
+	background: var(--teal-soft);
+	border-radius: 0.5rem;
+	overflow: hidden;
+}
+.line-photo img {
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+}
+.line-photo > app-icon {
+	font-size: 2.5rem;
+}
+.line-description {
+	flex: 1;
+	min-width: 0;
+}
+h2 {
+	font-size: 1.5rem;
+	margin: 0 0 0.5rem;
+}
+p {
+	font-size: 0.75rem;
+	color: var(--muted);
+	margin: 0;
+}
+small {
+	font-size: 0.65rem;
+	color: var(--accent);
+	text-transform: uppercase;
+}
+.line-controls {
+	display: flex;
+	align-items: center;
+	gap: 1.5rem;
+}
+.line-controls strong {
+	font-size: 0.9rem;
+	white-space: nowrap;
+}
+details {
+	font-size: 0.72rem;
+	color: var(--muted);
+	margin-top: 0.5rem;
+}
+summary {
+	cursor: pointer;
+}
+ul {
+	padding-left: 1.1rem;
+	line-height: 1.6;
+}
+@media (max-width: 1050px) {
+	article {
+		flex-wrap: wrap;
+	}
+	.line-controls {
+		flex-basis: 100%;
+		justify-content: flex-end;
+		gap: 1rem;
+	}
+	.line-controls app-quantity-control {
+		margin-right: auto;
+	}
+}
+@media (max-width: 550px) {
+	.line-photo {
+		width: 5rem;
+	}
+	article {
+		gap: 0.8rem;
+	}
+	h2 {
+		font-size: 1.2rem;
+	}
+	.line-controls {
+		gap: 0.7rem;
+	}
+}

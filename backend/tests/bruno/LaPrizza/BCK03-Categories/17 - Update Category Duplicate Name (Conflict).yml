@@ -1,0 +1,24 @@
+info:
+  name: 17 - Update Category Duplicate Name (Conflict)
+  type: http
+  seq: 17
+http:
+  method: PUT
+  url: '{{baseUrl}}/categories/{{updatedCategoryName}}'
+  body:
+    type: json
+    data: |-
+      {
+          "name": "Beverages",
+          "description": "Attempt to collide with existing Beverages"
+      }
+  auth:
+    type: bearer
+    token: '{{managerToken}}'
+runtime:
+  scripts:
+    - type: tests
+      code: |-
+        test("Renaming to existing name returns 409 Conflict", function() {
+            expect(res.getStatus()).to.equal(409);
+        });

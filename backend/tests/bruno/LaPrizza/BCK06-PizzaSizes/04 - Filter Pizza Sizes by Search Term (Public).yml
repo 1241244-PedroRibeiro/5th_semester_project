@@ -1,0 +1,17 @@
+info:
+  name: 04 - Filter Pizza Sizes by Search Term (Public)
+  type: http
+  seq: 6
+http:
+  method: GET
+  url: '{{baseUrl}}/pizza-sizes?search=Small'
+  body: none
+runtime:
+  scripts:
+    - type: tests
+      code: |-
+        test("Filters pizza sizes by name returning 200 OK", function() {
+        	expect(res.getStatus()).to.equal(200);
+        	const data = res.getBody();
+        	expect(Array.isArray(data)).to.be.true;
+        });

@@ -1,0 +1,36 @@
+info:
+  name: 02 - Manager updates the pending role
+  type: http
+  seq: 2
+http:
+  method: POST
+  url: '{{baseUrl}}/auth/invite'
+  auth:
+    type: bearer
+    token: '{{invitationToken}}'
+  body:
+    type: json
+    data: |-
+      {"email": "{{invitationEmail}}", "roleName": "MANAGER"}
+runtime:
+  scripts:
+    - type: before-request
+      code: |-
+        const actor = await bru.sendRequest({
+          method: "POST", url: bru.getEnvVar("baseUrl") + "/auth/login",
+          headers: { "Content-Type": "application/json" },
+          data: { email: bru.getEnvVar("inviteManagerEmail"), password: bru.getEnvVar("inviteManagerPassword") },
+          validateStatus: () => true
+        });
+        if (actor.status !== 200) throw new Error("Invitation fixture login failed: " + actor.status);
+        bru.setVar("invitationToken", actor.data.token);
+        if (!bru.getVar("invitationEmail")) throw new Error("Run request 01 first");
+    - type: tests
+      code: |-
+        test("Expected HTTP 201", () => expect(res.getStatus()).to.equal(201));
+        test("Pending role is assigned", () => {
+          const user = res.getBody();
+          expect(user.status).to.equal("PENDING_REGISTRATION");
+          expect(user.roles).to.deep.equal(["MANAGER"]);
+          expect(user).not.to.have.property("passwordHash");
+        });

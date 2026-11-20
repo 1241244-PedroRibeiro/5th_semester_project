@@ -1,0 +1,30 @@
+info:
+  name: 06 - Error - Missing stockUnitsPerSale
+  type: http
+  seq: 7
+http:
+  method: POST
+  url: "{{baseUrl}}/planning/executions"
+  body:
+    type: json
+    data: |-
+      { "forecastName": "Week-Missing-Units", "scenarioName": "Autumn-Scenario" }
+  auth:
+    type: bearer
+    token: "{{managerToken}}"
+runtime:
+  scripts:
+    - type: tests
+      code: |-
+        test("Status is 422", function() {
+          expect(res.getStatus()).to.equal(422);
+        });
+        test("Message mentions stockUnitsPerSale", function() {
+          expect(res.getBody().error.message).to.include("stockUnitsPerSale");
+        });
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: false

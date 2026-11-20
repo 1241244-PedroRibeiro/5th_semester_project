@@ -1,0 +1,30 @@
+### AI02 valid requirements planning
+POST http://localhost:3000/planning/executions
+Authorization: Bearer {{managerToken}}
+Content-Type: application/json
+
+{
+  "forecastName": "Week-45",
+  "scenarioName": "Autumn-Scenario",
+  "referenceDate": "2026-11-05",
+  "pendingDeliveries": [
+    {
+      "productSku": "PRD-FLOUR",
+      "quantity": 20,
+      "expectedDeliveryDate": "2026-11-06"
+    }
+  ]
+}
+
+### Representative response envelope (201)
+{
+  "executionId": 2,
+  "forecastName": "Week-45",
+  "scenarioName": "Autumn-Scenario",
+  "referenceDate": "2026-11-05",
+  "isReplay": false,
+  "isSimulated": false,
+  "requirements": [],
+  "proposals": [],
+  "unmetNeeds": []
+}

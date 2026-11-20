@@ -1,0 +1,48 @@
+<article>
+	<div class="product-photo">
+		@if (image(); as source) {
+			<img [src]="source" [alt]="item().name" width="1024" height="1024" loading="lazy" />
+		} @else {
+			<div class="placeholder">
+				<app-icon name="pizza" /><span>{{ item().categoryName }}</span>
+			</div>
+		}
+	</div>
+	<div class="product-content">
+		<h2>{{ item().name }}</h2>
+		<p>{{ item().description || item().categoryName }}</p>
+		<div class="price">
+			@if (price(); as price) {
+				@if (item().isPredefinedPizza) {
+					<span>{{ 'From' | translate }} </span>
+				}
+				{{ price.amount | localCurrency: price.currency }}
+			} @else {
+				<span>{{ 'Price unavailable' | translate }}</span>
+			}
+		</div>
+		<div class="product-actions">
+			<button
+				shopButton
+				small
+				[disabled]="!item().isAvailable || !price()"
+				(click)="added.emit(item())"
+				[attr.aria-label]="
+					('Add ' | translate) + item().name + (' to order' | translate) | translate
+				"
+			>
+				{{ item().isAvailable ? ('Add to order' | translate) : ('Unavailable' | translate) }}
+			</button>
+			<button
+				shopButton
+				tone="secondary"
+				small
+				[disabled]="!item().isAvailable || !price()"
+				(click)="customize.emit(item())"
+				[attr.aria-label]="('Customize ' | translate) + item().name | translate"
+			>
+				{{ 'Customize' | translate }}
+			</button>
+		</div>
+	</div>
+</article>

@@ -1,0 +1,7 @@
+info:
+  name: BCK05-Products
+  type: folder
+  seq: 6
+
+request:
+  auth: inherit

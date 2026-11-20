@@ -1,0 +1,128 @@
+name: laprizza
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: laprizza_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: laprizza_user
+      POSTGRES_PASSWORD: laprizza_password
+      POSTGRES_DB: laprizza_db
+    # ports:
+    #   - '5432:5432' # AC1.3: Database is never exposed to host or external network
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U laprizza_user -d laprizza_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - laprizza-internal
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: laprizza_backend
+    env_file:
+      - path: ./backend/.env
+        required: false
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      PORT: 3000
+      NODE_ENV: production
+      TRUSTED_PROXY_CIDRS: 172.30.240.10/32
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_USER: laprizza_user
+      DB_PASSWORD: laprizza_password
+      DB_NAME: laprizza_db
+      SEED_DATABASE: ${SEED_DATABASE:-true}
+      JWT_SECRET: ${JWT_SECRET:-laprizza-default-secret-key-change-in-production-2026}
+      KITCHEN_ASSET_BASE_URL: http://frontend:8080
+      PROLOG_URL: ${PROLOG_URL:-http://prolog:8080/api/v1/plan}
+      INVITATION_TTL_HOURS: ${INVITATION_TTL_HOURS:-48}
+      PICTURES_DIR: /app/data/pictures
+    dns:
+      - 193.136.60.5
+      - 193.136.60.12
+    # ports:
+    #   - '3000:3000' # AC1.2/AC1.3: Unexposed to host. Only Nginx reverse proxy reaches backend:3000
+    volumes:
+      - laprizza-shared:/shared
+      - laprizza-pictures:/app/data/pictures
+    healthcheck:
+      test:
+        - CMD
+        - node
+        - -e
+        - "fetch('http://127.0.0.1:3000/health').then(r => process.exit(r.ok ? 0 : 1)).catch(() => process.exit(1))"
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 90s
+    networks:
+      laprizza-network:
+        aliases:
+          - backend
+      laprizza-internal: {}
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    depends_on:
+      backend:
+        condition: service_healthy
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./certs:/etc/nginx/certs:ro
+      - laprizza-shared:/shared:ro
+    networks:
+      laprizza-network:
+        ipv4_address: 172.30.240.10
+
+  prolog:
+    build:
+      context: ./prolog
+      dockerfile: Dockerfile
+    container_name: laprizza_prolog
+    restart: unless-stopped
+    # ports:
+    #   - '8081:8080' # AC1.3: Prolog engine isolated on laprizza-internal; no host port mapping
+    volumes:
+      - laprizza-shared:/shared:ro
+    networks:
+      - laprizza-internal
+
+volumes:
+  postgres_data:
+    driver: local
+  laprizza-pictures:
+    driver: local
+  laprizza-shared:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ${LAPRIZZA_SHARED_DIR:-./shared}
+
+networks:
+  laprizza-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.30.240.0/24
+  laprizza-internal:
+    driver: bridge
+    internal: true

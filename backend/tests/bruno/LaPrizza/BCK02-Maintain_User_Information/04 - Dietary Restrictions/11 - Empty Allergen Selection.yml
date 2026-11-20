@@ -1,0 +1,27 @@
+info:
+  name: 11 - Empty Allergen Selection
+  type: http
+  seq: 11
+http:
+  method: POST
+  url: '{{baseUrl}}/user/{{bck02CustomerUsername}}/allergen'
+  body:
+    type: json
+    data: |-
+      {
+      	"allergens": []
+      }
+  auth:
+    type: bearer
+    token: '{{bck02CustomerToken}}'
+runtime:
+  scripts:
+    - type: tests
+      code: |-
+        test("Status code is 400", function() {
+        	expect(res.getStatus()).to.equal(400);
+        });
+
+        test("Returns an error message", function() {
+        	expect(res.getBody().error.message).to.be.a("string").and.not.empty;
+        });

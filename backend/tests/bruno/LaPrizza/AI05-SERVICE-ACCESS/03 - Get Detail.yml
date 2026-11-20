@@ -1,0 +1,24 @@
+info:
+  name: 03 - Get Detail
+  type: http
+  seq: 4
+http:
+  method: GET
+  url: "{{baseUrl}}/planning/executions/{{executionId}}"
+  auth:
+    type: bearer
+    token: "{{managerToken}}"
+runtime:
+  scripts:
+    - type: tests
+      code: |-
+        test("Status is 200", function() { expect(res.getStatus()).to.equal(200); });
+        test("Returns requested execution", function() {
+          expect(String(res.getBody().executionId)).to.equal(String(bru.getVar("executionId")));
+        });
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: false

@@ -1,0 +1,32 @@
+info:
+  name: ADJUST-STOCK-ZERO-AMOUNT
+  type: http
+  seq: 9
+http:
+  method: POST
+  url: '{{baseUrl}}/stock/{{productSku}}/adjustments'
+  body:
+    type: json
+    data: |-
+      {
+      	"adjustmentType": "INCREASE",
+      	"amount": 0,
+      	"reason": "Teste de quantidade zero"
+      }
+  auth:
+    type: bearer
+    token: '{{managerToken}}'
+runtime:
+  scripts:
+    - type: tests
+      code: |-
+        test("Matches the current API contract", function() {
+        	expect(res.getStatus()).to.equal(400);
+
+        });
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: false

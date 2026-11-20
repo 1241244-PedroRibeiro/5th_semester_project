@@ -1,0 +1,215 @@
+<div class="auth-layout">
+	<aside class="story">
+		<app-brand />
+		<div class="story-content">
+			<p class="eyebrow">{{ 'Made for the daily service' | translate }}</p>
+			<h1>
+				{{
+					registration
+						? ('A fresh start for your backoffice.' | translate)
+						: ('Good food.
+Smooth operations.' | translate)
+				}}
+			</h1>
+			<p>
+				{{
+					registration
+						? ('Bring your orders, menu and team together.
+A little less admin. A lot more time for your craft.' | translate)
+						: ('From the first order to the last delivery,
+keep your kitchen and your team in sync.' | translate)
+				}}
+			</p>
+			<figure>
+				<img
+					src="/images/kitchen.jpg"
+					[alt]="'Chef preparing a fresh pizza in a restaurant kitchen' | translate"
+					width="1376"
+					height="768"
+					fetchpriority="high"
+				/>
+				<figcaption>
+					<span class="flame"><app-icon name="flame" /></span
+					><span
+						><strong>{{ 'More time for what you love.' | translate }}</strong
+						><small>{{ 'Your whole restaurant, in one place.' | translate }}</small></span
+					>
+				</figcaption>
+			</figure>
+			<div class="benefits">
+				@for (item of ['Orders', 'Menu', 'Team', 'Stock']; track item) {
+					<span><app-icon name="check" />{{ item | translate }}</span>
+				}
+			</div>
+		</div>
+		<small class="copyright">{{
+			'© 2026 Forno. Made for the people behind the pizza.' | translate
+		}}</small>
+	</aside>
+	<main class="auth-main">
+		<div class="mobile-brand"><app-brand /></div>
+		<div class="help">
+			{{ 'Need a hand?' | translate }}
+			<span>{{ 'Contact your restaurant administrator ↗' | translate }}</span>
+		</div>
+		<div class="auth-form">
+			@if (forgot()) {
+				<app-password-recovery-form [initialEmail]="email" (closed)="forgot.set(false)" />
+			} @else {
+				<p class="eyebrow">
+					{{
+						registration
+							? ("Let's get your kitchen connected" | translate)
+							: ('Your backoffice, ready when you are' | translate)
+					}}
+				</p>
+				<h2>
+					{{ registration ? ('Create your account.' | translate) : ('Welcome back.' | translate) }}
+				</h2>
+				<p class="intro">
+					{{
+						registration
+							? ('Complete your account using your invited work email.' | translate)
+							: ('Sign in to your Forno management center.' | translate)
+					}}
+				</p>
+				<form #form="ngForm" class="stack" (ngSubmit)="form.valid && submit()">
+					<fieldset class="stack" [disabled]="busy()">
+						@if (registration) {
+							<div class="form-grid">
+								<label
+									>{{ 'First name' | translate
+									}}<input
+										name="firstName"
+										[(ngModel)]="firstName"
+										required
+										maxlength="100"
+										autocomplete="given-name"
+										[placeholder]="'Alex' | translate" /></label
+								><label
+									>{{ 'Last name' | translate
+									}}<input
+										name="lastName"
+										[(ngModel)]="lastName"
+										required
+										maxlength="100"
+										autocomplete="family-name"
+										[placeholder]="'Morgan' | translate"
+								/></label>
+							</div>
+						}
+						<label
+							>{{ registration ? ('Work email' | translate) : ('Email address' | translate)
+							}}<input
+								type="email"
+								name="email"
+								[(ngModel)]="email"
+								required
+								email
+								autocomplete="email"
+								[placeholder]="'you@restaurant.com' | translate" /></label
+						><label
+							>{{ 'Password' | translate
+							}}<span class="password"
+								><input
+									[type]="visible() ? 'text' : 'password'"
+									name="password"
+									[(ngModel)]="password"
+									required
+									[minlength]="registration ? 8 : 1"
+									[pattern]="
+										registration
+											? '(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[^A-Za-z0-9\\s]).{8,}'
+											: '.*'
+									"
+									[autocomplete]="registration ? 'new-password' : 'current-password'"
+									[placeholder]="
+										(registration
+											? ('Create a password' | translate)
+											: ('Enter your password' | translate)
+										) | translate
+									" /><button
+									class="icon-button"
+									type="button"
+									[attr.aria-label]="
+										(visible() ? ('Hide password' | translate) : ('Show password' | translate))
+											| translate
+									"
+									[attr.aria-pressed]="visible()"
+									(click)="visible.set(!visible())"
+								>
+									<app-icon name="eye" /></button></span
+						></label>
+						@if (registration) {
+							<small>{{
+								'Use at least 8 characters, with an uppercase and lowercase letter, a number and a special character.'
+									| translate
+							}}</small>
+						} @else {
+							<div class="remember">
+								<label class="check-label"
+									><input type="checkbox" name="remember" [(ngModel)]="remember" />{{
+										'Keep me signed in' | translate
+									}}</label
+								><button
+									class="inline-link"
+									type="button"
+									(click)="password = ''; forgot.set(true)"
+								>
+									{{ 'Forgot your password?' | translate }}
+								</button>
+							</div>
+						}
+						@if (error()) {
+							<div class="notice error" role="alert">{{ error() | translate }}</div>
+						}
+						@if (success()) {
+							<div class="notice" role="status">{{ success() | translate }}</div>
+						}
+						<button class="button primary submit" [disabled]="busy() || form.invalid">
+							{{
+								busy()
+									? ('Please wait…' | translate)
+									: registration
+										? ('Create account' | translate)
+										: ('Sign in' | translate)
+							}}
+						</button>
+					</fieldset>
+				</form>
+				
+				@if (!registration) {
+					<div style="text-align: center; margin-top: 16px;">
+						<button type="button" class="button secondary" (click)="loginWithGoogle()" style="width: 100%;">
+							Sign in with Google
+						</button>
+					</div>
+				}
+
+				<p class="switch">
+					{{
+						registration ? ('Already have an account?' | translate) : ('New to Forno?' | translate)
+					}}
+					<a
+						class="inline-link"
+						[routerLink]="registration ? '/backoffice/login' : '/backoffice/register'"
+						>{{ registration ? ('Sign in' | translate) : ('Create an account' | translate) }}</a
+					>
+				</p>
+				<div class="invitation">
+					{{
+						registration
+							? ('Your invitation determines your team role. New accounts without an invitation have customer access.'
+								| translate)
+							: ('Joining an existing team? Use the email address your restaurant administrator invited.'
+								| translate)
+					}}
+				</div>
+			}
+		</div>
+		<footer>
+			<span><app-icon name="lock" />{{ 'Secure backoffice access' | translate }}</span
+			><span>{{ 'LaPrizza · Forno management center' | translate }}</span>
+		</footer>
+	</main>
+</div>

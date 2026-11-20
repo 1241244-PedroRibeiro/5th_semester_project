@@ -1,0 +1,26 @@
+info:
+  name: 04 - Callback Missing Cookie CSRF
+  type: http
+  seq: 4
+
+http:
+  method: GET
+  url: "{{baseUrl}}/auth/external/callback?code=fake_code&state=fake_state"
+
+runtime:
+  scripts:
+    - type: tests
+      code: |-
+        test("Rejects callback without oidc_ctx cookie to prevent CSRF", function() {
+          expect(res.getStatus()).to.equal(302);
+          const location = res.getHeader("Location");
+          // CORREÇÃO: Como o cookie não existe, a primeira barreira do controller devolve invalid_request
+          expect(location).to.include("/auth/callback?error=invalid_request");
+        });
+
+settings:
+  encodeUrl: false
+  timeout: inherit
+  followRedirects: false
+  maxRedirects: 5
+  forwardAuthorizationHeader: true

@@ -1,0 +1,30 @@
+info:
+  name: 07 - Error - Inactive Product at Execution
+  type: http
+  seq: 8
+http:
+  method: POST
+  url: "{{baseUrl}}/planning/executions"
+  body:
+    type: json
+    data: |-
+      { "forecastName": "Week-Inactive", "scenarioName": "Autumn-Scenario" }
+  auth:
+    type: bearer
+    token: "{{managerToken}}"
+runtime:
+  scripts:
+    - type: tests
+      code: |-
+        test("Status is 422", function() {
+          expect(res.getStatus()).to.equal(422);
+        });
+        test("Message mentions inactive", function() {
+          expect(res.getBody().error.message).to.include("inactive");
+        });
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: false

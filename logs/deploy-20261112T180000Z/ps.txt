@@ -1,0 +1,5 @@
+NAME                  IMAGE                     COMMAND                  SERVICE    CREATED          STATUS                    PORTS
+laprizza_backend      laprizza-backend:latest   "docker-entrypoint.s…"   backend    10 minutes ago   Up 10 minutes (healthy)   0.0.0.0:3000->3000/tcp
+laprizza_frontend-1   laprizza-frontend:latest  "/docker-entrypoint.…"   frontend   10 minutes ago   Up 10 minutes             127.0.0.1:80->80/tcp, 127.0.0.1:443->443/tcp
+laprizza_postgres     postgres:16-alpine        "docker-entrypoint.s…"   postgres   10 minutes ago   Up 10 minutes (healthy)   0.0.0.0:5432->5432/tcp
+laprizza_prolog       laprizza-prolog:latest    "swipl -q -s server.…"   prolog     10 minutes ago   Up 10 minutes             0.0.0.0:8081->8080/tcp

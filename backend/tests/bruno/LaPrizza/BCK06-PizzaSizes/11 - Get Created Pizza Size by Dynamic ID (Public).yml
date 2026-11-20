@@ -1,0 +1,23 @@
+info:
+  name: 11 - Get Created Pizza Size by Dynamic Name (Public)
+  type: http
+  seq: 13
+http:
+  method: GET
+  url: '{{baseUrl}}/pizza-sizes/{{createdSizeName}}'
+  body: none
+runtime:
+  scripts:
+    - type: before-request
+      code: |-
+        if (!bru.getVar("createdSizeName") && !bru.getEnvVar("createdSizeName")) {
+        	throw new Error("createdSizeName is required; run request 07 first.");
+        }
+    - type: tests
+      code: |-
+        test("Retrieves pizza size by dynamic ID with 200 OK", function() {
+        	expect(res.getStatus()).to.equal(200);
+        	const data = res.getBody();
+        	expect(data.name).to.equal(bru.getVar("createdSizeName") || bru.getEnvVar("createdSizeName"));
+        	expect(data.name).to.equal(bru.getVar("newSizeName"));
+        });

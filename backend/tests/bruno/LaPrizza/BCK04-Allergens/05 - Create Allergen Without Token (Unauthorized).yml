@@ -1,0 +1,22 @@
+info:
+  name: 05 - Create Allergen Without Token (Unauthorized)
+  type: http
+  seq: 7
+http:
+  method: POST
+  url: '{{baseUrl}}/allergens'
+  body:
+    type: json
+    data: |-
+      {
+      	"name": "Anonymous Allergen",
+      	"description": "Unauthorized attempt"
+      }
+runtime:
+  scripts:
+    - type: tests
+      code: |-
+        test("Rejects creation without token with 401 Unauthorized", function() {
+        	expect(res.getStatus()).to.equal(401);
+        	expect(res.getBody().error.message).to.equal("Authentication required.");
+        });

@@ -1,0 +1,26 @@
+info:
+  name: 23 - Block Product (Manager Success Soft Delete)
+  type: http
+  seq: 26
+http:
+  method: PATCH
+  url: '{{baseUrl}}/products/{{sellableProductSku}}/block'
+  auth:
+    type: bearer
+    token: '{{managerToken}}'
+runtime:
+  scripts:
+    - type: tests
+      code: |-
+        test("Matches the current API contract", function() {
+        	expect(res.getStatus()).to.equal(200);
+        	const data = res.getBody();
+        	expect(data.sku).to.equal(bru.getVar("sellableProductSku"));
+        	expect(data.active).to.equal(false);
+        });
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: true

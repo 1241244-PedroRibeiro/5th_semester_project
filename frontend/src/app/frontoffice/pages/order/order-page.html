@@ -1,0 +1,59 @@
+@if (!cart.lines().length) {
+	<section class="shop-container empty-order">
+		<h1>{{ 'Your order' | translate }}</h1>
+		<app-icon name="bag" />
+		<h2>{{ 'Your order is empty' | translate }}</h2>
+		<p>{{ 'Explore the menu and add your favourites to get started.' | translate }}</p>
+		<a shopButton routerLink="/menu"
+			>{{ 'Browse the menu' | translate }} <app-icon name="arrow"
+		/></a>
+	</section>
+} @else {
+	<div class="order-checker" aria-hidden="true"></div>
+	<section class="shop-container">
+		<div class="order-layout">
+			<div>
+				<div class="order-heading">
+					<h1>{{ 'Your order' | translate }}</h1>
+					<a shopButton tone="secondary" small routerLink="/menu">{{
+						'Add more items' | translate
+					}}</a>
+				</div>
+				<div class="order-lines">
+					@for (line of cart.lines(); track line.id) {
+						<app-order-line-item
+							[line]="line"
+							(quantityChanged)="cart.setQuantity(line.id, $event)"
+							(removed)="cart.remove(line.id)"
+						/>
+					}
+				</div>
+			</div>
+			<app-order-totals [subtotal]="cart.subtotal()" [currency]="cart.currency()"
+				><div class="delivery">
+					<app-icon name="pin" />
+					<div>
+						<strong>{{
+							profile.contact()?.address?.street || ('Delivery address' | translate)
+						}}</strong>
+						<p>
+							{{
+								profile.contact()?.address
+									? profile.contact()!.address!.postalCode +
+										' · ' +
+										profile.contact()!.address!.city
+									: ('Add or update your address in My account.' | translate)
+							}}
+						</p>
+					</div>
+					<a
+						class="shop-link"
+						[routerLink]="auth.user() ? '/account' : '/login'"
+						[queryParams]="auth.user() ? {} : { returnUrl: '/account' }"
+						>{{ 'Edit' | translate }}</a
+					>
+				</div></app-order-totals
+			>
+		</div>
+	</section>
+}

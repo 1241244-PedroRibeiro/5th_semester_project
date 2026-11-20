@@ -1,0 +1,25 @@
+info:
+  name: 00 - Setup Manager Token Fixture
+  type: http
+  seq: 1
+http:
+  method: POST
+  url: '{{baseUrl}}/auth/login'
+  body:
+    type: json
+    data: |-
+      {
+        "email": "manager@laprizza.test",
+        "password": "Manager123!"
+      }
+runtime:
+  scripts:
+    - type: tests
+      code: |-
+        test("Authenticates predefined manager for BCK03 suite", function() {
+          expect(res.getStatus()).to.equal(200);
+          const data = res.getBody();
+          expect(data.token).to.be.a("string").and.not.empty;
+          bru.setVar("managerToken", data.token);
+          bru.setEnvVar("managerToken", data.token);
+        });

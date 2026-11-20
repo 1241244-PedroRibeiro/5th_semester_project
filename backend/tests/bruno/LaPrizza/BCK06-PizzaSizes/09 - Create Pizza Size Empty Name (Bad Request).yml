@@ -1,0 +1,24 @@
+info:
+  name: 09 - Create Pizza Size Empty Name (Bad Request)
+  type: http
+  seq: 11
+http:
+  method: POST
+  url: '{{baseUrl}}/pizza-sizes'
+  body:
+    type: json
+    data: |-
+      {
+      	"name": ""
+      }
+  auth:
+    type: bearer
+    token: '{{managerToken}}'
+runtime:
+  scripts:
+    - type: tests
+      code: |-
+        test("Empty name returns 400 Bad Request", function() {
+        	expect(res.getStatus()).to.equal(400);
+        	expect(res.getBody().error.message).to.contain("Pizza size name is required");
+        });

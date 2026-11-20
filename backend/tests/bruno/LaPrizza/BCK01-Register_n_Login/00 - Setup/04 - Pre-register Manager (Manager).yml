@@ -1,0 +1,53 @@
+info:
+  name: 13 - Pre-register Manager (Manager)
+  type: http
+  seq: 7
+http:
+  method: POST
+  url: '{{baseUrl}}/auth/pre_register'
+  body:
+    type: json
+    data: |-
+      {
+      	"firstName": "Bruno",
+      	"lastName": "Staff",
+      	"email": "{{preRegisterEmail}}",
+      	"roleName": " manager "
+      }
+  auth:
+    type: bearer
+    token: '{{managerToken}}'
+runtime:
+  scripts:
+    - type: before-request
+      code: |-
+        if (!bru.getVar("managerToken")) {
+        	throw new Error("Set managerToken before running this request; see this folder's README.");
+        }
+        bru.setVar("preRegisterEmail", "bruno-staff-" + Date.now() + "-" + Math.random().toString(36).slice(2) + "@example.com");
+    - type: tests
+      code: |-
+        test("Status code is 201", function() {
+        	expect(res.getStatus()).to.equal(201);
+        });
+
+        test("Creates pending staff with the requested role and no exposed credentials", function() {
+        	const data = res.getBody();
+        	expect(data.username).to.be.a("string").and.not.empty;
+        	expect(data.firstName).to.equal("Bruno");
+        	expect(data.lastName).to.equal("Staff");
+        	expect(data.email).to.equal(bru.getVar("preRegisterEmail"));
+        	expect(data.roles).to.deep.equal(["MANAGER"]);
+        	expect(data.status).to.equal("PENDING_REGISTRATION");
+        	expect(Number.isFinite(Date.parse(data.createdAt))).to.equal(true);
+        	expect(Number.isFinite(Date.parse(data.updatedAt))).to.equal(true);
+        	expect(data.createdAt).to.equal(data.updatedAt);
+        	for (const key of ["token", "password", "passwordHash", "temporaryPassword"]) {
+        		expect(data).not.to.have.property(key);
+        	}
+        });
+
+        test("Generates the staff username from the email", function() {
+        	const [local, domain] = bru.getVar("preRegisterEmail").split("@");
+        	expect(res.getBody().username).to.equal(local + "_" + domain[0]);
+        });

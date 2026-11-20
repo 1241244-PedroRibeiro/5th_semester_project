@@ -1,0 +1,6 @@
+info:
+  name: 04 - Dietary Restrictions
+  type: folder
+  seq: 5
+request:
+  auth: inherit

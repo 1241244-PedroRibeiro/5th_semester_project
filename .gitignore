@@ -1,0 +1,59 @@
+# Dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# Testing and Coverage
+coverage/
+*.lcov
+
+# Production Build
+dist/
+build/
+
+# Environment Variables
+.env
+.env.local
+.env.*.local
+!.env.example
+
+# Logs
+logs/*
+!logs/deploy-20261112T180000Z/
+!logs/deploy-20261112T180000Z/**
+!logs/deploy-20261112T183000Z-fail/
+!logs/deploy-20261112T183000Z-fail/**
+!logs/README.md
+*.log
+!logs/**/*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Database & Docker Volumes
+.docker/
+postgres_data/
+
+# OS and IDE Files
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Generated local Bruno sessions
+backend/tests/bruno/LaPrizza/environments/Local Status Tests.yml
+backend/tests/bruno/LaPrizza/environments/AA07.local.json
+
+/certs/
+
+# Browser test artifacts
+frontend/test-results/
+frontend/playwright-report/
+
+# Local database backup
+/backup-before-baseline.dump
+*.dump
+backup-*.sql
+frontend/backup-before-kitchen-uuid.sql

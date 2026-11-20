@@ -1,0 +1,36 @@
+info:
+  name: 05 - Reject Expired Pending Code
+  type: http
+  seq: 5
+http:
+  method: POST
+  url: '{{baseUrl}}/password-recovery/new_pass'
+  body:
+    type: json
+    data: |-
+      {
+        "recovery_code": "{{recoveryExpiredCode}}",
+        "new_password": "{{recoveryNewPassword}}"
+      }
+runtime:
+  scripts:
+    - type: before-request
+      code: |-
+        const password = bru.getEnvVar("recoveryNewPassword");
+        if (!password) throw new Error("Set recoveryNewPassword locally; use 8–128 characters with uppercase, lowercase, a number, and a symbol.");
+        bru.setVar("recoveryNewPassword", password);
+        const code = bru.getEnvVar("recoveryExpiredCode");
+        if (!code || !/^[a-f0-9]{64}$/i.test(code.trim())) throw new Error("Set recoveryExpiredCode to a separate PENDING code older than 5 minutes. A USED code returns 409 instead.");
+        bru.setVar("recoveryExpiredCode", code.trim());
+    - type: tests
+      code: |-
+        test("Returns HTTP 410", function() {
+          expect(res.getStatus()).to.equal(410);
+        });
+        test("Returns a confirmation or explanation without recovery credentials", function() {
+          const data = res.getBody();
+          expect(data.error.message).to.be.a("string").and.not.empty;
+          expect(data).not.to.have.property("recovery_code");
+          expect(data).not.to.have.property("new_password");
+          expect(data).not.to.have.property("passwordHash");
+        });

@@ -1,0 +1,37 @@
+info:
+  name: 01 - Execute and Save ID
+  type: http
+  seq: 2
+http:
+  method: POST
+  url: "{{baseUrl}}/planning/executions"
+  body:
+    type: json
+    data: |-
+      { "forecastName": "Week-45", "scenarioName": "Autumn-Scenario", "referenceDate": "2026-11-05" }
+  auth:
+    type: bearer
+    token: "{{managerToken}}"
+runtime:
+  scripts:
+    - type: post-response
+      code: |-
+        if (res.getBody().executionId) {
+          bru.setVar("executionId", String(res.getBody().executionId));
+          bru.setEnvVar("executionId", String(res.getBody().executionId));
+        }
+    - type: tests
+      code: |-
+        test("Status is 201", function() { expect(res.getStatus()).to.equal(201); });
+        test("Stores execution ID", function() {
+          const executionId = res.getBody().executionId;
+          expect(executionId).to.be.a("number").and.above(0);
+          bru.setVar("executionId", String(executionId));
+          bru.setEnvVar("executionId", String(executionId));
+        });
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: false

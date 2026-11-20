@@ -1,0 +1,22 @@
+info:
+  name: 04 - Replay Execution
+  type: http
+  seq: 5
+http:
+  method: POST
+  url: "{{baseUrl}}/planning/executions/{{executionId}}/replay"
+  auth:
+    type: bearer
+    token: "{{managerToken}}"
+runtime:
+  scripts:
+    - type: tests
+      code: |-
+        test("Status is 201", function() { expect(res.getStatus()).to.equal(201); });
+        test("Marks result as replay", function() { expect(res.getBody().isReplay).to.equal(true); });
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: false

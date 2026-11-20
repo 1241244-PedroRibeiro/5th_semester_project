@@ -1,0 +1,35 @@
+info:
+  name: 09 - Reject Pizza Component Without ComponentTypeCode (AC5 Violation)
+  type: http
+  seq: 12
+http:
+  method: POST
+  url: '{{baseUrl}}/products'
+  body:
+    type: json
+    data: |-
+      {
+          "name": "Orphan Dough",
+          "description": "Pizza component missing component type",
+          "categoryName": "Ingredients",
+          "isSellable": false,
+          "isPizzaComponent": true,
+          "isStockControlled": true,
+          "sku": "PRD-ERR-COMP"
+      }
+  auth:
+    type: bearer
+    token: '{{managerToken}}'
+runtime:
+  scripts:
+    - type: tests
+      code: |-
+        test("Rejects missing component type with 400 Bad Request", function() {
+            expect(res.getStatus()).to.equal(400);
+        });
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: true

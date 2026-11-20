@@ -1,0 +1,44 @@
+info:
+  name: 09 - Happy Path - Sufficient Stock (201)
+  type: http
+  seq: 10
+http:
+  method: POST
+  url: "{{baseUrl}}/planning/bom-executions"
+  body:
+    type: json
+    data: |-
+      {
+        "orders": [
+          { "productSku": "PIZ-MARGHERITA", "pizzaSize": "Small", "quantity": 2 }
+        ],
+        "isSimulated": true,
+        "source": "simulated"
+      }
+  auth:
+    type: bearer
+    token: "{{managerToken}}"
+runtime:
+  scripts:
+    - type: tests
+      code: |-
+        test("Status is 201 Created", function() {
+          expect(res.getStatus()).to.equal(201);
+        });
+
+        test("Sufficient stock leaves a positive hypothetical balance", function() {
+          const reqs = res.getBody().requirements;
+          const dough = reqs.find(r => r.productSku === 'PRD-DOUGH'); // Stock é 120 no seed
+
+          // 2 Small pizzas * 1 unit = 2 units needed.
+          expect(dough.requiredUnits).to.equal(2);
+          expect(dough.replenishmentUnits).to.equal(0);
+          // Stock (120) - Required (2) = 118
+          expect(dough.hypotheticalRemainingUnits).to.equal(118);
+        });
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: false

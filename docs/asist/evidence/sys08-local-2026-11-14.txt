@@ -1,0 +1,88 @@
+=== BACKUP FILES ===
+total 84
+drwx------  2 root root  4096 Nov 14 23:17 .
+drwxr-xr-x 19 root root  4096 Nov 14 20:33 ..
+-rw-r--r--  1 root root  2075 Nov 14 23:16 backup.log
+-rw-r--r--  1 root root 19005 Nov 14 22:17 db-20261114T221731Z.dump.gz.age
+-rw-r--r--  1 root root   107 Nov 14 22:17 db-20261114T221731Z.dump.gz.age.sha256
+-rw-r--r--  1 root root 18871 Nov 14 23:16 db-20261114T231612Z.dump.gz.age
+-rw-r--r--  1 root root   107 Nov 14 23:16 db-20261114T231612Z.dump.gz.age.sha256
+-rw-r--r--  1 root root 11544 Nov 14 22:54 dr-drill-2026-11-14.log
+-rw-r--r--  1 root root   880 Nov 14 23:16 restore-test.log
+-rw-r--r--  1 root root  4963 Nov 14 23:16 restore.log
+
+=== BACKUP PERMISSIONS ===
+drwx------ root:root /backups
+-rw-r--r-- root:root /backups/db-20261114T221731Z.dump.gz.age
+-rw-r--r-- root:root /backups/db-20261114T231612Z.dump.gz.age
+
+=== CRON ===
+# laprizza SYS08 - Backup cron jobs
+# Daily full DB dump at 02:00 UTC
+# Weekly full at 03:00 UTC Sunday
+# Monthly full at 04:00 UTC first day of month
+# Off-site sync (NAS + S3) at 05:00 UTC daily
+# WAL archiving continuous (handled by PostgreSQL config)
+
+# Environment variables for backup scripts
+BACKUP_DIR=/backups
+DB_NAME=laprizza_db
+DB_USER=laprizza_user
+DB_HOST=postgres
+DB_PORT=5432
+AGE_PUBKEY_FILE=/etc/laprizza/age.pub
+AGE_PRIVKEY_FILE=/etc/laprizza/age.key
+NAS_HOST=nas.dei.example.com
+NAS_USER=laprizza-backup
+NAS_PATH=/backups/laprizza
+NAS_SSH_KEY=/etc/laprizza/nas_ssh_key
+S3_REMOTE=laprizza-s3
+S3_BUCKET=laprizza-backups
+S3_PATH=laprizza/
+AGE_PUBKEY_S3=/etc/laprizza/age-s3.pub
+RCLONE_CONFIG=/etc/rclone.conf
+
+# Daily backup at 02:00 UTC
+0 2 * * * root /usr/local/sbin/backup.sh daily >> /backups/backup-cron.log 2>&1
+
+# Weekly backup at 03:00 UTC Sunday
+0 3 * * 0 root /usr/local/sbin/backup.sh weekly >> /backups/backup-cron.log 2>&1
+
+# Monthly backup at 04:00 UTC first day of month
+0 4 1 * * root /usr/local/sbin/backup.sh monthly >> /backups/backup-cron.log 2>&1
+
+# Off-site sync to NAS at 05:00 UTC daily
+0 5 * * * root /usr/local/sbin/backup-to-nas.sh >> /backups/backup-cron.log 2>&1
+
+# Off-site sync to S3 at 05:30 UTC daily
+30 5 * * * root /usr/local/sbin/backup-to-s3.sh >> /backups/backup-cron.log 2>&1
+
+# Weekly restore test at 06:00 UTC Sunday
+0 6 * * 0 root /usr/local/sbin/restore-test.sh >> /backups/restore-test.log 2>&1
+
+# Monthly DR drill at 07:00 UTC first Sunday
+0 7 1-7 * 0 root /usr/local/sbin/dr-drill.sh >> /backups/dr-drill.log 2>&1
+=== AUDIT RULE ===
+-w /backups -p rwa -k backups
+
+=== RESTORE TEST ===
+Target database: laprizza_restore_test
+Verifying checksum...
+Checksum: OK
+Decrypting and decompressing...
+Decrypted dump: 108369 bytes
+Dropping and creating target database: laprizza_restore_test
+NOTICE:  database "laprizza_restore_test" does not exist, skipping
+DROP DATABASE
+CREATE DATABASE
+Restoring database...
+Verifying restore...
+Tables restored: 42
+WARNING: Parity script not found, skipping
+Comparing schema with live database (laprizza_db)...
+Schema comparison: IDENTICAL
+=== Restore completed successfully at Sat Nov 14 23:16:22 UTC 2026 ===
+PASS backup=db-20261114T231612Z.dump.gz.age parity=OK
+Comparing row counts...
+Row counts: IDENTICAL
+PASS backup=db-20261114T231612Z.dump.gz.age parity=OK

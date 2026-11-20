@@ -1,0 +1,44 @@
+info:
+  name: POST-CREATE-PREDEFINED-PIZZA
+  type: http
+  seq: 1
+http:
+  method: POST
+  url: '{{baseUrl}}/predefined-pizzas'
+  body:
+    type: json
+    data: |-
+      {
+      	"recipeName": "BCK10 Pizza Integration Test",
+      	"defaultRecipeLines": [
+      		{
+      			"defaultQuantity": 1,
+      			"componentSku": "{{bck10DoughSku}}"
+      		},
+      		{
+      			"defaultQuantity": 1,
+      			"componentSku": "PRD-MOZZ"
+      		}
+      	],
+      	"availableSizes": [
+      		"Small"
+      	],
+      	"pizzaSku": "{{bck10PizzaSku}}"
+      }
+  auth:
+    type: bearer
+    token: '{{managerToken}}'
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: false
+runtime:
+  scripts:
+    - type: tests
+      code: |-
+        test("Manager creates predefined pizza successfully", function() {
+            expect(res.getStatus()).to.equal(201);
+            expect(res.getBody().pizzaSku).to.equal(bru.getVar("bck10PizzaSku"));
+        });

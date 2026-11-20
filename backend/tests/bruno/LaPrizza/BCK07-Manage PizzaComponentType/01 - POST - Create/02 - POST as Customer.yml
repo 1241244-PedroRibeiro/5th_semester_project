@@ -1,0 +1,29 @@
+info:
+  name: 02 - POST as Customer
+  type: http
+  seq: 2
+http:
+  method: POST
+  url: '{{baseUrl}}/pizza-component-types'
+  body:
+    type: json
+    data: |-
+      {
+        "name": "{{bck07Name}}",
+        "assemblyOrder": {{bck07Order}},
+        "minCardinality": 0,
+        "maxCardinality": null
+      }
+  auth:
+    type: bearer
+    token: '{{bck07CustomerToken}}'
+settings:
+  encodeUrl: true
+runtime:
+  scripts:
+    - type: tests
+      code: |-
+        test("POST as Customer", function() {
+          expect(res.getStatus()).to.equal(403);
+          expect(res.getBody().error.message).to.equal("You do not have permission to do this.");
+        });

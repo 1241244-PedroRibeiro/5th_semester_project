@@ -1,0 +1,30 @@
+info:
+  name: 04 - Create Bounded Type
+  type: http
+  seq: 4
+http:
+  method: POST
+  url: '{{baseUrl}}/pizza-component-types'
+  body:
+    type: json
+    data: |-
+      {
+        "name": "{{bck07BoundedName}}",
+        "assemblyOrder": {{bck07BoundedOrder}},
+        "minCardinality": 0,
+        "maxCardinality": 3
+      }
+  auth:
+    type: bearer
+    token: '{{bck07ManagerToken}}'
+runtime:
+  scripts:
+    - type: before-request
+      code: 'bru.setVar("bck07BoundedName", bru.getVar("bck07Name") + " bounded"); bru.setVar("bck07ReferencedName", bru.getVar("bck07BoundedName"));'
+    - type: tests
+      code: |-
+        test("Matches the current API contract", function() {
+          expect(res.getStatus()).to.equal(201);
+          expect(res.getBody().maxCardinality).to.equal(3);
+          expect(res.getBody().name).to.equal(bru.getVar("bck07BoundedName"));
+        });

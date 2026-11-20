@@ -1,0 +1,46 @@
+info:
+  name: POST-REJECT-SIZE-WITHOUT-CONFIG
+  type: http
+  seq: 4
+http:
+  method: POST
+  url: '{{baseUrl}}/predefined-pizzas'
+  body:
+    type: json
+    data: |-
+      {
+      	"recipeName": "BCK10 Pizza Integration Test",
+      	"defaultRecipeLines": [
+      		{
+      			"defaultQuantity": 1,
+      			"componentSku": "{{bck10DoughSku}}"
+      		},
+      		{
+      			"defaultQuantity": 1,
+      			"componentSku": "PRD-MOZZ"
+      		}
+      	],
+      	"availableSizes": [
+      		"Large"
+      	],
+      	"pizzaSku": "{{bck10PizzaSku}}"
+      }
+  auth:
+    type: bearer
+    token: '{{managerToken}}'
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: false
+runtime:
+  scripts:
+    - type: tests
+      code: |-
+        test("Rejects creation for size without configurations (422 Unprocessable Entity)", function() {
+            expect(res.getStatus()).to.equal(422);
+            expect(res.getBody().error.message).to.equal(
+                "An active component with a configuration for this size is required"
+            );
+        });

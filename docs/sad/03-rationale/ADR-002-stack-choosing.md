@@ -1,0 +1,83 @@
+# ADR 002: Back-End Technology Stack, Runtime, and Persistence Store
+
+- **Status:** Accepted
+
+- **Context:**
+The LaPrizza information system requires the implementation of the Sprint 1 back-end REST API to manage system users, customers, products, categories, allergens, pizza sizes, component types, size-dependent configurations, stock units, predefined pizzas, and product catalogue queries (LEI-2026-27-Sem5-Project_v1-Sprint1US.pdf, pp. 4-10).
+The system will subsequently integrate with an interactive client web application (Single-Page Application), a Three.js 3D visualization canvas, and an AI-driven preparation scheduling module in Prolog (LEI-2026-27-Sem5-Project_v1-SystemSpecification.pdf, pp. 11-13).
+
+According to the RFP guidelines, the project does not mandate any specific technology or persistence engine by decree, leaving the architectural selection open to the team provided that all choices are rigorously justified, fit the problem domain, and balance non-functional quality attributes (base-project-prompts.md, p. 1; principios orientadores ARQSI - English.pdf, pp. 2-3).
+A central challenge of this domain lies in the heavy requirements for referential integrity across interconnected catalogues (e.g., preventing the deletion of categories, allergens, sizes, or component types that are actively referenced by products) and non-negative stock invariants (LEI-2026-27-Sem5-Project_v1-Sprint1US.pdf, pp. 6-10). We must select a technology stack, runtime, and persistence architecture capable of satisfying these constraints reliably.
+
+- **Decision:**
+We adopt a **Node.js (TypeScript) + Nest.js + PostgreSQL** architecture for the back-end application service, structured as follows:
+1. **Runtime & Language:** **Node.js** (LTS v20+ / v24) with **TypeScript**, providing static typing, explicit domain interfaces, compile-time validation, and modern asynchronous capabilities (02 - Node.js - v2.pdf, pp. 18-19; base-project-prompts.md, p. 1).
+2. **Web Framework:** **Nest.js**, a TypeScript-first, opinionated framework that runs on top of the Express HTTP engine and adds an enterprise-grade application structure. It delivers modular HTTP routing through decorator-based controllers, decoupled middleware pipelines, and centralized error handling through exception filters (02 - Node.js - v2.pdf, pp. 27, 32, 53). Beyond the Express baseline, Nest.js provides:
+   - **Modular architecture:** features (e.g., Catalogue, Stock, Users) are encapsulated in self-contained modules with explicit boundaries, mapping naturally onto the layered/DDD organization of the domain.
+   - **Built-in Dependency Injection:** controllers, application services, and repositories are wired through an IoC container, enforcing separation of concerns and allowing infrastructure (e.g., repositories) to be replaced by test doubles without changing business code.
+   - **Declarative request pipeline:** guards (authentication/authorization by role), pipes (payload validation and transformation), and interceptors (logging, response mapping) keep cross-cutting concerns out of the business logic.
+   - **Integrated testing tooling:** the `@nestjs/testing` module builds isolated testing modules with overridable providers, complementing Jest and Supertest.
+   - **Ecosystem integration:** first-class support for Prisma/TypeORM, JWT/Passport-based authentication, and OpenAPI (Swagger) documentation of the REST API.
+3. **Primary Persistence Engine:** **PostgreSQL** accessed via an Object-Relational Mapping (ORM) / query abstraction layer (such as Prisma or TypeORM), backed by native SQL constraints for referential integrity and atomic transaction guarantees (02 - Node.js - v2.pdf, p. 36).
+4. **Boundary Validation:** **Joi** (or Zod) executed at the routing perimeter to guarantee that incoming HTTP request payloads conform strictly to expected contracts before reaching application services (02 - Node.js - v2.pdf, pp. 56-58).
+5. **Security & Authentication:** **JSON Web Tokens (jsonwebtoken)** for stateless authentication claims (02 - Node.js - v2.pdf, pp. 76, 80) and **Argon2id (argon2 package)** for hashing user passwords, replacing the bcrypt/bcryptjs approach shown in the course slides (02 - Node.js - v2.pdf, p. 83). Argon2id is the winner of the Password Hashing Competition and the first-choice algorithm in the OWASP Password Storage Cheat Sheet.
+   - **Advantages:**
+     - **Memory-hard:** each hash requires a configurable amount of RAM, making large-scale brute-force attacks on GPUs/ASICs far more expensive than with bcrypt.
+     - **Tunable cost:** memory, iterations, and parallelism can be adjusted independently as hardware evolves.
+     - **Hybrid resistance:** the `id` variant combines protection against side-channel attacks (Argon2i) and against GPU cracking (Argon2d).
+     - **Self-contained hashes and no length limit:** the salt and parameters are stored in the hash string, and passwords are not truncated (bcrypt truncates at 72 bytes).
+     - **Non-blocking execution:** the native implementation hashes outside the Node.js event loop, unlike the pure-JavaScript `bcryptjs`.
+     - **Pepper support:** an optional secret kept outside the database can be mixed into the hash, so a database leak alone is not enough to crack passwords.
+   - **Disadvantages:**
+     - **Native dependency:** the `argon2` package requires prebuilt binaries or a build toolchain, which may complicate Docker images and CI pipelines.
+     - **Resource consumption:** the memory cost increases RAM usage per login request, so parameters must be sized to avoid exhaustion under concurrent authentication load.
+     - **Not covered by the course material:** the reference slides use bcrypt, so the team must rely on external documentation (OWASP, the library's own documentation).
+     - **Less ubiquitous than bcrypt:** fewer legacy systems and tutorials support it, which makes migrating existing hashes require a rehash-on-login strategy.
+6. **Automated Testing Suite:** **Jest / Vitest** for domain unit tests, combined with **Supertest** for testing REST API endpoints against the Nest.js app without opening live TCP listener ports (02 - Node.js - v2.pdf, p. 28; base-project-prompts.md, p. 1).
+
+- **Considered Alternatives:**
+
+  ### 1. Document Database (MongoDB with Mongoose ODM)
+  - *Description:* Utilizing MongoDB to store domain entities as JSON-like documents, as demonstrated in reference course examples (02 - Node.js - v2.pdf, pp. 35, 37).
+  - *Pros:* Natural support for hierarchical structures; rapid prototyping for documents read/written as a single unit without joins (02 - Node.js - v2.pdf, pp. 36, 44).
+  - *Cons:* MongoDB lacks native database-level referential integrity enforcement (02 - Node.js - v2.pdf, p. 46). In LaPrizza, almost every catalogue entity (Category, Allergen, PizzaSize, PizzaComponentType) has strict acceptance criteria forbidding deletion if referenced by active products or configurations (LEI-2026-27-Sem5-Project_v1-Sprint1US.pdf, pp. 6-10). In MongoDB, preventing dangling references requires custom application-level queries (`findById` checks before delete) which are vulnerable to race conditions unless wrapped in distributed multi-document ACID transactions (02 - Node.js - v2.pdf, pp. 46-47).
+
+  ### 2. Enterprise Compiled Framework (.NET ASP.NET Core / Java Spring Boot)
+  - *Description:* Implementing the back-end service in C# or Java with relational persistence (Entity Framework / Hibernate) (ARQSI_04_architectural_styles.pdf, pp. 11-12).
+  - *Pros:* Heavy compile-time type safety, robust built-in Dependency Injection, and battle-tested enterprise patterns (ARQSI_04_architectural_styles.pdf, pp. 11, 29).
+  - *Cons:* Introduces higher boilerplate overhead, slower local feedback loops, and diverges from the web technology baseline shared across other project deliverables (principios orientadores ARQSI - English.pdf, p. 2; 02 - Node.js - v2.pdf, p. 5).
+
+  ### 3. Pure Relational Database (PostgreSQL) vs. Document NoSQL (MongoDB)
+  - *Comparison:* While MongoDB is presented in course slides as the reference tool, the slides explicitly provide a comparative matrix to justify persistence selection based on data characteristics: relational engines excel when data requires strong consistency and cross-entity constraints, whereas document stores fit data with evolving schemas read as a whole (02 - Node.js - v2.pdf, p. 36). LaPrizza features deeply relational cross-entity constraints (products referencing categories, allergens, component roles, and sizes), making a relational engine fundamentally aligned with the domain requirements (LEI-2026-27-Sem5-Project_v1-SystemSpecification.pdf, p. 10).
+
+  ### 4. Password Hashing: bcrypt / bcryptjs vs. Argon2id
+  - *Description:* Hashing user passwords with bcrypt through the `bcryptjs` library, as demonstrated in the reference course examples (02 - Node.js - v2.pdf, p. 83).
+  - *Pros:* Simple one-call API, automatic salting, widely adopted and well documented, and acceptable under current OWASP guidance with a cost factor of at least 10.
+  - *Cons:* Not memory-hard, so GPU/FPGA cracking is cheaper than against Argon2id; passwords are truncated at 72 bytes; and the pure-JavaScript `bcryptjs` runs on the Node.js main thread, which can block the event loop under concurrent authentication load.
+
+- **Consequences:**
+
+  ### Positive
+  - **Native Referential Integrity & Invariant Protection:** PostgreSQL directly enforces relational integrity constraints (`FOREIGN KEY ... ON DELETE RESTRICT`) and check constraints (e.g., `CHECK (stock_units >= 0)`), guaranteeing that business invariants cannot be bypassed by database operations or race conditions (LEI-2026-27-Sem5-Project_v1-Sprint1US.pdf, pp. 6-10, 13).
+  - **ACID Transaction Guarantees:** Ensures atomic consistency when updating multi-entity records, such as creating a predefined pizza along with its default component links or performing atomic stock adjustments (LEI-2026-27-Sem5-Project_v1-Sprint1US.pdf, pp. 9-10; 02 - Node.js - v2.pdf, p. 36).
+  - **Type Safety and Domain Modeling with TypeScript:** Using TypeScript on top of Node.js eliminates runtime typing errors, allows seamless compilation of DDD Entities and Value Objects, and creates robust contracts shared across layers (ARQSI_04_architectural_styles.pdf, pp. 18, 20).
+  - **Enterprise Modularity & Built-in IoC Container:** Adopting Nest.js provides enterprise-grade structure via first-class Inversion of Control (IoC), enabling strict adherence to Clean/Onion dependency inversion without manual factory boilerplate.
+  - **Modern Cryptographic Hardening (Argon2id):** Guarantees state-of-the-art password defense (OWASP gold standard), eliminates CPU event loop blockages via native threads, and removes the 72-byte password truncation limit.
+  - **Hybrid Modeling Capabilities (JSONB Support):** If hierarchical configurations (such as customized pizza recipes or complex 3D metadata) need to be stored without fixed column normalization in later sprints, PostgreSQL's native `JSONB` columns offer document-like flexibility within a relational engine (LEI-2026-27-Sem5-Project_v1-SystemSpecification.pdf, pp. 5, 11-12).
+  - **Non-blocking Asynchronous I/O:** Retains Node.js's high-throughput event loop for handling concurrent REST requests without incurring multi-threaded process overhead (02 - Node.js - v2.pdf, pp. 3, 9, 13).
+
+  ### Negative / Trade-offs
+  - **Framework Learning Curve & Abstraction:** Nest.js introduces higher architectural ceremony (decorators, modules, providers) compared to minimal Express scripts.
+  - **Native Binary Compilation for Hashing:** `argon2` depends on native C++ bindings, requiring precompiled binaries in Docker/CI containers.
+  - **Migration Management Overhead:** Schema modifications require formal migration scripts rather than dynamic schema updates, requiring greater discipline during rapid iteration cycles.
+  - **Divergence from Slide Examples:** While fully supported by the open RFP guidelines, code examples provided in the introductory ARQSI slides demonstrate Mongoose syntax and plain Express, meaning the team must maintain their own repository mapping patterns using Nest.js and an ORM (base-project-prompts.md, p. 1; 02 - Node.js - v2.pdf, pp. 37-43).
+
+---
+
+## Revision History & Changes Noted (ADR-002 Revision v2.2)
+
+- **Status Transition:** Updated from `Pending` to `Accepted`.
+- **Framework Evolution (Express.js -> Nest.js):** Promoted the HTTP application framework from raw Express.js to **Nest.js** (over Express engine). This change introduces built-in Dependency Injection (IoC Container), modular feature boundaries, declarative request pipelines (Guards/Pipes/Interceptors), and `@nestjs/testing` utilities, fulfilling enterprise Clean/Onion Architecture standards.
+- **Cryptographic Upgrade (bcryptjs -> Argon2id):** Replaced `bcrypt`/`bcryptjs` with **Argon2id** (`argon2` package). Added thorough analysis of trade-offs: resistance to GPU/ASIC cracking via memory hardness, removal of the 72-byte truncation limit, off-event-loop execution, and consideration of native binary build requirements in CI/CD.
+- **Considered Alternatives Expansion:** Added explicit comparative analysis between *bcrypt/bcryptjs* and *Argon2id* in the evaluated alternatives section.
+- **Consequences Refinement:** Added positive consequences for enterprise IoC container adoption and OWASP-compliant password security, as well as trade-offs regarding native binary dependencies in containerized environments.

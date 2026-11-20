@@ -1,0 +1,131 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "LaPrizza Egress Allowlist Configuration",
+  "description": "JSON Schema for config/allowed-endpoints.yml (SYS03)",
+  "type": "object",
+  "required": ["version", "endpoints"],
+  "additionalProperties": false,
+  "properties": {
+    "version": {
+      "type": "integer",
+      "const": 1,
+      "description": "Schema version for forward compatibility"
+    },
+    "metadata": {
+      "type": "object",
+      "required": ["owner", "last_updated"],
+      "additionalProperties": false,
+      "properties": {
+        "owner": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Team or owner identifier"
+        },
+        "last_updated": {
+          "type": "string",
+          "format": "date",
+          "description": "Last update date in ISO format (YYYY-MM-DD)"
+        },
+        "rationale": {
+          "type": "string",
+          "description": "Human-readable rationale for this configuration"
+        }
+      }
+    },
+    "defaults": {
+      "type": "object",
+      "required": ["action", "log"],
+      "additionalProperties": false,
+      "properties": {
+        "action": {
+          "type": "string",
+          "enum": ["deny", "allow"],
+          "description": "Default action for unspecified destinations"
+        },
+        "log": {
+          "type": "boolean",
+          "description": "Whether to log denied egress connections"
+        }
+      }
+    },
+    "endpoints": {
+      "type": "array",
+      "minItems": 1,
+      "description": "List of allowed egress endpoints",
+      "items": {
+        "type": "object",
+        "required": ["name", "protocol", "destinations", "purpose", "sprint"],
+        "additionalProperties": false,
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "pattern": "^[a-z0-9-]+$",
+            "description": "Unique endpoint identifier (lowercase, alphanumeric, hyphens)"
+          },
+          "protocol": {
+            "type": "string",
+            "enum": ["tcp", "udp", "icmp"],
+            "description": "Network protocol"
+          },
+          "port": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 65535,
+            "description": "Single destination port"
+          },
+          "ports": {
+            "type": "array",
+            "minItems": 1,
+            "maxItems": 65535,
+            "uniqueItems": true,
+            "items": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 65535
+            },
+            "description": "Multiple destination ports (alternative to port)"
+          },
+          "destinations": {
+            "type": "array",
+            "minItems": 1,
+            "uniqueItems": true,
+            "items": {
+              "type": "string",
+              "minLength": 1,
+              "description": "Destination hostname or CIDR"
+            },
+            "description": "List of destination hostnames or CIDR blocks"
+          },
+          "purpose": {
+            "type": "string",
+            "minLength": 5,
+            "description": "Human-readable purpose of this endpoint"
+          },
+          "sprint": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 3,
+            "description": "Sprint in which this endpoint was introduced"
+          },
+          "internal_only": {
+            "type": "boolean",
+            "default": false,
+            "description": "If true, endpoint is internal-only (no egress rule generated)"
+          }
+        },
+        "oneOf": [
+          {
+            "required": ["port"],
+            "not": { "required": ["ports"] }
+          },
+          {
+            "required": ["ports"],
+            "not": { "required": ["port"] }
+          }
+        ]
+      },
+      "uniqueItems": true
+    }
+  }
+}

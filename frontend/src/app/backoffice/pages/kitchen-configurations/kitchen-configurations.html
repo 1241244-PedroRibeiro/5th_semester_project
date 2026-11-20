@@ -1,0 +1,247 @@
+﻿<app-page-header title="Kitchen Configurations"
+    description="Manage your kitchen layouts and select the active configuration." />
+
+@if (success()) {
+<p class="notice success" role="status">
+    {{ success() | translate }}
+</p>
+}
+
+@if (error()) {
+<app-feedback kind="error" [title]="'Kitchen configuration error' | translate" [message]="error() | translate"
+    [retryable]="true" (retry)="load()" />
+}
+
+<app-panel [title]="'Kitchen layouts' | translate" [count]="items().length">
+    <div class="toolbar">
+        <label class="search">
+            <app-icon name="search" />
+            <input type="search" [placeholder]="'Search configurations...' | translate" [ngModel]="query()"
+                (ngModelChange)="query.set($event)" />
+        </label>
+
+        <button class="button primary" [disabled]="loading() || saving()" (click)="openCreate()">
+            <app-icon name="plus" />
+            {{ 'Create configuration' | translate }}
+        </button>
+    </div>
+
+    @if (loading()) {
+    <app-feedback kind="loading" [title]="'Loading kitchen configurations' | translate" />
+    } @else if (!filtered().length) {
+    <app-feedback [title]="'No configurations found' | translate"
+        [message]="'Create or import a kitchen configuration to get started.' | translate" />
+    } @else {
+    <div class="configuration-grid">
+        @for (item of filtered(); track item.id) {
+        <article class="configuration-card">
+            <div class="card-heading">
+                <div>
+                    <h3>{{ item.name }}</h3>
+
+                    <app-badge [tone]="item.isActive ? 'green' : 'neutral'">
+                        {{ (item.isActive ? 'Active' : 'Inactive') | translate }}
+                    </app-badge>
+                </div>
+
+                <div class="dates">
+                    <span class="date">
+                        {{ 'Created:' | translate }}
+                        {{ item.createdAt | localDate:'short' }}
+                    </span>
+
+                    <span class="date">
+                        {{ 'Updated:' | translate }}
+                        {{ item.updatedAt | localDate:'short' }}
+                    </span>
+                </div>
+            </div>
+
+            <div class="configuration-info">
+                <p>
+                    {{ 'Width:' | translate }}
+                    {{ item.jsonContent['dimensions']?.x ?? '—' }} m
+                </p>
+
+                <p>
+                    {{ 'Height:' | translate }}
+                    {{ item.jsonContent['dimensions']?.y ?? '—' }} m
+                </p>
+
+                <p>
+                    {{ 'Depth:' | translate }}
+                    {{ item.jsonContent['dimensions']?.z ?? '—' }} m
+                </p>
+
+                <p>
+                    {{ 'Equipment:' | translate }}
+                    {{ item.jsonContent['equipment']?.length ?? 0 }}
+                </p>
+            </div>
+
+            <details>
+                <summary>
+                    {{ 'View JSON configuration' | translate }}
+                </summary>
+
+                <pre>{{ jsonPreview(item) }}</pre>
+
+                <button type="button" class="button small" (click)="downloadJson(item)">
+                    {{ 'Download JSON' | translate }}
+                </button>
+            </details>
+
+            <div class="row-actions">
+                <button class="button small" [disabled]="saving()" (click)="openEdit(item)">
+                    {{ 'Edit' | translate }}
+                </button>
+
+                @if (!item.isActive) {
+                <button class="button small primary" [disabled]="saving()" (click)="activate(item)">
+                    {{ 'Activate' | translate }}
+                </button>
+                }
+
+                <button class="button small danger" [disabled]="saving() || item.isActive" (click)="askRemove(item)">
+                    {{ 'Delete' | translate }}
+                </button>
+            </div>
+        </article>
+        }
+    </div>
+    }
+</app-panel>
+
+<app-panel [title]="'3D Kitchen Visualization' | translate">
+
+    @if (viewerLoading()) {
+        <app-feedback
+            kind="loading"
+            [title]="'Loading kitchen configuration' | translate"
+        />
+    }
+
+    @if (viewerError()) {
+        <app-feedback
+            kind="error"
+            [title]="'Kitchen visualization error' | translate"
+            [message]="viewerError() | translate"
+            [retryable]="true"
+            (retry)="loadViewerConfiguration()"
+        />
+    }
+
+    @if (viewerConfiguration()) {
+        <div class="kitchen-viewer-wrapper">
+            <app-kitchen-viewer
+                [configuration]="viewerConfiguration()!"
+            />
+        </div>
+    } @else if (!viewerLoading() && !viewerError()) {
+        <p class="muted">
+            {{ 'No active kitchen configuration exists.' | translate }}
+            {{ 'Activate a valid configuration to enable the viewer.' | translate }}
+        </p>
+    }
+
+</app-panel>
+
+@if (editing()) {
+<app-modal [title]="(selected() ? 'Edit kitchen configuration' : 'Create kitchen configuration') | translate"
+    [description]="'Configure the kitchen JSON layout.' | translate" [busy]="saving()" (closed)="editing.set(false)">
+    <form id="kitchen-configuration-form" (ngSubmit)="save()">
+        <fieldset [disabled]="saving()" class="stack">
+            <label>
+                {{ 'Configuration name' | translate }}
+
+                <input name="name" [(ngModel)]="draftName" required maxlength="100" [readonly]="!!selected()" />
+            </label>
+
+            <label>
+                {{ 'Import JSON file' | translate }}
+
+                <input type="file" accept=".json,application/json" (change)="importJson($event)" />
+            </label>
+
+            <label>
+                {{ 'JSON content' | translate }}
+
+                <textarea name="jsonContent" [(ngModel)]="draftJson" rows="18" required spellcheck="false"></textarea>
+            </label>
+
+            @if (formError()) {
+            <p class="notice error" role="alert">
+                {{ formError() | translate }}
+            </p>
+            }
+        </fieldset>
+    </form>
+
+    <div modal-actions class="row-actions">
+        <button class="button" [disabled]="saving()" (click)="editing.set(false)">
+            {{ 'Cancel' | translate }}
+        </button>
+
+        <button class="button primary" type="submit" form="kitchen-configuration-form" [disabled]="saving()">
+            {{ (saving() ? 'Saving...' : 'Save configuration') | translate }}
+        </button>
+    </div>
+</app-modal>
+}
+
+@if (pendingImport(); as input) {
+<app-modal
+    [title]="'Large JSON file' | translate"
+    [description]="'The selected file is larger than 1 MB.' | translate"
+    (closed)="pendingImport.set(null); input.value = ''"
+>
+    <p>{{ 'Do you want to continue importing it?' | translate }}</p>
+    <div modal-actions class="row-actions">
+        <button class="button" (click)="pendingImport.set(null); input.value = ''">
+            {{ 'Cancel' | translate }}
+        </button>
+        <button class="button primary" (click)="continueImport()">
+            {{ 'Continue' | translate }}
+        </button>
+    </div>
+</app-modal>
+}
+
+@if (pendingActivation(); as item) {
+<app-modal
+    [title]="'Activate kitchen configuration?' | translate"
+    [description]="'The currently active configuration will be deactivated.' | translate"
+    [busy]="saving()"
+    (closed)="pendingActivation.set(null)"
+>
+    <p>{{ 'Activate {{name}} as the active kitchen configuration?' | translate: { name: item.name } }}</p>
+    <div modal-actions class="row-actions">
+        <button class="button" [disabled]="saving()" (click)="pendingActivation.set(null)">
+            {{ 'Cancel' | translate }}
+        </button>
+        <button class="button primary" [disabled]="saving()" (click)="confirmActivation()">
+            {{ saving() ? ('Saving…' | translate) : ('Confirm' | translate) }}
+        </button>
+    </div>
+</app-modal>
+}
+
+@if (removing(); as item) {
+<app-modal [title]="'Delete kitchen configuration?' | translate"
+    [description]="'This operation cannot be undone.' | translate" [busy]="saving()" (closed)="removing.set(null)">
+    <p>
+        {{ 'Are you sure you want to delete' | translate }}
+        <strong>{{ item.name }}</strong>?
+    </p>
+
+    <div modal-actions class="row-actions">
+        <button class="button" [disabled]="saving()" (click)="removing.set(null)">
+            {{ 'Cancel' | translate }}
+        </button>
+
+        <button class="button danger" [disabled]="saving()" (click)="remove()">
+            {{ 'Delete' | translate }}
+        </button>
+    </div>
+</app-modal>
+}

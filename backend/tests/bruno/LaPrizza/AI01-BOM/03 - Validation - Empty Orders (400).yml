@@ -1,0 +1,34 @@
+info:
+  name: 03 - Validation - Empty Orders (400)
+  type: http
+  seq: 4
+http:
+  method: POST
+  url: "{{baseUrl}}/planning/bom-executions"
+  body:
+    type: json
+    data: |-
+      {
+        "orders": [],
+        "isSimulated": true,
+        "source": "simulated"
+      }
+  auth:
+    type: bearer
+    token: "{{managerToken}}"
+runtime:
+  scripts:
+    - type: tests
+      code: |-
+        test("Status is 400 Bad Request", function() {
+          expect(res.getStatus()).to.equal(400);
+        });
+        test("Error mentions non-empty array", function() {
+          expect(res.getBody().error.message).to.include("non-empty");
+        });
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: false

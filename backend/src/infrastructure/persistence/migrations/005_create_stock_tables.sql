@@ -1,0 +1,19 @@
+BEGIN;
+
+CREATE TABLE IF NOT EXISTS stock_items (
+	product_sku VARCHAR PRIMARY KEY REFERENCES products(sku) ON DELETE RESTRICT,
+	current_units INT NOT NULL DEFAULT 0 CHECK (current_units >= 0),
+	created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+	updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS stock_movements (
+	id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+	product_sku VARCHAR NOT NULL REFERENCES stock_items(product_sku) ON DELETE RESTRICT,
+	type VARCHAR NOT NULL CHECK (type IN ('REPLENISHMENT', 'CONSUMPTION', 'ADJUSTMENT')),
+	amount INT NOT NULL CHECK (amount >= 0),
+	reason TEXT NOT NULL,
+	recorded_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+COMMIT;

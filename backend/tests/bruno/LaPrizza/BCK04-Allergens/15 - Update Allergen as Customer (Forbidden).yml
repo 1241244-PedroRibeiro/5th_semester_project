@@ -1,0 +1,25 @@
+info:
+  name: 15 - Update Allergen as Customer (Forbidden)
+  type: http
+  seq: 14
+http:
+  method: PUT
+  url: '{{baseUrl}}/allergens/{{createdAllergenName}}'
+  body:
+    type: json
+    data: |-
+      {
+      	"name": "Customer Mod",
+      	"description": "Forbidden update attempt"
+      }
+  auth:
+    type: bearer
+    token: '{{customerToken}}'
+runtime:
+  scripts:
+    - type: tests
+      code: |-
+        test("Customer cannot update allergen (403 Forbidden)", function() {
+        	expect(res.getStatus()).to.equal(403);
+        	expect(res.getBody().error.message).to.equal("You do not have permission to do this.");
+        });

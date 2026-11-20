@@ -1,0 +1,35 @@
+info:
+  name: 00 - Setup Manager Token
+  type: http
+  seq: 1
+http:
+  method: POST
+  url: "{{baseUrl}}/auth/login"
+  body:
+    type: json
+    data: |-
+      { "email": "manager@laprizza.test", "password": "Manager123!" }
+runtime:
+  scripts:
+    - type: post-response
+      code: |-
+        const token = res.getBody().token;
+        if (token) {
+          bru.setVar("ai06ManagerToken", token);
+          bru.setEnvVar("ai06ManagerToken", token);
+        }
+    - type: tests
+      code: |-
+        test("Manager login succeeds", function() {
+          expect(res.getStatus()).to.equal(200);
+          const token = res.getBody().token;
+          expect(token).to.be.a("string").and.not.empty;
+          bru.setVar("ai06ManagerToken", token);
+          bru.setEnvVar("ai06ManagerToken", token);
+        });
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: false

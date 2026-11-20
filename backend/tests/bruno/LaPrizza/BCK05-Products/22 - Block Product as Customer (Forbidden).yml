@@ -1,0 +1,24 @@
+info:
+  name: 22 - Block Product as Customer (Forbidden)
+  type: http
+  seq: 25
+http:
+  method: PATCH
+  url: '{{baseUrl}}/products/{{sellableProductSku}}/block'
+  auth:
+    type: bearer
+    token: '{{customerToken}}'
+runtime:
+  scripts:
+    - type: tests
+      code: |-
+        test("Customer cannot block product (403 Forbidden)", function() {
+        	expect(res.getStatus()).to.equal(403);
+        	expect(res.getBody().error.message).to.equal("You do not have permission to do this.");
+        });
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: true

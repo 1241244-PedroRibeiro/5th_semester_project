@@ -1,0 +1,35 @@
+info:
+  name: 01 - Initiate Login (Success)
+  type: http
+  seq: 1
+
+http:
+  method: GET
+  url: "{{baseUrl}}/auth/external/login"
+
+runtime:
+  scripts:
+    - type: tests
+      code: |-
+        test("Generates PKCE, state, and redirects to IdP (302)", function() {
+          expect(res.getStatus()).to.equal(302);
+          
+          const location = res.getHeader("Location");
+          expect(location).to.be.a("string");
+          expect(location).to.include("state=");
+          expect(location).to.include("code_challenge=");
+          expect(location).to.include("code_challenge_method=S256");
+          
+          // CORREÇÃO: O Bruno pode devolver o Set-Cookie como Array. 
+          // Verificamos apenas se contém a string esperada.
+          const cookies = res.getHeader("Set-Cookie");
+          expect(JSON.stringify(cookies)).to.include("oidc_ctx=");
+          expect(JSON.stringify(cookies)).to.include("HttpOnly");
+        });
+
+settings:
+  encodeUrl: false
+  timeout: inherit
+  followRedirects: false
+  maxRedirects: 5
+  forwardAuthorizationHeader: true

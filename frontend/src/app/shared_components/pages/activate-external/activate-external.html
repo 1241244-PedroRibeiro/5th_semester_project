@@ -1,0 +1,14 @@
+<main class="activation-page">
+	<div class="activation-card">
+		<app-brand />
+		@if (loading()) {
+			<p>{{ 'Checking your invitation…' | translate }}</p>
+		} @else {
+			<p class="eyebrow">{{ 'Secure account activation' | translate }}</p>
+			<h1>{{ 'Continue with your provider.' | translate }}</h1>
+			<p>{{ 'This invitation is for' | translate }} <strong>{{ email() }}</strong></p>
+			@if (error()) { <p class="error" role="alert">{{ error() | translate }}</p> }
+			@if (valid()) { <button class="primary" type="button" (click)="continueWithProvider()">{{ 'Continue with identity provider' | translate }}</button> }
+		}
+	</div>
+</main>

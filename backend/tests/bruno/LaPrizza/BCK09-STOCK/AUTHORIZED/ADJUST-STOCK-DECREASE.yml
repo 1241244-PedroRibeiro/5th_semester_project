@@ -1,0 +1,33 @@
+info:
+  name: ADJUST-STOCK-DECREASE
+  type: http
+  seq: 5
+http:
+  method: POST
+  url: '{{baseUrl}}/stock/{{productSku}}/adjustments'
+  body:
+    type: json
+    data: |-
+      {
+      	"adjustmentType": "DECREASE",
+      	"amount": 2,
+      	"reason": "Teste de ajuste no Bruno"
+      }
+  auth:
+    type: bearer
+    token: '{{managerToken}}'
+runtime:
+  scripts:
+    - type: tests
+      code: |-
+        test("Matches the current API contract", function() {
+        	expect(res.getStatus()).to.equal(200);
+        	expect(res.getBody().productSku).to.equal(bru.getVar("productSku"));
+        	expect(res.getBody().currentUnits).to.be.a("number");
+        });
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: false

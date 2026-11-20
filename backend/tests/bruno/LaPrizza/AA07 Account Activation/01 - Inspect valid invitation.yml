@@ -1,0 +1,21 @@
+info:
+  name: 01 - Inspect valid invitation
+  type: http
+  seq: 1
+http:
+  method: GET
+  url: '{{baseUrl}}/auth/invitation/{{activationToken}}'
+  auth:
+    type: none
+runtime:
+  scripts:
+    - type: tests
+      code: |-
+        test("Expected HTTP 200", () => expect(res.getStatus()).to.equal(200));
+        test("Returns a valid invitation summary", () => {
+          const data = res.getBody();
+          expect(data.valid).to.equal(true);
+          expect(["LOCAL_ACCOUNT_ACTIVATION", "EXTERNAL_IDP_MATCH"]).to.include(data.purpose);
+          expect(data.maskedEmail).to.be.a("string");
+          expect(data.expiresAt).to.be.a("string");
+        });

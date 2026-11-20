@@ -1,0 +1,25 @@
+<header>
+	<a class="brand" routerLink="/" [attr.aria-label]="'LaPrizza home' | translate"
+		><app-icon name="pizza" />LaPrizza</a
+	>
+</header>
+<main aria-labelledby="access-denied-title">
+	<div class="lock-mark" aria-hidden="true"><app-icon name="lock" /></div>
+	<p class="eyebrow">{{ '403 · Not authorized' | translate }}</p>
+	<h1 #heading id="access-denied-title" tabindex="-1">{{ 'Access denied' | translate }}</h1>
+	<p class="explanation">
+		{{ 'You don’t have permission to access this page or perform this action.' | translate }}
+	</p>
+	<p class="help">
+		{{ 'Contact the restaurant if you think you should have access.' | translate }}
+	</p>
+	<nav class="actions" [attr.aria-label]="'Access denied recovery' | translate">
+		<a class="button primary" routerLink="/"
+			>{{ 'Go to home' | translate }} <app-icon name="arrow"
+		/></a>
+		<a class="button" [routerLink]="auth.staff() ? '/backoffice/login' : '/login'">{{
+			auth.user() ? ('Sign in with another account' | translate) : ('Sign in' | translate)
+		}}</a>
+	</nav>
+</main>
+<footer>{{ 'LaPrizza · A slice above the rest' | translate }}</footer>

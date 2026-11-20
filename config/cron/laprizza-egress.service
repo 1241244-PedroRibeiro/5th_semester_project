@@ -1,0 +1,30 @@
+# /etc/systemd/system/laprizza-egress.service
+# LaPrizza Egress Allowlist DNS Refresh (SYS03 AC1.5)
+# Runs every 6 hours to refresh DNS-resolved IPs in iptables
+[Unit]
+Description=LaPrizza Egress Allowlist DNS Refresh
+Documentation=https://github.com/LEI-SEM5-PI-2026-27-3DJ-05/docs/asist/sys-network-config.md
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+User=root
+Group=root
+WorkingDirectory=/opt/laprizza
+Environment=ACTOR=systemd-timer
+Environment=SRC_COMMIT=systemd-timer
+ExecStart=/bin/bash /opt/laprizza/scripts/egress.sh
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=laprizza-egress
+
+# Security hardening
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ReadWritePaths=/var/log/laprizza /tmp
+CapabilityBoundingSet=CAP_NET_ADMIN CAP_NET_RAW
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,7 @@
+info:
+  name: AI01-BOM
+  type: folder
+  seq: 18
+
+request:
+  auth: inherit

@@ -1,0 +1,29 @@
+info:
+  name: 07 - Register Username Collision 3
+  type: http
+  seq: 5
+http:
+  method: POST
+  url: '{{baseUrl}}/auth/register'
+  body:
+    type: json
+    data: |-
+      {
+      	"firstName": "Bruno",
+      	"lastName": "Collision",
+      	"email": "{{collisionEmail}}",
+      	"password": "BrunoPassword123!"
+      }
+runtime:
+  scripts:
+    - type: before-request
+      code: |-
+        const local = bru.getVar("authTestEmail").split("@")[0];
+        bru.setVar("collisionEmail", local + "@example.org");
+    - type: tests
+      code: |-
+        test("Matches the current API contract", function() {
+        	expect(res.getStatus()).to.equal(201);
+        	expect(res.getBody().user.username).to.equal(bru.getVar("authTestUsername") + "3");
+        	expect(res.getBody().user.email).to.equal(bru.getVar("collisionEmail"));
+        });

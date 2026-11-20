@@ -1,0 +1,126 @@
+.customer-auth {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	padding: clamp(1.5rem, 4vw, 4rem) 1.25rem;
+	min-height: calc(100dvh - 12rem);
+}
+.auth-card {
+	width: min(100%, 36rem);
+	padding: clamp(1.5rem, 4vw, 3.5rem);
+	background: var(--teal-soft);
+}
+.auth-brand {
+	text-align: center;
+	margin: 0 0 1.5rem;
+}
+.auth-brand app-storefront-brand {
+	font-size: clamp(2.6rem, 5vw, 4.5rem);
+}
+h1 {
+	font-size: 1.6rem;
+	text-align: center;
+	margin: 0 0 0.6rem;
+}
+.auth-intro {
+	font-size: 0.8rem;
+	color: var(--muted);
+	text-align: center;
+	margin: 0 0 1.8rem;
+}
+.password-input {
+	position: relative;
+	display: block;
+}
+.password-input input {
+	padding-right: 3rem;
+}
+.password-input > button {
+	position: absolute;
+	right: 0.25rem;
+	top: 50%;
+	transform: translateY(-50%);
+}
+.login-extras {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	justify-content: space-between;
+	gap: 0.8rem;
+}
+.login-extras .check-label,
+.login-extras .shop-link {
+	font-size: 0.7rem;
+}
+.login-actions {
+	display: flex;
+	justify-content: center;
+	gap: 1rem;
+	margin-top: 0.5rem;
+}
+.social-signin {
+	text-align: center;
+	border-top: 1px solid var(--border);
+	padding-top: 1.4rem;
+	margin-top: 1.7rem;
+}
+.social-signin > div {
+	display: flex;
+	justify-content: center;
+	gap: 1rem;
+}
+.social-signin small {
+	display: block;
+	font-size: 0.65rem;
+	margin-top: 0.85rem;
+}
+.registration-steps {
+	display: flex;
+	justify-content: space-between;
+	gap: 0.7rem;
+	margin-bottom: 1.5rem;
+	font-size: 0.72rem;
+}
+.registration-steps > span {
+	padding-bottom: 0.5rem;
+	border-bottom: 2px solid var(--border);
+	flex: 1;
+	color: var(--muted);
+}
+.registration-steps > span.current {
+	border-color: var(--accent);
+	color: var(--ink);
+	font-weight: 600;
+}
+.registration-actions {
+	display: flex;
+	justify-content: space-between;
+	gap: 1rem;
+}
+.auth-switch {
+	font-size: 0.75rem;
+	text-align: center;
+	margin: 1.5rem 0 0;
+}
+.password-error {
+	color: #942507;
+	font-size: 0.75rem;
+	margin: 0;
+}
+@media (max-width: 420px) {
+	.customer-auth {
+		padding: 1.3rem 1rem 2.5rem;
+	}
+	.auth-card {
+		padding: 1.5rem 1.2rem;
+	}
+	.auth-brand app-storefront-brand {
+		font-size: 2.5rem;
+	}
+	.login-actions {
+		flex-wrap: wrap;
+	}
+	.registration-actions {
+		gap: 0.65rem;
+	}
+}

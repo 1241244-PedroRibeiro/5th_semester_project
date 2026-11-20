@@ -1,0 +1,66 @@
+:host {
+	display: block;
+}
+.profile {
+	display: flex;
+	align-items: center;
+	gap: 0.65rem;
+	border-top: 1px solid #ffffff55;
+	margin-top: 1.8rem;
+	padding-top: 1.3rem;
+}
+.avatar {
+	display: grid;
+	place-items: center;
+	flex-shrink: 0;
+	width: 2.2rem;
+	height: 2.2rem;
+	background: var(--yellow);
+	border-radius: 50%;
+	font-size: 0.75rem;
+}
+.profile-link {
+	display: flex;
+	align-items: center;
+	gap: 0.65rem;
+	min-height: 2.75rem;
+	min-width: 2.75rem;
+	flex: 1;
+	border-radius: 0.5rem;
+	text-decoration: none;
+	color: var(--ink);
+}
+.profile-link:hover,
+.profile-link.active {
+	background: #ffffff30;
+}
+:host(.compact) .profile-link {
+	justify-content: center;
+}
+.profile-details {
+	min-width: 0;
+	flex: 1;
+}
+strong {
+	display: block;
+	font-size: 0.7rem;
+	font-weight: 500;
+	overflow-wrap: anywhere;
+}
+small {
+	font-size: 0.63rem;
+	color: var(--teal);
+}
+.icon-button {
+	min-width: 2.75rem;
+	min-height: 2.75rem;
+	flex-shrink: 0;
+}
+:host(.compact) .profile {
+	flex-direction: column;
+	margin-top: 0.75rem;
+	padding-top: 0.75rem;
+}
+:host(.compact) .profile-details {
+	display: none;
+}

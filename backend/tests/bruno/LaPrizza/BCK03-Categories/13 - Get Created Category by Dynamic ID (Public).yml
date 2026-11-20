@@ -1,0 +1,22 @@
+info:
+  name: 13 - Get Created Category by Dynamic Name (Public)
+  type: http
+  seq: 13
+http:
+  method: GET
+  url: '{{baseUrl}}/categories/{{createdCategoryName}}'
+  body: none
+runtime:
+  scripts:
+    - type: before-request
+      code: |-
+        if (!bru.getVar("createdCategoryName") && !bru.getEnvVar("createdCategoryName")) {
+        	throw new Error("createdCategoryName is required; run request 07 first.");
+        }
+    - type: tests
+      code: |-
+        test("Retrieves category by dynamic ID with 200 OK", function() {
+        	expect(res.getStatus()).to.equal(200);
+        	const data = res.getBody();
+        	expect(data.name).to.equal(bru.getVar("createdCategoryName") || bru.getEnvVar("createdCategoryName"));
+        });

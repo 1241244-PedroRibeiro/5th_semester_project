@@ -1,0 +1,21 @@
+<div class="chips">
+	@for (name of names(); track name) {
+		@if (selectable()) {
+			<button
+				type="button"
+				class="chip"
+				[class.selected]="selected().includes(name)"
+				[attr.aria-pressed]="selected().includes(name)"
+				[disabled]="locked().includes(name)"
+				(click)="toggled.emit(name)"
+			>
+				{{ name }}
+				@if (locked().includes(name)) {
+					<span class="sr-only"> {{ '(already saved)' | translate }}</span>
+				}
+			</button>
+		} @else {
+			<span class="chip">{{ name }}</span>
+		}
+	}
+</div>

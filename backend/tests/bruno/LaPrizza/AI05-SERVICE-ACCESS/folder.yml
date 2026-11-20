@@ -1,0 +1,5 @@
+info:
+  name: AI05-SERVICE-ACCESS
+  description: AI05 service access, history, replay and AI06 export
+  type: folder
+  seq: 6

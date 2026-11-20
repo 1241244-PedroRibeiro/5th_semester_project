@@ -1,0 +1,26 @@
+info:
+  name: 06 — PUT Type Not Found
+  type: http
+  seq: 6
+
+http:
+  method: PUT
+  url: "{{baseUrl}}/pizza-component-types/WEB04%20Does%20Not%20Exist"
+  body:
+    type: json
+    data: |-
+      {
+        "assemblyOrder": 6,
+        "minCardinality": 1,
+        "maxCardinality": 2
+      }
+  auth:
+    type: bearer
+    token: "{{managerToken}}"
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: false

@@ -1,0 +1,14 @@
+info:
+  name: 27 - Read Seeded Product With Null Price
+  type: http
+  seq: 30
+http:
+  method: GET
+  url: '{{baseUrl}}/products/PRD-MOZZ'
+runtime:
+  scripts:
+    - type: tests
+      code: |-
+        test("Reads seeded product with null price returning 200 OK", function() {
+            expect(res.getStatus()).to.equal(200);
+        });

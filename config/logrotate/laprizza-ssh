@@ -1,0 +1,16 @@
+/var/log/laprizza/ssh-sessions.log
+/var/log/laprizza/ssh-alerts.log
+/var/log/laprizza/ssh-time-guard.log
+{
+    daily
+    missingok
+    rotate 90
+    compress
+    delaycompress
+    notifempty
+    create 0640 root laprizza
+    sharedscripts
+    postrotate
+        systemctl reload ssh > /dev/null 2>&1 || true
+    endscript
+}

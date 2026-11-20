@@ -1,0 +1,18 @@
+info:
+  name: 04 - Filter Categories by Search Term
+  type: http
+  seq: 6
+http:
+  method: GET
+  url: '{{baseUrl}}/categories?search=Pizza'
+  body: none
+runtime:
+  scripts:
+    - type: tests
+      code: |-
+        test("Filters categories by name search returning 200 OK", function() {
+        	expect(res.getStatus()).to.equal(200);
+        	const data = res.getBody();
+        	expect(Array.isArray(data)).to.be.true;
+        	expect(data.some(c => c.name === "Pizzas")).to.be.true;
+        });

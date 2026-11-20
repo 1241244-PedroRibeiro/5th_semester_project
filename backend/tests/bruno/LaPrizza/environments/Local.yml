@@ -1,0 +1,14 @@
+name: Local
+variables:
+  - name: baseUrl
+    value: https://localhost/api
+  - secret: true
+    name: JWT_SECRET
+  - name: managerToken
+    value: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzaWQiOiJmOGUzNDI0Ni0xMzdmLTQ3NWMtODJjYy0xNjYxMDI4OWQwM2IiLCJzdWIiOiJtYW5hZ2VyX2wiLCJlbWFpbCI6Im1hbmFnZXJAbGFwcml6emEudGVzdCIsInJvbGVzIjpbIkNVU1RPTUVSIiwiTUFOQUdFUiJdLCJzdGF0dXMiOiJBQ1RJVkUiLCJpYXQiOjE3OTUwNDIyNTMsImV4cCI6MTc5NTA0MzE1M30.gDzzTcceYjMMnt9azI0j3y2LjjlN5f30MEflBZdzouQ
+  - name: OriginalActiveKitchenConfigId
+    value: d952b09a-c1dd-4889-b965-3fc44ec8c627
+  - name: KitchenConfigId
+    value: e115d54e-acaa-4655-a2a0-6f70e191db42
+  - name: KitchenConfigName
+    value: Teste Bruno

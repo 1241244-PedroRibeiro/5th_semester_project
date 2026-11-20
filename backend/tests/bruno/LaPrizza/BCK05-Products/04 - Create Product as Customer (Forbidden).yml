@@ -1,0 +1,42 @@
+info:
+  name: 04 - Create Product as Customer (Forbidden)
+  type: http
+  seq: 6
+http:
+  method: POST
+  url: '{{baseUrl}}/products'
+  body:
+    type: json
+    data: |-
+      {
+      	"name": "Customer Drink",
+      	"description": "Forbidden attempt",
+      	"categoryName": "Beverages",
+      	"isSellable": true,
+      	"isPizzaComponent": false,
+      	"isStockControlled": true,
+      	"directSellingPrice": 2.5,
+      	"sku": "PRD-CUST"
+      }
+  auth:
+    type: bearer
+    token: '{{customerToken}}'
+runtime:
+  scripts:
+    - type: before-request
+      code: |-
+        if (!bru.getVar("customerToken") && !bru.getEnvVar("customerToken")) {
+        	throw new Error("customerToken is required; run request 00b first.");
+        }
+    - type: tests
+      code: |-
+        test("Rejects creation by Customer with 403 Forbidden", function() {
+        	expect(res.getStatus()).to.equal(403);
+        	expect(res.getBody().error.message).to.equal("You do not have permission to do this.");
+        });
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: true

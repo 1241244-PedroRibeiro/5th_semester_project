@@ -1,0 +1,35 @@
+info:
+  name: 03 - Customer Forbidden
+  type: http
+  seq: 4
+http:
+  method: POST
+  url: "{{baseUrl}}/auth/login"
+  body:
+    type: json
+    data: |-
+      { "email": "customer@laprizza.test", "password": "Manager123!" }
+runtime:
+  scripts:
+    - type: post-response
+      code: |-
+        const token = res.getBody().token;
+        if (token) {
+          bru.setVar("ai06CustomerToken", token);
+          bru.setEnvVar("ai06CustomerToken", token);
+        }
+    - type: tests
+      code: |-
+        test("Customer login succeeds", function() {
+          expect(res.getStatus()).to.equal(200);
+          const token = res.getBody().token;
+          expect(token).to.be.a("string").and.not.empty;
+          bru.setVar("ai06CustomerToken", token);
+          bru.setEnvVar("ai06CustomerToken", token);
+        });
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: false

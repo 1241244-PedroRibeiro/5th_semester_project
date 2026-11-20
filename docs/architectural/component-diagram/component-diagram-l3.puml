@@ -1,0 +1,409 @@
+@startuml component-diagram-l3
+!pragma layout smetana
+skinparam packageStyle rectangle
+skinparam componentStyle uml2
+skinparam shadowing false
+skinparam linetype ortho
+skinparam nodesep 40
+skinparam ranksep 55
+
+skinparam component {
+  BackgroundColor #F8F9FA
+  BorderColor #2B2D42
+  ArrowColor #1D3557
+  FontName "Arial"
+  FontSize 11
+}
+skinparam interface {
+  BackgroundColor #FFFFFF
+  BorderColor #1D3557
+}
+skinparam database {
+  BackgroundColor #D8F3DC
+  BorderColor #2B2D42
+}
+
+title LaPrizza Back-End — Component Diagram (C4 Level 3, Sprint 2 Baseline)
+
+' ============================== EXTERNAL CLIENTS & SYSTEMS ==============================
+package "External Clients & Sibling Containers" <<Cloud>> {
+  [SPA — Angular] as SPA #E2EAFC
+  [3D Canvas — Three.js] as ThreeJS #E2EAFC
+  [Prolog AI Planning Engine] as PrologEngine #EDE9FE
+  [External Identity Provider (OIDC)] as IdP #FFF4E6
+  [SMTP / Email Provider] as EmailProvider #FFF4E6
+}
+
+package "Back-End Modular Monolith" {
+
+  ' ============================================================
+  ' 1. PRESENTATION LAYER (HTTP Adapters)
+  ' ============================================================
+  package "1. Presentation & Delivery Layer" {
+
+    package "Auth & Identity" {
+      [AuthController\n«S1» local login] as C_Auth
+      [ExternalAuthController\n«S2» OIDC login/callback] as C_ExtAuth
+      [ActivationController\n«S2» invitation/activation] as C_Activation
+      [UserController / BackofficeUsersController\n«S1» users & roles] as C_Users
+    }
+
+    package "Business Modules" {
+      [CustomerController\n«S1»] as C_Customer
+      [CategoryController\n«S1»] as C_Category
+      [AllergenController\n«S1»] as C_Allergen
+      [ProductController\n«S1»] as C_Product
+      [PizzaSizeController\n«S1»] as C_Size
+      [PizzaComponentTypeController\n«S1»] as C_Type
+      [ComponentSizeConfigurationController\n«S1»] as C_SizeCfg
+      [StockController\n«S1»] as C_Stock
+      [PredefinedPizzaController\n«S1»] as C_Pizza
+      [CatalogueController\n«S1»] as C_Catalogue
+    }
+
+    package "Sprint 2" {
+      [KitchenConfigurationController\n«S2» WEB06] as C_Kitchen
+      [ConsumptionForecastController\n«S2» WEB07] as C_Forecast
+      [SupplierScenarioController\n«S2» WEB07] as C_Supplier
+      [PlanningController\n«S2» AI05] as C_Planning
+      [ProductExportController\n«S2» WEB07] as C_Export
+    }
+  }
+
+  ' ============================================================
+  ' 2. APPLICATION SERVICES LAYER
+  ' ============================================================
+  package "2. Application Services Layer" {
+
+    package "Identity & Access" {
+      [AuthService\n«S1» JWT + Argon2id] as S_Auth
+      [ExternalAuthService\n«S2» OIDC flow + JIT provisioning] as S_ExtAuth
+      [ActivationInvitationService\n«S2» invitations + email dispatch] as S_Invitation
+      [UserService\n«S1» users & roles] as S_Users
+      [RoleAuditService\n«S2» RoleChangeLog writes] as S_RoleAudit
+    }
+
+    package "Sprint 1 Business" {
+      [CustomerService «S1»] as S_Customer
+      [CategoryService «S1»] as S_Category
+      [AllergenService «S1»] as S_Allergen
+      [ProductService «S1»] as S_Product
+      [PizzaSizeService «S1»] as S_Size
+      [PizzaComponentTypeService «S1»] as S_Type
+      [ComponentSizeConfigurationService «S1»] as S_SizeCfg
+      [StockService «S1»] as S_Stock
+      [PredefinedPizzaService «S1»] as S_Pizza
+      [CatalogueQueryService «S1» BCK11] as S_Catalogue
+    }
+
+    package "Sprint 2 AI Planning & Kitchen" {
+      [KitchenConfigurationService\n«S2» validate + activate] as S_Kitchen
+      [ConsumptionForecastService\n«S2» CRUD + validation] as S_Forecast
+      [SupplierScenarioService\n«S2» import + confirm] as S_Supplier
+      [PlanningService\n«S2» BOM + RequirementsPlanning\norchestration] as S_Planning
+      [ProductExportService\n«S2» product→JSON export] as S_Export
+    }
+  }
+
+  ' ============================================================
+  ' 3. DOMAIN CORE LAYER
+  ' ============================================================
+  package "3. Domain Core Layer" {
+
+    package "Sprint 1 Aggregates" {
+      [User\n+ ActivationInvitation «S2»] as D_User
+      [Customer] as D_Customer
+      [ProductCategory] as D_Category
+      [Allergen] as D_Allergen
+      [Product] as D_Product
+      [PizzaSize] as D_Size
+      [PizzaComponentType] as D_Type
+      [ComponentSizeConfiguration] as D_SizeCfg
+      [StockItem] as D_Stock
+      [PredefinedPizza] as D_Pizza
+    }
+
+    package "Sprint 2 Aggregates" {
+      [KitchenConfiguration] as D_Kitchen
+      [ConsumptionForecast] as D_Forecast
+      [SupplierScenario] as D_Supplier
+      [PlanningResult] as D_Planning
+      [RoleChangeLog] as D_RoleAudit
+    }
+
+    package "Domain Services" {
+      [PricingDomainService «S1»] as DS_Pricing
+      [StockAvailabilityDomainService «S1»] as DS_Avail
+      [KitchenConfigValidationService «S2»\n(JSON schema + asset refs)] as DS_KitchenValidation
+      [PlanningSnapshotDomainService «S2»\n(deep-copies inputs for read-only replay)] as DS_Snapshot
+    }
+  }
+
+  ' ============================================================
+  ' 4. INFRASTRUCTURE LAYER (Repositories + External Adapters)
+  ' ============================================================
+  package "4. Infrastructure & Persistence Layer" {
+
+    package "Repository Interfaces (Ports)" {
+      interface "IUserRepository «S1»" as IR_User
+      interface "ICustomerRepository «S1»" as IR_Customer
+      interface "ICategoryRepository «S1»" as IR_Category
+      interface "IAllergenRepository «S1»" as IR_Allergen
+      interface "IProductRepository «S1»" as IR_Product
+      interface "IPizzaSizeRepository «S1»" as IR_Size
+      interface "IPizzaComponentTypeRepository «S1»" as IR_Type
+      interface "IComponentSizeConfigurationRepository «S1»" as IR_SizeCfg
+      interface "IStockRepository «S1»" as IR_Stock
+      interface "IPredefinedPizzaRepository «S1»" as IR_Pizza
+      interface "ICatalogueRepository «S1»" as IR_Catalogue
+      interface "IKitchenConfigurationRepository «S2»" as IR_Kitchen
+      interface "IConsumptionForecastRepository «S2»" as IR_Forecast
+      interface "ISupplierScenarioRepository «S2»" as IR_Supplier
+      interface "IPlanningResultRepository «S2»" as IR_Planning
+      interface "IActivationInvitationRepository «S2»" as IR_Invitation
+      interface "IRoleChangeLogRepository «S2»" as IR_RoleAudit
+    }
+
+    package "PostgreSQL Adapters" {
+      [PostgresUserRepository] as R_User
+      [PostgresCustomerRepository] as R_Customer
+      [PostgresCategoryRepository] as R_Category
+      [PostgresAllergenRepository] as R_Allergen
+      [PostgresProductRepository] as R_Product
+      [PostgresPizzaSizeRepository] as R_Size
+      [PostgresPizzaComponentTypeRepository] as R_Type
+      [PostgresComponentSizeConfigurationRepository] as R_SizeCfg
+      [PostgresStockRepository] as R_Stock
+      [PostgresPredefinedPizzaRepository] as R_Pizza
+      [PostgresCatalogueRepository] as R_Catalogue
+      [PostgresKitchenConfigurationRepository «S2»] as R_Kitchen
+      [PostgresConsumptionForecastRepository «S2»] as R_Forecast
+      [PostgresSupplierScenarioRepository «S2»] as R_Supplier
+      [PostgresPlanningResultRepository «S2»] as R_Planning
+      [PostgresActivationInvitationRepository «S2»] as R_Invitation
+      [PostgresRoleChangeLogRepository «S2»] as R_RoleAudit
+    }
+
+    package "External Adapters (Ports & Adapters)" {
+      [Argon2Hasher «S1»] as I_Argon
+      [JwtTokenService «S1»] as I_Jwt
+      [OidcClient «S2»\n(openid-client library)] as I_Oidc
+      [PrologHttpClient «S2»\n(HTTP fetch to Prolog container)] as I_Prolog
+      [SmtpEmailAdapter «S2»] as I_Email
+    }
+  }
+}
+
+' ============================================================
+' EXTERNAL INTERFACES (REST endpoints, called by clients)
+' ============================================================
+() "/api/v1/auth" as API_Auth
+() "/api/v1/auth/external" as API_ExtAuth
+() "/api/v1/auth/activate" as API_Activation
+() "/api/v1/users" as API_Users
+() "/api/v1/customers" as API_Customers
+() "/api/v1/product-categories" as API_Categories
+() "/api/v1/allergens" as API_Allergens
+() "/api/v1/products" as API_Products
+() "/api/v1/pizza-sizes" as API_Sizes
+() "/api/v1/pizza-component-types" as API_Types
+() "/api/v1/products/{code}/size-configurations" as API_SizeCfg
+() "/api/v1/stock" as API_Stock
+() "/api/v1/predefined-pizzas" as API_Pizza
+() "/api/v1/catalogue" as API_Catalogue
+() "/api/v1/kitchen-configurations" as API_Kitchen
+() "/api/v1/forecasts" as API_Forecast
+() "/api/v1/supplier-scenarios" as API_Supplier
+() "/api/v1/planning/executions" as API_Planning
+() "/api/v1/exports/products" as API_Export
+
+SPA ..> API_Auth : HTTPS
+SPA ..> API_ExtAuth : HTTPS
+SPA ..> API_Activation : HTTPS
+SPA ..> API_Users : HTTPS
+SPA ..> API_Customers : HTTPS
+SPA ..> API_Categories : HTTPS
+SPA ..> API_Allergens : HTTPS
+SPA ..> API_Products : HTTPS
+SPA ..> API_Sizes : HTTPS
+SPA ..> API_Types : HTTPS
+SPA ..> API_SizeCfg : HTTPS
+SPA ..> API_Stock : HTTPS
+SPA ..> API_Pizza : HTTPS
+SPA ..> API_Catalogue : HTTPS
+SPA ..> API_Kitchen : HTTPS
+SPA ..> API_Forecast : HTTPS
+SPA ..> API_Supplier : HTTPS
+SPA ..> API_Planning : HTTPS
+SPA ..> API_Export : HTTPS
+ThreeJS ..> API_Kitchen : HTTPS
+ThreeJS ..> API_Catalogue : HTTPS
+PrologEngine ..> API_Pizza : HTTPS (BOM fetch)
+PrologEngine ..> API_Forecast : HTTPS (forecast fetch)
+PrologEngine ..> API_Supplier : HTTPS (supplier scenario fetch)
+PrologEngine ..> API_Stock : HTTPS (stock snapshot fetch)
+
+' ============================================================
+' WIRING — Controllers → Services
+' ============================================================
+API_Auth -down- C_Auth
+API_ExtAuth -down- C_ExtAuth
+API_Activation -down- C_Activation
+API_Users -down- C_Users
+API_Customers -down- C_Customer
+API_Categories -down- C_Category
+API_Allergens -down- C_Allergen
+API_Products -down- C_Product
+API_Sizes -down- C_Size
+API_Types -down- C_Type
+API_SizeCfg -down- C_SizeCfg
+API_Stock -down- C_Stock
+API_Pizza -down- C_Pizza
+API_Catalogue -down- C_Catalogue
+API_Kitchen -down- C_Kitchen
+API_Forecast -down- C_Forecast
+API_Supplier -down- C_Supplier
+API_Planning -down- C_Planning
+API_Export -down- C_Export
+
+C_Auth ..> S_Auth
+C_ExtAuth ..> S_ExtAuth
+C_Activation ..> S_Invitation
+C_Users ..> S_Users
+C_Users ..> S_RoleAudit
+C_Customer ..> S_Customer
+C_Category ..> S_Category
+C_Allergen ..> S_Allergen
+C_Product ..> S_Product
+C_Size ..> S_Size
+C_Type ..> S_Type
+C_SizeCfg ..> S_SizeCfg
+C_Stock ..> S_Stock
+C_Pizza ..> S_Pizza
+C_Catalogue ..> S_Catalogue
+C_Kitchen ..> S_Kitchen
+C_Forecast ..> S_Forecast
+C_Supplier ..> S_Supplier
+C_Planning ..> S_Planning
+C_Export ..> S_Export
+
+' ============================================================
+' WIRING — Services → Domain
+' ============================================================
+S_Auth ..> D_User
+S_ExtAuth ..> D_User
+S_Invitation ..> D_User
+S_Users ..> D_User
+S_RoleAudit ..> D_RoleAudit
+S_Customer ..> D_Customer
+S_Category ..> D_Category
+S_Allergen ..> D_Allergen
+S_Product ..> D_Product
+S_Size ..> D_Size
+S_Type ..> D_Type
+S_SizeCfg ..> D_SizeCfg
+S_Stock ..> D_Stock
+S_Pizza ..> D_Pizza
+S_Kitchen ..> D_Kitchen
+S_Forecast ..> D_Forecast
+S_Supplier ..> D_Supplier
+S_Planning ..> D_Planning
+S_Catalogue ..> DS_Pricing
+S_Catalogue ..> DS_Avail
+S_Planning ..> DS_Snapshot
+S_Kitchen ..> DS_KitchenValidation
+
+' ============================================================
+' WIRING — Services → Repositories
+' ============================================================
+S_Auth ..> IR_User
+S_ExtAuth ..> IR_User
+S_Invitation ..> IR_Invitation
+S_Users ..> IR_User
+S_RoleAudit ..> IR_RoleAudit
+S_Customer ..> IR_Customer
+S_Category ..> IR_Category
+S_Allergen ..> IR_Allergen
+S_Product ..> IR_Product
+S_Size ..> IR_Size
+S_Type ..> IR_Type
+S_SizeCfg ..> IR_SizeCfg
+S_Stock ..> IR_Stock
+S_Pizza ..> IR_Pizza
+S_Catalogue ..> IR_Catalogue
+S_Catalogue ..> IR_Product
+S_Catalogue ..> IR_Pizza
+S_Catalogue ..> IR_Stock
+S_Kitchen ..> IR_Kitchen
+S_Forecast ..> IR_Forecast
+S_Supplier ..> IR_Supplier
+S_Planning ..> IR_Planning
+S_Planning ..> IR_Forecast
+S_Planning ..> IR_Supplier
+S_Planning ..> IR_Pizza
+S_Planning ..> IR_Stock
+S_Export ..> IR_Product
+
+' ============================================================
+' WIRING — Repos implement interfaces
+' ============================================================
+R_User -up-|> IR_User
+R_Customer -up-|> IR_Customer
+R_Category -up-|> IR_Category
+R_Allergen -up-|> IR_Allergen
+R_Product -up-|> IR_Product
+R_Size -up-|> IR_Size
+R_Type -up-|> IR_Type
+R_SizeCfg -up-|> IR_SizeCfg
+R_Stock -up-|> IR_Stock
+R_Pizza -up-|> IR_Pizza
+R_Catalogue -up-|> IR_Catalogue
+R_Kitchen -up-|> IR_Kitchen
+R_Forecast -up-|> IR_Forecast
+R_Supplier -up-|> IR_Supplier
+R_Planning -up-|> IR_Planning
+R_Invitation -up-|> IR_Invitation
+R_RoleAudit -up-|> IR_RoleAudit
+
+' ============================================================
+' WIRING — External adapters
+' ============================================================
+S_Auth ..> I_Argon
+S_Auth ..> I_Jwt
+S_ExtAuth ..> I_Oidc
+I_Oidc ..> IdP : OIDC
+S_Planning ..> I_Prolog
+I_Prolog ..> PrologEngine : HTTPS/JSON
+S_Invitation ..> I_Email
+I_Email ..> EmailProvider : SMTP/HTTPS
+
+' ============================================================
+' DATABASE
+' ============================================================
+database "PostgreSQL 16+\n(CHECK, UNIQUE, FK RESTRICT,\nJSONB for kitchen configs)" as PostgreSQL
+
+R_User ..> PostgreSQL
+R_Customer ..> PostgreSQL
+R_Category ..> PostgreSQL
+R_Allergen ..> PostgreSQL
+R_Product ..> PostgreSQL
+R_Size ..> PostgreSQL
+R_Type ..> PostgreSQL
+R_SizeCfg ..> PostgreSQL
+R_Stock ..> PostgreSQL
+R_Pizza ..> PostgreSQL
+R_Catalogue ..> PostgreSQL
+R_Kitchen ..> PostgreSQL
+R_Forecast ..> PostgreSQL
+R_Supplier ..> PostgreSQL
+R_Planning ..> PostgreSQL
+R_Invitation ..> PostgreSQL
+R_RoleAudit ..> PostgreSQL
+
+legend bottom
+  **Sprint 1** components are marked «S1».
+  **Sprint 2** additions are marked «S2».
+  Both coexist as part of the same Modular Monolith Container.
+endlegend
+
+@enduml

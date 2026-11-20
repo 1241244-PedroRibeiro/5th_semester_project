@@ -1,0 +1,28 @@
+info:
+  name: 00 - Login Predefined Manager
+  type: http
+  seq: 1
+http:
+  method: POST
+  url: '{{baseUrl}}/auth/login'
+  body:
+    type: json
+    data: |-
+      {
+      	"email": "manager@laprizza.test",
+      	"password": "Manager123!"
+      }
+runtime:
+  scripts:
+    - type: tests
+      code: |-
+        test("Authenticates the predefined active manager", function() {
+        	expect(res.getStatus()).to.equal(200);
+        	const data = res.getBody();
+        	expect(data.user.email).to.equal("manager@laprizza.test");
+        	expect(data.user.roles).to.include("MANAGER");
+        	expect(data.user.status).to.equal("ACTIVE");
+        	expect(data.token).to.be.a("string").and.not.empty;
+        	bru.setVar("managerToken", data.token);
+        	bru.setEnvVar("managerToken", data.token);
+        });

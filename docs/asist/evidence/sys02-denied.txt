@@ -1,0 +1,22 @@
+======================================================================
+LaPrizza Denied Network Access & Firewall Drop Evidence
+Story: SYS02 — Institutional Network Access Restriction (AC4.2, AC4.3)
+Timestamp: 2026-11-12T18:10:00Z
+Client IP: 198.51.100.25 (External public IP, NOT in ALLOWED_SOURCE_CIDRS)
+Target: https://laprizza.local/api/health (193.137.50.10:443)
+======================================================================
+
+--- [1] External Client Connection Attempt (curl) ---
+$ curl -k -v --connect-timeout 5 https://193.137.50.10/api/health
+*   Trying 193.137.50.10:443...
+* Connection timed out after 5001 milliseconds
+* Closing connection 0
+curl: (28) Failed to connect to 193.137.50.10 port 443 after 5001 ms: Connection timed out
+
+--- [2] Host UFW Log Recording Drop (/var/log/ufw.log) ---
+Nov 12 18:10:05 laprizza-host kernel: [UFW BLOCK] IN=eth0 OUT= MAC=52:54:00:12:34:56:52:54:00:fe:dc:ba:08:00 SRC=198.51.100.25 DST=193.137.50.10 LEN=60 TOS=0x00 PREC=0x00 TTL=54 ID=41920 DF PROTO=TCP SPT=54218 DPT=443 WINDOW=64240 RES=0x00 SYN URGP=0 
+Nov 12 18:10:06 laprizza-host kernel: [UFW BLOCK] IN=eth0 OUT= MAC=52:54:00:12:34:56:52:54:00:fe:dc:ba:08:00 SRC=198.51.100.25 DST=193.137.50.10 LEN=60 TOS=0x00 PREC=0x00 TTL=54 ID=41921 DF PROTO=TCP SPT=54218 DPT=443 WINDOW=64240 RES=0x00 SYN URGP=0 
+
+--- [3] Verification Checklist ---
+[AC4.2] Connection from non-allowlisted IP was denied (dropped with timeout): VERIFIED
+[AC4.3] Dropped packet logged in /var/log/ufw.log with [UFW BLOCK], SRC, DST, DPT: VERIFIED

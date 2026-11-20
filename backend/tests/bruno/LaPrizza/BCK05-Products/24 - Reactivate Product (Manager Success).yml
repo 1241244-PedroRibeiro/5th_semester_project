@@ -1,0 +1,27 @@
+info:
+  name: 24 - Reactivate Product (Manager Success)
+  type: http
+  seq: 27
+http:
+  method: PATCH
+  url: '{{baseUrl}}/products/{{productSku}}/activate'
+  body: none
+  auth:
+    type: bearer
+    token: '{{managerToken}}'
+runtime:
+  scripts:
+    - type: tests
+      code: |-
+        test("Manager reactivates blocked product with 200 OK setting active to true", function() {
+        	expect(res.getStatus()).to.equal(200);
+        	const data = res.getBody();
+        	expect(data.sku).to.equal(bru.getVar("productSku"));
+        	expect(data.active).to.be.true;
+        });
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: true

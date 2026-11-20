@@ -1,0 +1,29 @@
+info:
+  name: 18 - Manager Deactivates Another User
+  type: http
+  seq: 18
+http:
+  method: DELETE
+  url: '{{baseUrl}}/user/{{bck02DeactivateTargetUsername}}'
+  auth:
+    type: bearer
+    token: '{{bck02ManagerToken}}'
+runtime:
+  scripts:
+    - type: before-request
+      code: |-
+        const value = name => bru.getVar(name) ?? bru.getEnvVar(name);
+        for (const name of ["bck02ManagerToken", "bck02CustomerUsername", "bck02ManagerUsername", "bck02DeactivateTargetUsername"]) {
+        	if (!value(name)) throw new Error("Set " + name + " before running this request.");
+        }
+        if (value("bck02CustomerUsername") === value("bck02ManagerUsername")) {
+        	throw new Error("Customer and manager usernames must be different.");
+        }
+        if ([value("bck02CustomerUsername"), value("bck02ManagerUsername")].includes(value("bck02DeactivateTargetUsername"))) {
+        	throw new Error("Use a separate account as bck02DeactivateTargetUsername; the customer and manager are needed by the suite.");
+        }
+    - type: tests
+      code: |-
+        test("Status code is 200", function() {
+        	expect(res.getStatus()).to.equal(200);
+        });

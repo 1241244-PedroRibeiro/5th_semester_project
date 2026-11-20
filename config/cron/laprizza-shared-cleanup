@@ -1,0 +1,8 @@
+SHELL=/bin/bash
+PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+
+# SYS04 retention policy for transient shared resources.
+0 3 * * * root find /var/lib/laprizza/shared/planning-inputs -type f -mtime +7 -delete
+0 3 * * * root find /var/lib/laprizza/shared/planning-outputs -type f -mtime +7 -delete
+0 3 * * * root find /var/lib/laprizza/shared/exports -type f -mtime +30 -delete
+0 3 * * * root find /var/lib/laprizza/shared/tmp -type f -mtime +1 -delete

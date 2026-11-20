@@ -1,0 +1,26 @@
+info:
+  name: 02 - Relate Unknown Username
+  type: http
+  seq: 2
+http:
+  method: POST
+  url: '{{baseUrl}}/user/bruno-missing-username/allergen'
+  body:
+    type: json
+    data: |-
+      {
+      	"allergens": [
+      		"{{bck02AllergenName}}"
+      	]
+      }
+  auth:
+    type: bearer
+    token: '{{bck02CustomerToken}}'
+runtime:
+  scripts:
+    - type: tests
+      code: |-
+        test("Unknown username follows ownership and lookup rules", function() {
+        	expect(res.getStatus()).to.equal(403);
+        	expect(res.getBody().error.message).to.be.a("string").and.not.empty;
+        });

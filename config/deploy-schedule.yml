@@ -1,0 +1,60 @@
+# ==============================================================================
+# LaPrizza - Deployment Schedule Configuration (SYS01 / AC4)
+# Documented in docs/asist/sys-deployment.md §5.4
+# ==============================================================================
+
+version: "1.0"
+project: "laprizza"
+
+schedules:
+  # Staging automated redeploy and smoke verification
+  staging:
+    enabled: true
+    # Every night at 02:00 UTC (DEI low-traffic window)
+    cron: "0 2 * * *"
+    target_host: "dei-staging.isep.ipp.pt"
+    branch: "develop"
+    modules:
+      - postgres
+      - backend
+      - prolog
+      - frontend
+    validation:
+      run_smoke_tests: true
+      run_unit_tests: true
+      fail_fast: true
+    archival:
+      retention_days: 90
+      log_dir: "logs"
+
+  # Production scheduled maintenance window deploy
+  production:
+    enabled: false
+    # Sunday at 04:00 UTC (maintenance window)
+    cron: "0 4 * * 0"
+    target_host: "dei-prod.isep.ipp.pt"
+    branch: "main"
+    modules:
+      - postgres
+      - backend
+      - prolog
+      - frontend
+    validation:
+      run_smoke_tests: true
+      run_unit_tests: true
+      fail_fast: true
+    archival:
+      retention_days: 90
+      log_dir: "logs"
+
+  # CI validation pipeline scheduled execution
+  ci_validation:
+    enabled: true
+    # Runs nightly at 03:00 UTC on GitHub Actions
+    cron: "0 3 * * *"
+    branch: "main"
+    validation:
+      run_unit_tests: true
+      run_db_tests: true
+      run_smoke_tests: true
+      secrets_scan: true

@@ -1,0 +1,774 @@
+Tens razão em pedir o mesmo nível. Aqui vou percorrer o **`firewall.sh` actual**, as duas chains que cria, o script do relatório diário, a instalação no servidor e o que cada verificação demonstra. Baseei-me nos ficheiros do repositório, em particular [firewall.sh](C:/Users/pedro/vsc/LEI-SEM5-PI-2026-27-3DJ-05/infra/sys02-network-access/firewall.sh), [ufw-report.sh](C:/Users/pedro/vsc/LEI-SEM5-PI-2026-27-3DJ-05/infra/sys02-network-access/ufw-report.sh) e [requirements.md da SYS02](C:/Users/pedro/vsc/LEI-SEM5-PI-2026-27-3DJ-05/docs/user-stories/SYS02/requirements.md).
+
+# SYS02 — dissecação do `firewall.sh`
+
+## 1. O que a SYS02 controla
+
+A SYS02 restringe o tráfego que chega ao servidor e aos serviços publicados pelo Docker, usando as redes internas/VPN aprovadas como lista de origens autorizadas.
+
+O script tem **duas chains**, porque são dois caminhos diferentes:
+
+```text
+Ligação dirigida ao próprio host
+    → hook input
+    → chain host_input
+
+Ligação dirigida a um contentor publicado pelo Docker
+    → hook forward
+    → chain docker_ingress
+```
+
+A primeira protege serviços do sistema operativo, como SSH. A segunda protege o encaminhamento para os contentores Nginx publicados. Filtrar apenas o `input` do host não cobriria o tráfego encaminhado para um contentor.
+
+A política fica na tabela própria `inet laprizza_sys02`. O script não substitui as tabelas que o Docker gere.
+
+## 2. Cabeçalho e modo estrito
+
+```bash
+#!/usr/bin/env bash
+# SYS02 host and Docker ingress policy for the Debian/nftables deployment.
+# The script owns only table inet laprizza_sys02; Docker's tables are untouched.
+set -euo pipefail
+```
+
+- `#!/usr/bin/env bash` indica que o script deve correr com Bash.
+- Os comentários resumem o âmbito e a tabela gerida.
+- `set -euo pipefail` activa o modo estrito:
+  - `-e`: o script termina quando um comando falha;
+  - `-u`: uma variável não definida é tratada como erro;
+  - `pipefail`: uma pipeline falha se falhar um dos comandos que a compõem.
+
+**Defesa oral:** “O modo estrito evita continuar para a geração ou aplicação de regras quando uma operação necessária falha. A política não deve ser construída com valores incompletos.”
+
+## 3. Ler a configuração do servidor
+
+```bash
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+POLICY_ENV="${NETWORK_POLICY_FILE:-/etc/laprizza/network-policy.env}"
+```
+
+- `BASH_SOURCE[0]` identifica o script que está a correr.
+- `dirname` obtém a pasta do script.
+- `cd ... && pwd` obtém o caminho absoluto dessa pasta.
+- `NETWORK_POLICY_FILE` permite substituir o caminho do ficheiro de configuração; se não estiver definido, usa `/etc/laprizza/network-policy.env`.
+
+```bash
+if [[ -f "${POLICY_ENV}" ]]; then
+    # shellcheck disable=SC1090
+    set -a; source "${POLICY_ENV}"; set +a
+fi
+```
+
+Se o ficheiro existir, `source` lê-o no contexto do Bash. `set -a` faz com que as variáveis nele definidas sejam exportadas para os processos chamados pelo script; `set +a` desliga essa opção depois.
+
+O exemplo versionado está em [network-policy.env.example](C:/Users/pedro/vsc/LEI-SEM5-PI-2026-27-3DJ-05/config/network-policy.env.example). Para a SYS02, contém:
+
+```bash
+ALLOWED_SOURCE_CIDRS=10.8.0.0/16
+DOCKER_INGRESS_NETWORK=laprizza_laprizza-network
+WAN_INTERFACE=eth0
+```
+
+No servidor, esse ficheiro é instalado como `/etc/laprizza/network-policy.env`. A configuração controla a lista de origens, a rede Docker e a interface WAN, sem obrigar a alterar o script.
+
+Como `source` executa o conteúdo como comandos Bash, o ficheiro instalado tem de ser protegido e editável apenas por administradores.
+
+## 4. Exigir root e as ferramentas necessárias
+
+```bash
+if [[ "$(id -u)" -ne 0 ]]; then
+    echo "SYS02: run as root (or with sudo)." >&2
+    exit 1
+fi
+```
+
+`id -u` devolve o UID do utilizador. O UID `0` é o `root`. Alterar nftables requer privilégios elevados; caso contrário, o script envia uma mensagem para `stderr` (`>&2`) e termina com código `1`.
+
+```bash
+for cmd in nft python3 ip docker; do
+    command -v "${cmd}" >/dev/null 2>&1 || {
+        echo "SYS02: required command missing: ${cmd}" >&2
+        exit 1
+    }
+done
+```
+
+Para cada ferramenta, `command -v` verifica se existe no `PATH`:
+
+- `nft`: validar e aplicar a tabela;
+- `python3`: validar e normalizar os CIDRs;
+- `ip`: descobrir a interface de saída;
+- `docker`: consultar a rede e sub-rede do contentor.
+
+A saída da pesquisa é descartada. Se uma ferramenta não existir, o script termina antes de construir regras.
+
+## 5. Valores predefinidos
+
+```bash
+ALLOWED_SOURCE_CIDRS="${ALLOWED_SOURCE_CIDRS:-10.8.0.0/16}"
+DOCKER_INGRESS_NETWORK="${DOCKER_INGRESS_NETWORK:-laprizza_laprizza-network}"
+WAN_INTERFACE="${WAN_INTERFACE:-$(ip -4 route show default | awk 'NR == 1 { for (i=1; i<=NF; i++) if ($i == "dev") { print $(i+1); exit } }')}"
+APPLY="${APPLY:-false}"
+```
+
+A expansão `${VAR:-valor}` usa o valor de `VAR` se estiver definido e não vazio; caso contrário, usa o valor indicado.
+
+- `ALLOWED_SOURCE_CIDRS` é a lista de origens IPv4 autorizadas. O exemplo usa `10.8.0.0/16`.
+- `DOCKER_INGRESS_NETWORK` identifica a rede Docker que contém o serviço publicado.
+- `WAN_INTERFACE` pode vir da configuração; se não vier, o script consulta a rota IPv4 predefinida.
+- `APPLY` começa como `false`, pelo que a execução normal só valida e mostra as regras.
+
+O `awk` procura o campo `dev` na primeira rota predefinida e devolve o nome que vem a seguir, por exemplo `eth0`.
+
+```bash
+if [[ -z "${WAN_INTERFACE}" || ! "${WAN_INTERFACE}" =~ ^[a-zA-Z0-9_.:-]+$ ]]; then
+    echo "SYS02: could not determine a valid WAN_INTERFACE; set it in ${POLICY_ENV}." >&2
+    exit 1
+fi
+```
+
+O script rejeita uma interface vazia ou que contenha caracteres fora do formato aceite. Isto também reduz o risco de inserir valores inesperados na configuração nftables que será gerada.
+
+## 6. Validar a lista de CIDRs
+
+```bash
+CIDR_ELEMENTS="$(python3 - "${ALLOWED_SOURCE_CIDRS}" <<'PY'
+import ipaddress
+import sys
+
+items = [part.strip() for part in sys.argv[1].split(",") if part.strip()]
+if not items:
+    raise SystemExit("ALLOWED_SOURCE_CIDRS must contain at least one IPv4 CIDR")
+networks = []
+for item in items:
+    network = ipaddress.ip_network(item, strict=False)
+    if network.version != 4:
+        raise SystemExit(f"IPv6 source range is not enabled until independently validated: {item}")
+    networks.append(str(network))
+print(", ".join(sorted(set(networks))))
+PY
+)" || { echo "SYS02: invalid source allowlist." >&2; exit 1; }
+```
+
+Este bloco passa o valor da allowlist para Python, que tem uma biblioteca própria para trabalhar com endereços e redes IP.
+
+1. `sys.argv[1]` recebe o texto de `ALLOWED_SOURCE_CIDRS`.
+2. `split(",")` permite configurar várias redes separadas por vírgulas.
+3. `strip()` remove espaços em redor de cada valor.
+4. A condição `if part.strip()` ignora elementos vazios, por exemplo uma vírgula final.
+5. Se não houver nenhum elemento, o Python termina com erro.
+6. `ipaddress.ip_network(item, strict=False)` valida e normaliza cada rede. `strict=False` permite, por exemplo, normalizar um endereço com bits de host definidos para o endereço de rede correspondente.
+7. `network.version != 4` rejeita redes IPv6 nesta allowlist.
+8. `set(networks)` remove CIDRs repetidos; `sorted` torna a saída determinística.
+9. A saída é uma lista separada por vírgulas, pronta para ser inserida no set nftables.
+
+Se Python devolver erro, a substituição de comando falha e o Bash imprime `SYS02: invalid source allowlist.` antes de sair.
+
+**Defesa oral:** “Não passamos texto arbitrário directamente para o set. Validamos cada CIDR com `ipaddress` e rejeitamos IPv6 enquanto não tivermos uma pool IPv6 aprovada.”
+
+## 7. Descobrir a rede Docker e a bridge
+
+```bash
+NETWORK_INFO="$(docker network inspect "${DOCKER_INGRESS_NETWORK}" \
+  --format '{{.Id}} {{range .IPAM.Config}}{{.Subnet}}{{end}}' \
+  2>/dev/null || true)"
+```
+
+`docker network inspect` consulta a rede indicada. O formato pede:
+
+- `.Id`: identificador da rede;
+- `.IPAM.Config` e `.Subnet`: sub-rede(s) configurada(s).
+
+Os erros do Docker são ocultados com `2>/dev/null`. `|| true` impede que `set -e` termine imediatamente; assim, o script pode verificar o resultado e apresentar a sua mensagem de erro.
+
+```bash
+if [[ -z "${NETWORK_INFO}" ]]; then
+    echo "SYS02: Docker ingress network not found: ${DOCKER_INGRESS_NETWORK}" >&2
+    exit 1
+fi
+NETWORK_ID="${NETWORK_INFO%% *}"
+```
+
+Se a consulta não devolver nada, a rede não foi encontrada e o script termina. `${NETWORK_INFO%% *}` remove o primeiro espaço e tudo o que vem depois, deixando o ID da rede.
+
+```bash
+DOCKER_BRIDGE="${DOCKER_BRIDGE:-br-${NETWORK_ID:0:12}}"
+if [[ ! "${DOCKER_BRIDGE}" =~ ^[a-zA-Z0-9_.:-]+$ ]]; then
+    echo "SYS02: invalid Docker bridge interface." >&2
+    exit 1
+fi
+```
+
+Docker cria normalmente o nome da bridge a partir de `br-` e dos primeiros 12 caracteres do ID da rede. O administrador pode defini-la explicitamente por `DOCKER_BRIDGE`. O resultado é validado antes de entrar nas regras.
+
+Isto evita depender cegamente de um nome fixo de bridge, que pode mudar se a rede Docker for recriada.
+
+## 8. Ficheiro temporário e substituição controlada
+
+```bash
+RULES_FILE="$(mktemp /tmp/laprizza-sys02.XXXXXX.nft)"
+trap 'rm -f "${RULES_FILE}"' EXIT
+```
+
+`mktemp` cria um ficheiro temporário com nome imprevisível para guardar o lote nftables. `trap` remove-o ao terminar, mesmo que o script saia por erro.
+
+```bash
+if nft list table inet laprizza_sys02 >/dev/null 2>&1; then
+    echo 'delete table inet laprizza_sys02' > "${RULES_FILE}"
+fi
+```
+
+O script testa se a sua tabela já existe. Se existir, acrescenta ao lote a instrução para a remover. A remoção e a criação da tabela nova pertencem ao mesmo ficheiro que será verificado e aplicado.
+
+A tabela é identificada pelo nome `laprizza_sys02`; o script não pede para eliminar as tabelas do Docker nem outras tabelas nftables.
+
+## 9. O set `allowed_sources4`
+
+```bash
+cat >> "${RULES_FILE}" <<NFT
+table inet laprizza_sys02 {
+    set allowed_sources4 {
+        type ipv4_addr
+        flags interval
+        elements = { ${CIDR_ELEMENTS} }
+    }
+```
+
+`cat <<NFT` é um *here-document*: acrescenta o texto entre `NFT` e o delimitador final ao ficheiro temporário. Aqui a variável `${CIDR_ELEMENTS}` é expandida para a lista já validada.
+
+- `table inet laprizza_sys02`: cria uma tabela da família `inet`, que permite expressar regras para IPv4 e IPv6.
+- `set allowed_sources4`: cria um conjunto chamado `allowed_sources4`.
+- `type ipv4_addr`: os elementos do conjunto são endereços/redes IPv4.
+- `flags interval`: permite representar redes CIDR como intervalos, em vez de escrever uma regra por cada endereço individual.
+- `elements`: insere as redes validadas pelo Python.
+
+Mais adiante, a regra SSH usa `@allowed_sources4` para consultar este conjunto.
+
+## 10. Chain `host_input`: tráfego dirigido ao host
+
+```nft
+chain host_input {
+    type filter hook input priority -10; policy drop;
+```
+
+Esta chain trata pacotes cujo destino é o próprio host.
+
+- `type filter`: é uma chain de filtragem.
+- `hook input`: associa-a ao caminho de entrada para o host.
+- `priority -10`: define a prioridade desta chain no hook.
+- `policy drop`: o comportamento final da chain é descartar pacotes que não tenham sido aceites por uma regra anterior.
+
+As regras seguintes definem as excepções:
+
+```nft
+iifname "lo" accept
+```
+
+Aceita tráfego que chega pela interface de loopback `lo`, usada por comunicações locais do próprio sistema.
+
+```nft
+ct state invalid drop
+```
+
+Descarta pacotes que o connection tracking classifica como inválidos.
+
+```nft
+ct state established,related accept
+```
+
+Aceita pacotes de ligações já estabelecidas e de tráfego relacionado. Por exemplo, permite o tráfego de resposta de ligações que o host iniciou. É uma regra stateful: toma em conta o estado da ligação, não apenas um endereço e uma porta.
+
+```nft
+ip protocol icmp accept
+meta l4proto ipv6-icmp accept
+```
+
+Aceitam ICMP IPv4 e ICMPv6. Estes protocolos são usados, entre outras coisas, para diagnóstico e para funções de rede. A aceitação destas duas classes de pacotes não significa que todas as ligações IPv4 ou IPv6 estejam autorizadas.
+
+```nft
+ip saddr @allowed_sources4 tcp dport 22 accept
+```
+
+Aceita SSH dirigido à porta TCP/22 do host quando o endereço IPv4 de origem pertence ao set `allowed_sources4`.
+
+Na configuração de `vs582`, a porta de rede TCP/2222 é redireccionada na borda para TCP/22 na VM. Por isso, a regra local do servidor verifica a porta `22`, que é a porta que recebe o tráfego após esse redireccionamento.
+
+As três regras seguintes registam pacotes que não foram aceites:
+
+```nft
+tcp dport 22 limit rate 5/second burst 10 packets \
+    log prefix "LAPRIZZA-SYS02-DENY " flags all
+
+tcp dport 2228 limit rate 5/second burst 10 packets \
+    log prefix "LAPRIZZA-SYS02-DENY " flags all
+
+limit rate 5/second burst 10 packets \
+    log prefix "LAPRIZZA-SYS02-DENY " flags all
+```
+
+- A primeira regista tentativas dirigidas à porta 22 que não foram aceites pela regra SSH anterior.
+- A segunda regista tráfego TCP dirigido à porta 2228, que não tem regra de aceitação nesta chain.
+- A terceira é a regra geral de registo para outro tráfego que chegar a esta posição.
+- `limit rate 5/second burst 10 packets` limita a frequência de registo, para que um fluxo intenso não gere uma linha de log por cada pacote.
+- `log prefix` identifica estas mensagens no journal.
+- `flags all` pede ao kernel que inclua os campos de pacote disponíveis.
+
+**Pormenor para a defesa:** uma regra `log` não termina o processamento do pacote. O pacote continua na chain; quando nenhuma regra o aceita, a `policy drop` faz o descarte. Assim, o registo e o bloqueio são passos diferentes.
+
+## 11. Chain `docker_ingress`: tráfego encaminhado para contentores
+
+```nft
+chain docker_ingress {
+    type filter hook forward priority -10; policy accept;
+```
+
+Esta chain está no hook `forward`, porque o tráfego destinado a um contentor publicado atravessa o host para ser encaminhado à bridge Docker. Não é tráfego dirigido a um serviço local do host.
+
+A `policy accept` significa que esta chain não descarta todo o tráfego encaminhado por omissão. A política de SYS02 é implementada pelas regras explícitas que tratam o tráfego DNAT que chega da interface WAN.
+
+A regra de autorização é:
+
+```nft
+iifname "${WAN_INTERFACE}" \
+oifname "${DOCKER_BRIDGE}" \
+ct status dnat \
+ct original proto-dst { 80, 443 } \
+ip saddr @allowed_sources4 accept
+```
+
+Cada condição restringe o tipo de pacote autorizado:
+
+- `iifname "${WAN_INTERFACE}"`: entrou pela interface de rede externa.
+- `oifname "${DOCKER_BRIDGE}"`: vai sair pela bridge do contentor publicado.
+- `ct status dnat`: o connection tracking identificou que o destino foi traduzido por DNAT. É o caso habitual de uma porta publicada pelo Docker.
+- `ct original proto-dst { 80, 443 }`: verifica a porta de destino **original**, antes da tradução NAT; só permite as portas web 80 e 443.
+- `ip saddr @allowed_sources4`: exige uma origem IPv4 aprovada.
+- `accept`: aceita o pacote que satisfaz todas as condições.
+
+A regra seguinte regista tráfego DNAT que entrou pela WAN mas não foi aceite pela regra anterior:
+
+```nft
+iifname "${WAN_INTERFACE}" ct status dnat \
+    limit rate 5/second burst 10 packets \
+    log prefix "LAPRIZZA-SYS02-DENY " flags all
+```
+
+Como o `log` não termina a avaliação, o pacote continua para a regra seguinte:
+
+```nft
+iifname "${WAN_INTERFACE}" ct status dnat drop
+```
+
+Esta descarta o tráfego DNAT que veio da WAN e não correspondeu à autorização anterior. Isto é o que impede que outras portas publicadas pelo Docker sejam acessíveis por esse caminho externo.
+
+**Por que não usar só a chain `input`?**  
+Porque as ligações para portas publicadas do Docker são encaminhadas para um contentor. O hook relevante é `forward`. A chain `input` continua necessária para os serviços do próprio host, como SSH.
+
+**Por que não definir `policy drop` em `forward`?**  
+A chain está no caminho de tráfego encaminhado, que também pode incluir fluxos não abrangidos por esta política. Por isso, mantém `policy accept` e limita o bloqueio explícito a tráfego DNAT proveniente da WAN.
+
+## 12. Verificação do plano e aplicação explícita
+
+```bash
+echo "SYS02 plan: source CIDRs=${CIDR_ELEMENTS}; WAN=${WAN_INTERFACE}; Docker network=${DOCKER_INGRESS_NETWORK} (${DOCKER_BRIDGE}); SSH inside VM=22 (network port 2222 is redirected to it)."
+```
+
+Apresenta os valores que vão ser usados: CIDRs, interface WAN, rede Docker, bridge e o mapeamento da porta SSH.
+
+```bash
+nft -c -f "${RULES_FILE}"
+```
+
+`-c` pede ao nftables para verificar o ficheiro sem aplicar as regras. Se houver erro de sintaxe ou validação, `set -e` termina o script antes da aplicação.
+
+```bash
+if [[ "${APPLY}" != "true" ]]; then
+    echo "SYS02: validation passed; no rules changed. Review the plan, then rerun with APPLY=true to apply."
+    exit 0
+fi
+```
+
+O modo predefinido é validar e sair. Só continua para aplicar se `APPLY` for exactamente `true`.
+
+```bash
+nft -f "${RULES_FILE}"
+echo "SYS02: applied nftables table inet laprizza_sys02. Docker-managed tables were not replaced."
+nft list table inet laprizza_sys02
+```
+
+- `nft -f` aplica o lote de regras.
+- A mensagem indica que foi aplicada a tabela própria da SYS02.
+- `nft list table` apresenta as regras activas para inspecção.
+
+**Defesa oral:** “O `nft -c` é a fase de validação; não muda o kernel. O `nft -f` é a fase de aplicação. O script só chega a esta última com `APPLY=true`.”
+
+## 13. `vim` versus `cat <<NFT`
+
+Também na SYS02, há dois elementos diferentes:
+
+- A **configuração** — por exemplo, `/etc/laprizza/network-policy.env` — pode ser editada por um administrador com `vim`.
+- O ficheiro `.nft` é **gerado temporariamente** pelo script, com os CIDRs, a bridge e a interface descobertos naquela execução.
+
+Por exemplo, é possível editar a configuração e depois pedir ao script para validar o resultado:
+
+```bash
+sudoedit /etc/laprizza/network-policy.env
+make firewall
+```
+
+Para aplicar depois de rever o plano:
+
+```bash
+make firewall-apply
+```
+
+O script usa `cat <<NFT` porque precisa de inserir valores dinâmicos no lote: `${CIDR_ELEMENTS}`, `${WAN_INTERFACE}` e `${DOCKER_BRIDGE}`. O lote temporário é validado antes de ser aplicado e removido quando o script termina.
+
+`vim` também pode ser usado para prototipar regras ou consultar ficheiros, mas não é adequado à execução automática no arranque do servidor: espera por uma pessoa e não gera as regras a partir dos valores descobertos no ambiente.
+
+# Instalação no servidor e persistência após reinício
+
+O alvo `make sys02-install`, no [Makefile](C:/Users/pedro/vsc/LEI-SEM5-PI-2026-27-3DJ-05/Makefile), instala:
+
+- `/etc/laprizza/network-policy.env`, se ainda não existir;
+- o script de firewall e o script de relatório em `/opt/laprizza/scripts`;
+- o serviço systemd;
+- a tarefa cron para o relatório diário.
+
+O serviço [laprizza-sys02.service](C:/Users/pedro/vsc/LEI-SEM5-PI-2026-27-3DJ-05/config/systemd/laprizza-sys02.service) tem:
+
+```ini
+Type=oneshot
+User=root
+Group=root
+WorkingDirectory=/opt/laprizza
+Environment=APPLY=true
+ExecStart=/bin/bash /opt/laprizza/scripts/firewall.sh
+```
+
+- `oneshot`: executa uma vez e termina; não é um daemon permanente.
+- `User=root` e `Group=root`: corre com privilégios para instalar regras.
+- `WorkingDirectory`: define o directório de trabalho.
+- `Environment=APPLY=true`: permite que o serviço de arranque aplique a política.
+- `ExecStart`: indica o script instalado que será executado.
+
+```ini
+Wants=network-online.target
+After=network-online.target docker.service
+Requires=docker.service
+```
+
+O serviço espera pela rede e pelo Docker. A dependência do Docker é importante porque o script precisa de inspeccionar a rede e a bridge. O serviço está habilitado para ser executado durante o arranque; isso é distinto de estar actualmente em execução — por ser `oneshot`, depois de terminar pode aparecer como inactivo.
+
+O unit também limita privilégios e acesso ao sistema de ficheiros:
+
+```ini
+CapabilityBoundingSet=CAP_NET_ADMIN CAP_NET_RAW
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+PrivateTmp=true
+```
+
+- `CapabilityBoundingSet` limita as capacidades Linux atribuídas ao serviço às necessárias para a tarefa de rede.
+- `NoNewPrivileges` impede que o processo obtenha privilégios adicionais.
+- `ProtectSystem=strict` torna a hierarquia do sistema de ficheiros protegida contra escrita pelo serviço, salvo caminhos autorizados pelo unit.
+- `ProtectHome` protege as pastas pessoais.
+- `PrivateTmp` dá ao serviço uma área temporária privada. O `mktemp` continua a funcionar dentro dessa área.
+
+# O relatório diário de recusas
+
+O script [ufw-report.sh](C:/Users/pedro/vsc/LEI-SEM5-PI-2026-27-3DJ-05/infra/sys02-network-access/ufw-report.sh) tem um nome histórico: apesar de conter `ufw`, lê os eventos da política nftables no journal.
+
+## 1. Preparar caminhos e intervalo de datas
+
+```bash
+#!/usr/bin/env bash
+# SYS02 daily summary for drops emitted by the LaPrizza nftables policy.
+set -euo pipefail
+```
+
+Define Bash e activa modo estrito.
+
+```bash
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+ROOT_DIR="${LAPRIZZA_REPO_DIR:-}"
+```
+
+Descobre a pasta do script e permite indicar a raiz do repositório explicitamente.
+
+O ciclo seguinte procura a pasta `config` relativamente ao script:
+
+```bash
+if [[ -z "${ROOT_DIR}" ]]; then
+    for candidate in "${SCRIPT_DIR}/../.." "${SCRIPT_DIR}/.."; do
+        if [[ -d "${candidate}/config" ]]; then
+            ROOT_DIR="$(cd "${candidate}" && pwd)"
+            break
+        fi
+    done
+fi
+ROOT_DIR="${ROOT_DIR:-/opt/laprizza}"
+```
+
+Se não encontrar a árvore do projecto, usa `/opt/laprizza`.
+
+Depois define os valores do relatório:
+
+```bash
+REPORT_DATE="${1:-$(date -u +%Y%m%d)}"
+REPORT_DIR="${REPORT_DIR:-${ROOT_DIR}/logs/ufw-report}"
+REPORT_FILE="${REPORT_DIR}/${REPORT_DATE}.txt"
+REPORT_EMAIL="${REPORT_EMAIL:-}"
+START_DATE="${REPORT_DATE:0:4}-${REPORT_DATE:4:2}-${REPORT_DATE:6:2} 00:00:00 UTC"
+END_DATE="$(date -u -d "${START_DATE} + 1 day" '+%Y-%m-%d %H:%M:%S UTC')"
+```
+
+- O primeiro argumento permite escolher a data; sem ele, usa hoje em UTC.
+- O directório pode ser substituído por `REPORT_DIR`.
+- O nome do relatório é a data com extensão `.txt`.
+- O envio por email é opcional e fica desactivado se `REPORT_EMAIL` estiver vazio.
+- `START_DATE` e `END_DATE` definem um dia UTC completo.
+
+## 2. Validar a data e o journal
+
+```bash
+[[ "${REPORT_DATE}" =~ ^[0-9]{8}$ ]] || {
+    echo "Usage: $0 [YYYYMMDD]" >&2
+    exit 2
+}
+```
+
+Exige exactamente oito algarismos, no formato `YYYYMMDD`. Código `2` indica utilização incorrecta.
+
+```bash
+command -v journalctl >/dev/null 2>&1 || {
+    echo "SYS02 report requires journalctl; refusing to report a false zero." >&2
+    exit 1
+}
+```
+
+Confirma que `journalctl` existe. Sem ele, o script falha em vez de gerar um relatório que pudesse parecer indicar zero eventos.
+
+```bash
+mkdir -p "${REPORT_DIR}"
+umask 027
+```
+
+Cria o directório e limita as permissões dos novos ficheiros.
+
+## 3. Procurar os eventos relevantes
+
+```bash
+EVENTS="$(journalctl -k \
+  --since "${START_DATE}" \
+  --until "${END_DATE}" \
+  -o cat --no-pager 2>/dev/null |
+  grep -E 'LAPRIZZA-SYS02-DENY' || true)"
+```
+
+- `journalctl -k` lê mensagens do kernel.
+- `--since` e `--until` limitam a pesquisa ao dia pedido.
+- `-o cat` imprime a mensagem sem metadados decorativos do journal.
+- `--no-pager` evita abrir um pager interactivo.
+- `grep` selecciona mensagens com o prefixo definido nas regras.
+- `|| true` permite que o resultado seja vazio sem interromper o script, pois zero eventos num período é um resultado possível.
+
+O relatório só conta mensagens encontradas pelo prefixo SYS02. Não conta todas as recusas do sistema.
+
+## 4. Gerar o conteúdo do relatório
+
+O bloco entre `{ ... }` monta o relatório e redirecciona-o para `REPORT_FILE`:
+
+```bash
+{
+    echo "LaPrizza Security Report — Daily Denied Connections (nftables)"
+    echo "Report Date (UTC): ${REPORT_DATE}"
+    echo "Generated At:     $(date -u +'%Y-%m-%dT%H:%M:%SZ')"
+    echo "Log Source:       systemd kernel journal"
+    ...
+} > "${REPORT_FILE}"
+```
+
+Se `EVENTS` estiver vazio, escreve:
+
+```text
+Status: No LaPrizza SYS02 drop entries were recorded for this period.
+This is not evidence that the firewall is installed or that traffic was tested.
+Total denied attempts recorded: 0
+```
+
+Essa segunda frase é importante para a interpretação: um relatório com zero eventos significa que não foram encontradas mensagens do prefixo nesse intervalo. **Não prova, por si só, que a firewall estava instalada ou que alguém tentou aceder.**
+
+Se houver eventos, o script calcula e mostra:
+
+- o total de linhas encontradas (`wc -l`);
+- as dez origens mais frequentes, extraindo `SRC=...`;
+- as dez portas de destino mais frequentes, extraindo `DPT=...`;
+- as últimas dez mensagens como amostra.
+
+`sort | uniq -c | sort -rn` agrupa valores iguais, conta-os e ordena pela frequência descendente.
+
+Depois define permissões e mostra o resultado:
+
+```bash
+chmod 640 "${REPORT_FILE}"
+echo "Report generated: ${REPORT_FILE}"
+cat "${REPORT_FILE}"
+```
+
+O ficheiro fica legível pelo proprietário e grupo, mas não por outros utilizadores. O caminho e o próprio conteúdo são apresentados no terminal.
+
+O bloco final envia o relatório **apenas se** `REPORT_EMAIL` tiver sido definido:
+
+```bash
+if [[ -n "${REPORT_EMAIL}" ]]; then
+    command -v msmtp >/dev/null 2>&1 || {
+        echo "REPORT_EMAIL is set but msmtp is unavailable." >&2
+        exit 1
+    }
+    ...
+fi
+```
+
+Se o email estiver configurado, verifica se `msmtp` existe, cria os cabeçalhos e envia o conteúdo com `msmtp -t`. Sem `REPORT_EMAIL`, não tenta enviar email.
+
+## 5. Agendamento do relatório
+
+O ficheiro [laprizza-ufw-report](C:/Users/pedro/vsc/LEI-SEM5-PI-2026-27-3DJ-05/config/cron/laprizza-ufw-report) define:
+
+```cron
+0 7 * * * root /opt/laprizza/scripts/ufw-report.sh >> /var/log/laprizza-ufw-report.log 2>&1
+```
+
+Isto agenda uma execução diária às 07:00, como `root`, e acrescenta a saída do script a `/var/log/laprizza-ufw-report.log`. O relatório próprio, quando não recebe argumentos, usa a data UTC.
+
+**Nuance:** a linha cron não declara `CRON_TZ=UTC`; por isso, a hora efectiva do cron depende do fuso horário do servidor. A data que o relatório selecciona, por omissão, é calculada em UTC. Se o professor perguntar, distingue a hora de execução do cron do intervalo UTC consultado pelo relatório.
+
+# Testes e verificações
+
+## 1. Pré-visualizar sem alterar regras
+
+```bash
+make firewall
+```
+
+Este alvo executa o script sem `APPLY=true`. O script valida os CIDRs, descobre a rede e interface, gera o ficheiro e executa `nft -c`. Depois mostra o plano e termina sem chamar `nft -f`.
+
+Para a defesa, é útil explicar que esta verificação confirma a validade do lote proposto; não prova que o lote ficou activo.
+
+## 2. Aplicar a tabela
+
+```bash
+make firewall-apply
+```
+
+O alvo define `APPLY=true`. O script volta a construir e validar o lote e, se a verificação passar, chama `nft -f`.
+
+## 3. Inspeccionar a tabela activa
+
+```bash
+sudo nft list table inet laprizza_sys02
+```
+
+Confirma que a tabela existe no nftables activo e permite inspeccionar:
+
+- o set `allowed_sources4`;
+- a chain `host_input` e a respectiva política;
+- a chain `docker_ingress`;
+- as condições de origem, interface, DNAT e portas;
+- os contadores das regras de recusa, quando apresentados.
+
+Também é possível verificar a configuração e o serviço:
+
+```bash
+sudo cat /etc/laprizza/network-policy.env
+systemctl is-enabled laprizza-sys02.service
+sudo systemctl status laprizza-sys02.service
+```
+
+`is-enabled` diz se o serviço está configurado para arrancar com o sistema. `status` mostra o estado da unidade e a execução mais recente. Sendo `Type=oneshot`, é normal que o serviço termine depois de aplicar as regras.
+
+## 4. Testar acesso permitido e recusado
+
+Com a VPN ligada, o pedido HTTPS ao endpoint de saúde deve alcançar o serviço:
+
+```powershell
+curl.exe -k -i --connect-timeout 8 `
+  https://vs582.dei.isep.ipp.pt/api/health
+```
+
+A evidência recolhida anteriormente inclui resposta HTTP 200 através da VPN. Isso demonstra o acesso pelo caminho permitido e a resposta HTTP da aplicação.
+
+Para testar a restrição de origem, é preciso repetir a tentativa a partir de uma rede fora da VPN, mantendo o destino e o pedido:
+
+```powershell
+curl.exe -k -i --connect-timeout 8 `
+  https://vs582.dei.isep.ipp.pt/api/health
+```
+
+Um timeout, isoladamente, não identifica qual equipamento descartou o pedido. Para associar o teste à regra do servidor, consulta-se o journal logo depois:
+
+```bash
+sudo journalctl -k --since "10 minutes ago" \
+  --grep 'LAPRIZZA-SYS02-DENY' --no-pager
+```
+
+Se a ligação for bloqueada antes de chegar à VM — por exemplo, na rede de borda — poderá não existir mensagem da chain SYS02. Nesse caso, o resultado prova que o caminho externo falhou, mas não que foi esta tabela do host a produzir o bloqueio.
+
+## 5. Verificar o relatório
+
+```bash
+sudo /opt/laprizza/scripts/ufw-report.sh "$(date -u +%Y%m%d)"
+```
+
+Executa manualmente o gerador para a data UTC actual. É possível escolher outro directório para um relatório de teste:
+
+```bash
+sudo env REPORT_DIR=/tmp/sys02-report \
+  bash infra/sys02-network-access/ufw-report.sh "$(date -u +%Y%m%d)"
+```
+
+Se o relatório disser que não foram encontradas entradas, isso prova apenas que o journal não devolveu mensagens correspondentes ao prefixo e intervalo seleccionados. A prova da firewall activa vem de `nft list table`; a prova comportamental vem de probes e, quando aplicável, de eventos de kernel correlacionados.
+
+# Perguntas prováveis do professor
+
+**“Porque é que existem duas chains?”**  
+Porque o tráfego para o host e o tráfego encaminhado para um contentor percorrem hooks diferentes. `input` protege serviços locais; `forward` permite filtrar tráfego que atravessa o host em direcção à bridge Docker.
+
+**“Porque não basta filtrar na Nginx?”**  
+A política é aplicada no host, antes de o tráfego encaminhado chegar ao contentor. Assim, o controlo não depende de cada localização ou configuração da aplicação Nginx.
+
+**“O que significa `ct status dnat`?”**  
+Indica que o connection tracking identificou uma tradução do endereço de destino. É usado para reconhecer tráfego dirigido a uma porta publicada e redireccionada pelo Docker.
+
+**“Por que consultar `ct original proto-dst`?”**  
+Porque depois do DNAT a porta de destino pode ter sido traduzida. Esta expressão permite verificar a porta original pedida pelo cliente — aqui 80 ou 443.
+
+**“A porta externa 2222 aparece nas regras?”**  
+Não. A documentação da configuração do servidor indica que a borda redirecciona TCP/2222 para TCP/22 na VM. A regra nftables da VM verifica, por isso, a porta 22.
+
+**“A `policy accept` da chain `forward` não abre tudo?”**  
+Não equivale a uma aceitação global do host. Nesta chain, a aceitação predefinida evita descartar todo o tráfego encaminhado; as regras específicas registam e descartam tráfego DNAT que chega pela WAN e não foi autorizado. As outras chains e regras do sistema também continuam a participar na decisão.
+
+**“O que acontece a tráfego DNAT da WAN para uma porta diferente de 80/443?”**  
+Não corresponde à regra `accept`. Passa pela regra de log e depois pela regra `drop` da chain `docker_ingress`.
+
+**“O que acontece a tráfego SSH de uma origem não permitida?”**  
+Não corresponde à regra que aceita TCP/22 a partir de `allowed_sources4`. É registado pelas regras de log e, não havendo uma regra que o aceite, chega à `policy drop` de `host_input`.
+
+**“Porque usar um set para os CIDRs?”**  
+O conjunto centraliza as origens autorizadas e permite referenciá-las nas regras. `flags interval` permite representar redes como intervalos, sem enumerar endereço por endereço.
+
+**“O que sobrevive a um reboot?”**  
+As regras activas do kernel são aplicadas pelo serviço systemd habilitado. O unit espera que a rede e o Docker estejam disponíveis e executa o script com `APPLY=true`.
+
+**“O relatório com zero recusas prova que a firewall funciona?”**  
+Não. O próprio relatório diz isso: zero eventos significa que não encontrou mensagens naquele período. É preciso verificar a tabela activa e executar probes adequadas.
+
+**“Que evidência demonstra a recusa externa?”**  
+Uma tentativa feita a partir de uma origem não permitida, acompanhada por mensagem do kernel com o prefixo `LAPRIZZA-SYS02-DENY` e campos como origem e porta. Sem essa mensagem, o timeout não permite atribuir o bloqueio especificamente à firewall da VM.
+
+## Resposta curta para a defesa
+
+> “A SYS02 gere uma tabela nftables própria. Na chain `input`, aplica default drop ao tráfego destinado ao host e permite os serviços explicitamente previstos, incluindo SSH/22 apenas a partir do set IPv4 aprovado. Na chain `forward`, identifica tráfego DNAT vindo da interface WAN para a bridge Docker e só aceita origens autorizadas nas portas web 80 e 443; os restantes fluxos DNAT desse caminho são registados e descartados. O script valida os CIDRs, descobre a rede Docker e a interface, gera um lote temporário, valida-o com `nft -c` e só o aplica com `APPLY=true`. Um serviço systemd repõe a tabela no arranque; o relatório diário resume os eventos SYS02 encontrados no journal.”

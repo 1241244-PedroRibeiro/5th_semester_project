@@ -1,73 +1,56 @@
-Tens razão. A resposta anterior falou sobretudo da intenção da SYS03 e deixou de fora grande parte do código que precisas de defender. Abaixo percorro o **script que está no repositório**, incluindo as linhas de validação, resolução DNS, geração das regras, aplicação, logs e os testes.
+# SYS03 — explicação e defesa das decisões de implementação
 
-# SYS03 — dissecação do `egress.sh`
+A SYS03 limita o tráfego de saída dos contentores da aplicação. Os destinos autorizados são declarados num YAML; o script valida essa configuração, resolve os nomes DNS e gera uma tabela nftables para o tráfego encaminhado da rede Docker seleccionada.
 
-A SYS03 controla o tráfego de saída **encaminhado pela rede Docker seleccionada**. A lista editável está em YAML; o script valida-a e transforma-a numa tabela nftables. O ficheiro de referência é [infra/sys03-egress-allowlist/egress.sh](C:/Users/pedro/vsc/LEI-SEM5-PI-2026-27-3DJ-05/infra/sys03-egress-allowlist/egress.sh).
+Os principais ficheiros são [egress.sh](C:/Users/pedro/vsc/LEI-SEM5-PI-2026-27-3DJ-05/infra/sys03-egress-allowlist/egress.sh), [validate-allowed-endpoints.mjs](C:/Users/pedro/vsc/LEI-SEM5-PI-2026-27-3DJ-05/infra/sys03-egress-allowlist/validate-allowed-endpoints.mjs), [allowed-endpoints.yml](C:/Users/pedro/vsc/LEI-SEM5-PI-2026-27-3DJ-05/config/allowed-endpoints.yml) e [allowed-endpoints.schema.json](C:/Users/pedro/vsc/LEI-SEM5-PI-2026-27-3DJ-05/config/allowed-endpoints.schema.json).
 
-O fluxo geral é:
+## 1. Desenho geral e limites da política
+
+O fluxo é:
 
 ```text
-allowed-endpoints.yml
-        │
-        ├─ YAML parse → JSON
-        ├─ JSON Schema + verificação de nomes repetidos
-        ├─ Descoberta da rede Docker e interface WAN
-        ├─ Resolução DNS dos destinos externos
-        ├─ Geração de policy.nft temporária
-        ├─ nft -c: validar sem aplicar
-        └─ APPLY=true → nft -f: aplicar a tabela
+YAML de endpoints
+    → análise e conversão para JSON
+    → validação pelo schema e pelo validador
+    → descoberta da rede Docker
+    → resolução dos destinos externos por DNS
+    → geração de regras nftables
+    → verificação do lote
+    → aplicação explícita da tabela
 ```
 
-## 1. Interpretador, modo estrito e permissões
+A tabela chama-se `inet laprizza_sys03` e filtra tráfego na chain `container_egress`, ligada ao hook `forward`.
+
+**Justificação:** os contentores comunicam com destinos externos através do encaminhamento do host. Por isso, o controlo é aplicado no caminho `forward`, e não em `OUTPUT`, que corresponde a tráfego originado pelo próprio servidor. A tabela dedicada permite gerir a política SYS03 sem substituir as tabelas do Docker nem a política de saída do host.
+
+## 2. Modo estrito e descoberta dos caminhos
+
+No início do [egress.sh](C:/Users/pedro/vsc/LEI-SEM5-PI-2026-27-3DJ-05/infra/sys03-egress-allowlist/egress.sh):
 
 ```bash
-#!/usr/bin/env bash
-# SYS03 runtime egress policy for Docker containers on the Debian/nftables VM.
-# Host egress and Docker-managed tables are deliberately left unchanged.
 set -euo pipefail
 umask 027
 ```
 
-- `#!/usr/bin/env bash` pede ao sistema para executar o ficheiro com Bash.
-- Os comentários registam o âmbito: tráfego de contentores na VM, preservando a saída do host e as tabelas geridas pelo Docker.
-- `set -euo pipefail` activa o modo estrito:
-  - `-e`: termina quando um comando falha, salvo situações tratadas explicitamente;
-  - `-u`: falha ao usar uma variável não definida;
-  - `pipefail`: uma pipeline falha se falhar um dos seus comandos, em vez de só olhar para o último.
-- `umask 027` limita as permissões dos ficheiros criados pelo processo. O resultado normal é que o proprietário tenha acesso completo, o grupo possa ler/atravessar conforme o tipo de ficheiro e os outros utilizadores não tenham acesso.
+- `-e` termina o script se um comando falhar;
+- `-u` trata variáveis não definidas como erro;
+- `pipefail` propaga falhas de comandos dentro de pipelines;
+- `umask 027` limita as permissões dos ficheiros criados.
 
-**Pergunta provável:** “Porque usar `set -euo pipefail` num script de firewall?”  
-**Resposta:** Para que um erro de leitura, resolução ou geração não seja ignorado e o script não continue com uma política incompleta. Há alguns comandos que podem falhar legitimamente e são tratados de forma explícita, como a pesquisa da tabela existente.
+**Justificação:** uma falha de validação, resolução ou descoberta não deve produzir uma política parcial. O `umask` estabelece uma base restritiva para os ficheiros temporários e logs criados pelo processo.
 
-## 2. Descobrir a raiz e definir caminhos
+O script determina a sua localização e a raiz do repositório:
 
 ```bash
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT_DIR="${LAPRIZZA_REPO_DIR:-}"
 ```
 
-- `${BASH_SOURCE[0]}` identifica o ficheiro de script actualmente executado.
-- `dirname` obtém a pasta desse ficheiro.
-- `cd ... && pwd` converte-a num caminho absoluto.
-- `LAPRIZZA_REPO_DIR` permite indicar explicitamente a raiz do repositório, sobretudo útil para testes isolados.
+Se `LAPRIZZA_REPO_DIR` não estiver definida, procura uma pasta que contenha `config/allowed-endpoints.yml` relativamente à localização do script. Se não encontrar, usa `/opt/laprizza`.
 
-Depois tenta encontrar automaticamente o repositório:
+**Justificação:** o mesmo script pode ser executado a partir da árvore do repositório ou da instalação de produção. A variável `LAPRIZZA_REPO_DIR` permite ainda indicar uma raiz temporária durante testes controlados.
 
-```bash
-if [[ -z "${ROOT_DIR}" ]]; then
-    for candidate in "${SCRIPT_DIR}/../.." "${SCRIPT_DIR}/.."; do
-        if [[ -f "${candidate}/config/allowed-endpoints.yml" ]]; then
-            ROOT_DIR="$(cd "${candidate}" && pwd)"
-            break
-        fi
-    done
-fi
-ROOT_DIR="${ROOT_DIR:-/opt/laprizza}"
-```
-
-Se a variável estiver vazia, procura o YAML em duas localizações relativas ao script. Encontrar o YAML serve como sinal de que encontrou a raiz do projecto. `break` interrompe a procura quando encontra a primeira opção válida. Se não encontrar, usa `/opt/laprizza`, o caminho de instalação no servidor.
-
-Em seguida define os caminhos usados:
+Depois define os caminhos de configuração e logs:
 
 ```bash
 YAML_FILE="${ROOT_DIR}/config/allowed-endpoints.yml"
@@ -78,34 +61,36 @@ ADMIN_GROUP="${ADMIN_GROUP:-laprizza-admins}"
 APPLY="${APPLY:-false}"
 ```
 
-A sintaxe `${VAR:-valor}` significa “usar `VAR` se estiver definida e não vazia; caso contrário, usar este valor”. Isto permite:
+`APPLY` começa como `false`. Os restantes caminhos podem ser substituídos pelo ambiente, o que permite direccionar logs e configuração para uma área de teste.
 
-- usar o ficheiro de política instalado em `/etc/laprizza/network-policy.env`;
-- redireccionar os registos para uma pasta de teste;
-- manter a pré-visualização como comportamento normal, porque `APPLY` começa em `false`.
+**Justificação:** separar os parâmetros da lógica torna o script reutilizável e testável. Manter a pré-visualização como predefinição evita que a simples execução altere a política activa.
 
-O utilizador e a revisão de origem são obtidos assim:
+## 3. Actor, revisão e configuração da máquina
 
 ```bash
 ACTOR="${ACTOR:-${SUDO_USER:-$(id -un)}}"
 SRC_COMMIT="${SRC_COMMIT:-$(git -C "${ROOT_DIR}" rev-parse --short HEAD 2>/dev/null || echo uncommitted)}"
 ```
 
-- `ACTOR` usa, por ordem, a variável já definida, `SUDO_USER` ou o utilizador actual.
-- `SRC_COMMIT` tenta obter o hash curto do commit da raiz do repositório.
-- Se o `git rev-parse` falhar, regista `uncommitted`. O `|| echo uncommitted` trata essa falha em vez de deixar a substituição de comando interromper esta atribuição.
+`ACTOR` identifica quem iniciou a operação: usa a variável explícita, depois `SUDO_USER`, e finalmente o utilizador actual. `SRC_COMMIT` tenta guardar o commit curto associado à árvore; se não conseguir, regista `uncommitted`.
 
-## 3. Carregar as variáveis da máquina e confirmar os requisitos
+**Justificação:** estas informações tornam a auditoria útil para relacionar uma aplicação com o utilizador e com a versão do código/configuração usada.
+
+O ficheiro de configuração do host é carregado se existir:
 
 ```bash
 if [[ -f "${POLICY_ENV}" ]]; then
-    set -a; source "${POLICY_ENV}"; set +a
+    set -a
+    source "${POLICY_ENV}"
+    set +a
 fi
 ```
 
-Se o ficheiro de configuração do host existir, o Bash carrega-o. `source` executa as atribuições no contexto do script. `set -a` exporta as variáveis definidas nesse ficheiro para o ambiente dos comandos seguintes; `set +a` desliga esse comportamento depois da leitura.
+`source` lê as variáveis no contexto do script. `set -a` exporta-as para os processos chamados; `set +a` desliga a exportação automática depois da leitura.
 
-É neste ficheiro que podem estar, por exemplo, `DOCKER_EGRESS_NETWORK`, `WAN_INTERFACE` e `DOCKER_DNS_SERVERS`. Como `source` executa comandos Bash, o ficheiro tem de ser controlado por administradores e protegido no servidor.
+**Justificação:** parâmetros como a rede Docker, a interface WAN e os DNS upstream podem variar entre servidores sem estarem escritos directamente no script. Como `source` executa comandos Bash, o ficheiro deve permanecer protegido e sob controlo administrativo.
+
+## 4. Privilégios, dependências e configuração obrigatória
 
 ```bash
 if [[ "$(id -u)" -ne 0 ]]; then
@@ -114,7 +99,9 @@ if [[ "$(id -u)" -ne 0 ]]; then
 fi
 ```
 
-`id -u` devolve o identificador numérico do utilizador. `0` é o `root`. Se não estiver a correr como root, o script escreve o erro em `stderr` (`>&2`) e termina com código `1`.
+`id -u` verifica o UID. A alteração de regras nftables exige `root`; se o UID não for zero, o script termina.
+
+**Justificação:** falhar explicitamente é preferível a continuar até uma operação privilegiada falhar de forma menos clara.
 
 ```bash
 for cmd in node yq jq dig timeout sha256sum nft docker ip python3 chgrp; do
@@ -125,25 +112,9 @@ for cmd in node yq jq dig timeout sha256sum nft docker ip python3 chgrp; do
 done
 ```
 
-Para cada comando necessário, `command -v` verifica se está disponível no `PATH`. A saída normal é descartada. Se algum faltar, o script termina antes de construir ou aplicar regras.
+Confirma que estão disponíveis as ferramentas necessárias: Node e Ajv para a validação, `yq` e `jq` para processar a configuração, `dig` e `timeout` para DNS, `nft` para a firewall, Docker e `ip` para descobrir a rede, Python para validar IPs, e `sha256sum`/`chgrp` para auditoria e permissões.
 
-As ferramentas têm estas funções:
-
-| Ferramenta | Uso no script |
-|---|---|
-| `node` | Executar o validador JavaScript |
-| `yq` | Ler o YAML e produzir JSON |
-| `jq` | Extrair os endpoints do JSON |
-| `dig` | Consultar DNS |
-| `timeout` | Limitar a duração de uma consulta |
-| `sha256sum` | Identificar o conteúdo da configuração |
-| `nft` | Validar e gerir a tabela nftables |
-| `docker` | Consultar a rede Docker |
-| `ip` | Descobrir a rota e a interface WAN |
-| `python3` | Validar e normalizar sub-redes e endereços |
-| `chgrp` | Atribuir os logs ao grupo administrativo |
-
-Por fim:
+**Justificação:** uma ausência de dependência é detectada antes de qualquer tentativa de aplicar regras.
 
 ```bash
 [[ -f "${YAML_FILE}" ]] || {
@@ -152,16 +123,18 @@ Por fim:
 }
 ```
 
-O YAML é obrigatório. Se não existir, não há configuração a validar e o script termina.
+O YAML tem de existir.
 
-## 4. Descobrir a rede Docker e a interface WAN
+**Justificação:** sem uma fonte de configuração não há uma política que possa ser validada e aplicada. O script não deve inventar uma lista vazia nem continuar silenciosamente.
+
+## 5. Descobrir e validar a rede Docker
 
 ```bash
 DOCKER_EGRESS_NETWORK="${DOCKER_EGRESS_NETWORK:-laprizza_laprizza-network}"
 WAN_INTERFACE="${WAN_INTERFACE:-$(ip -4 route show default | awk 'NR == 1 { for (i=1; i<=NF; i++) if ($i == "dev") { print $(i+1); exit } }')}"
 ```
 
-A rede Docker tem um valor predefinido, mas pode ser substituída pela configuração do host. A interface WAN também pode ser configurada. Se não estiver, o comando `ip -4 route show default` mostra a rota IPv4 predefinida e o `awk` procura o campo `dev`, que identifica a interface de saída, como `eth0`.
+A rede Docker tem um valor predefinido. Se a interface WAN não estiver configurada, `ip -4 route show default` apresenta a rota IPv4 predefinida e `awk` extrai o valor que segue `dev`.
 
 ```bash
 [[ -n "${WAN_INTERFACE}" && "${WAN_INTERFACE}" =~ ^[a-zA-Z0-9_.:-]+$ ]] || {
@@ -170,13 +143,21 @@ A rede Docker tem um valor predefinido, mas pode ser substituída pela configura
 }
 ```
 
-Confirma que a variável não está vazia e que só contém caracteres aceites para um nome de interface. A validação também evita inserir texto arbitrário dentro do ficheiro nftables gerado.
+Confirma que a interface existe como valor não vazio e tem um formato admissível.
 
-O script consulta depois o Docker:
+**Justificação:** as regras distinguem o tráfego que entra pela bridge e sai pela WAN. Uma interface errada poderia deixar tráfego fora do âmbito pretendido; validar o valor também evita inserção de texto inesperado nas regras.
+
+O Docker fornece o ID e a sub-rede da rede:
 
 ```bash
 NETWORK_INFO="$(docker network inspect "${DOCKER_EGRESS_NETWORK}" \
-  --format '{{.Id}} {{range .IPAM.Config}}{{.Subnet}}{{end}}' 2>/dev/null || true)"
+  --format '{{.Id}} {{range .IPAM.Config}}{{.Subnet}}{{end}}' \
+  2>/dev/null || true)"
+```
+
+`docker network inspect` consulta a rede seleccionada. Os erros são ocultados e `|| true` permite que o script teste a resposta e apresente a sua própria mensagem se a rede não existir.
+
+```bash
 [[ -n "${NETWORK_INFO}" ]] || {
     echo "SYS03: Docker egress network not found: ${DOCKER_EGRESS_NETWORK}" >&2
     exit 1
@@ -184,11 +165,9 @@ NETWORK_INFO="$(docker network inspect "${DOCKER_EGRESS_NETWORK}" \
 NETWORK_ID="${NETWORK_INFO%% *}"
 ```
 
-`docker network inspect` pede o identificador e a sub-rede da rede. `--format` formata a resposta sem imprimir todo o JSON. Os erros do Docker são ocultados por `2>/dev/null`; `|| true` impede que o modo `-e` termine antes de a verificação seguinte poder produzir a mensagem própria do script.
+Se a resposta estiver vazia, termina. Caso contrário, conserva o ID antes do primeiro espaço.
 
-`NETWORK_INFO%% *` remove tudo a partir do primeiro espaço, deixando o identificador da rede.
-
-A sub-rede é validada com Python:
+A sub-rede passa por validação Python:
 
 ```bash
 NETWORK_SUBNET="$(python3 - "${NETWORK_INFO#* }" <<'PY'
@@ -204,16 +183,9 @@ PY
 }
 ```
 
-`NETWORK_INFO#* ` remove o identificador e o espaço inicial. O pequeno programa Python:
+Python interpreta e normaliza a rede. Se não for uma rede válida ou não for IPv4, o script termina.
 
-1. lê a sub-rede recebida em `sys.argv[1]`;
-2. usa a biblioteca `ipaddress` para validar e normalizar a rede;
-3. exige IPv4;
-4. imprime a forma normalizada.
-
-Se a rede estiver mal formada ou for IPv6, a substituição de comando falha e o script termina.
-
-A bridge é calculada pelo prefixo do identificador Docker:
+**Justificação:** a política actual gera regras com origem IPv4. É melhor rejeitar uma rede inesperada do que aplicar uma regra que não representa correctamente a rede runtime.
 
 ```bash
 DOCKER_BRIDGE="${DOCKER_BRIDGE:-br-${NETWORK_ID:0:12}}"
@@ -223,9 +195,11 @@ DOCKER_BRIDGE="${DOCKER_BRIDGE:-br-${NETWORK_ID:0:12}}"
 }
 ```
 
-Docker costuma nomear a bridge como `br-` seguido dos primeiros 12 caracteres do ID da rede. A variável pode ser substituída explicitamente. Depois há outra validação para impedir que um valor inesperado entre no ficheiro de regras.
+O nome predefinido da bridge é `br-` seguido dos primeiros 12 caracteres do ID da rede, com possibilidade de configuração explícita.
 
-## 5. Criar área temporária, logs e funções
+**Justificação:** o ID da rede e a bridge podem mudar quando o Docker recria a rede. A descoberta reduz a dependência de nomes fixos; a validação protege o texto inserido no lote nftables.
+
+## 6. Preparar ficheiros temporários e auditoria
 
 ```bash
 TEMP_DIR="$(mktemp -d /tmp/laprizza-egress.XXXXXX)"
@@ -236,13 +210,15 @@ RESOLVED="${TEMP_DIR}/resolved.tsv"
 YAML_SHA256="$(sha256sum "${YAML_FILE}" | awk '{print $1}')"
 ```
 
-- `mktemp -d` cria uma pasta temporária com nome imprevisível.
-- `trap ... EXIT` pede ao Bash para apagar essa pasta quando o script termina, incluindo em saídas por erro.
-- Os ficheiros temporários têm funções distintas:
-  - `config.json`: YAML convertido;
-  - `policy.nft`: regras que serão verificadas/aplicadas;
-  - `resolved.tsv`: lista tabulada de endpoints já resolvidos.
-- `sha256sum` calcula o hash do YAML. O `awk` selecciona a primeira coluna, que é o hash.
+Cria uma pasta temporária com nome imprevisível e remove-a quando o script terminar. Guarda nela:
+
+- o JSON convertido;
+- o lote de regras nftables;
+- a lista tabulada dos destinos resolvidos.
+
+O hash identifica o conteúdo exacto do YAML utilizado.
+
+**Justificação:** os dados intermédios são gerados em cada execução e não devem ser confundidos com a configuração mantida no Git. O hash permite identificar que versão de conteúdo foi aplicada.
 
 Os logs são preparados assim:
 
@@ -253,9 +229,9 @@ chgrp "${ADMIN_GROUP}" "${EGRESS_LOG}" "${CHANGES_LOG}"
 chmod 640 "${EGRESS_LOG}" "${CHANGES_LOG}"
 ```
 
-`dirname` obtém as pastas dos logs; `mkdir -p` cria-as se forem necessárias; `touch` garante que os ficheiros existem. Depois são atribuídos ao grupo de administradores e recebem modo `640`: o proprietário pode ler e escrever, o grupo pode ler e os restantes não têm permissões.
+Cria as pastas e os ficheiros, atribui-lhes o grupo administrativo e define permissões `640`.
 
-As funções seguintes centralizam o registo:
+A função `log` escreve uma mensagem com data UTC tanto no log como na saída:
 
 ```bash
 log() {
@@ -265,7 +241,7 @@ log() {
 }
 ```
 
-`log` recebe nível e mensagem. `date -u` produz data UTC; `printf` cria uma linha consistente; `tee -a` acrescenta-a ao ficheiro e também a mostra no terminal ou journal.
+A função `audit` acrescenta uma linha estruturada a `egress-changes.log` com actor, acção, resultado, número de regras, hash e origem Git.
 
 ```bash
 audit() {
@@ -277,7 +253,9 @@ audit() {
 }
 ```
 
-`audit` escreve uma linha de auditoria com data, actor, acção, resultado, número de regras, hash e origem Git. O segundo argumento tem `0` como valor predefinido. No fim reforça as permissões e o grupo do ficheiro.
+**Justificação:** os logs operacionais explicam o que aconteceu; o registo de alterações permite relacionar cada tentativa de aplicação com o utilizador e a configuração.
+
+As falhas passam pela função comum:
 
 ```bash
 fail() {
@@ -288,148 +266,90 @@ fail() {
 }
 ```
 
-`fail` é o caminho comum para falhas após a definição destas funções: regista o erro, audita a tentativa inválida, escreve uma mensagem para `stderr` e termina com código `1`.
+Regista a causa, audita o resultado como inválido, envia uma mensagem para `stderr` e termina com código `1`.
 
-## 6. Converter e validar a configuração
+**Justificação:** uma configuração rejeitada não deve ser confundida com uma aplicação bem-sucedida. O erro também fica disponível no terminal ou no journal do serviço.
+
+## 7. Converter e validar o YAML
 
 ```bash
-yq '.' "${YAML_FILE}" > "${CONFIG_JSON}" || fail "YAML parsing failed"
+yq '.' "${YAML_FILE}" > "${CONFIG_JSON}" ||
+    fail "YAML parsing failed"
+```
+
+`yq` analisa o documento YAML e produz JSON. O `.` selecciona o documento inteiro.
+
+**Justificação:** YAML é conveniente para edição humana; o JSON produzido facilita a validação pelo validador e a extracção dos campos por `jq`.
+
+Depois:
+
+```bash
 node "${SCRIPT_DIR}/validate-allowed-endpoints.mjs" \
-  "${CONFIG_JSON}" "${ROOT_DIR}/config/allowed-endpoints.schema.json" ||
+  "${CONFIG_JSON}" \
+  "${ROOT_DIR}/config/allowed-endpoints.schema.json" ||
   fail "schema validation failed"
 ```
 
-Primeiro, `yq` analisa o YAML. O `.` significa seleccionar o documento inteiro. A versão de `yq` usada no Debian gera JSON por omissão, que é guardado em `CONFIG_JSON`.
+O validador recebe o JSON e o schema. Se falhar, `fail` regista a tentativa inválida. Esta etapa acontece antes de resolver destinos ou construir a tabela.
 
-Depois, Node executa o validador com dois argumentos: o JSON temporário e o schema. Qualquer erro de parsing ou validação chama `fail`, antes da geração e aplicação da política.
+**Justificação:** encontrar erros de estrutura e valores antes de chegar à firewall evita gerar regras com endpoints mal formados.
 
-### O validador JavaScript, passo a passo
+## 8. O validador JavaScript e as decisões do schema
 
-Em [validate-allowed-endpoints.mjs](C:/Users/pedro/vsc/LEI-SEM5-PI-2026-27-3DJ-05/infra/sys03-egress-allowlist/validate-allowed-endpoints.mjs):
+O ficheiro [validate-allowed-endpoints.mjs](C:/Users/pedro/vsc/LEI-SEM5-PI-2026-27-3DJ-05/infra/sys03-egress-allowlist/validate-allowed-endpoints.mjs) carrega as bibliotecas Ajv e Ajv Formats a partir das dependências do backend, procurando primeiro na árvore do repositório e depois em `/opt/laprizza/backend/node_modules`.
 
-```js
-import { readFileSync } from 'node:fs';
-import { createRequire } from 'node:module';
-import { dirname, resolve } from 'node:path';
-import { fileURLToPath } from 'node:url';
+**Justificação:** reutilizar dependências de produção já instaladas evita manter uma cópia separada destas bibliotecas apenas para validar a configuração.
+
+O validador exige dois argumentos:
+
+```text
+validate-allowed-endpoints.mjs <config.json> <schema.json>
 ```
 
-Importa as funções nativas do Node necessárias para ler ficheiros, resolver caminhos e permitir carregar os pacotes instalados pelo backend.
+Se faltar algum, apresenta a utilização e termina com código `2`.
 
-```js
-const require = createRequire(import.meta.url);
-const scriptDirectory = dirname(fileURLToPath(import.meta.url));
+Depois lê ambos os ficheiros com `readFileSync`, converte-os de JSON, cria Ajv com validação estrita e `allErrors: true`, activa os formatos e compila o schema.
+
+**Justificação:** `allErrors: true` permite apresentar vários erros numa execução; validação estrita ajuda a detectar definições de schema inconsistentes; os formatos são necessários para validar campos como datas.
+
+Se Ajv encontrar erros, o script imprime o caminho do campo e a mensagem, por exemplo:
+
+```text
+/endpoints/3/protocol must be equal to one of the allowed values
 ```
 
-Como este é um ficheiro ES module, `createRequire` cria uma função compatível com `require`. `fileURLToPath` transforma o URL do módulo num caminho normal; `dirname` guarda a pasta do validador.
+Depois termina com código `1`.
 
-```js
-const moduleRoots = [
-    resolve(scriptDirectory, '../../backend/node_modules'),
-    resolve(scriptDirectory, '../backend/node_modules'),
-    '/opt/laprizza/backend/node_modules',
-];
-```
-
-O validador procura as dependências Ajv e Ajv Formats em três locais: relativo à árvore de desenvolvimento e no caminho de produção no servidor.
-
-```js
-const requireBackendModule = (name) => {
-    for (const root of moduleRoots) {
-        try {
-            return require(resolve(root, name));
-        } catch (error) {
-            if (error.code !== 'MODULE_NOT_FOUND') throw error;
-        }
-    }
-    throw new Error(`Could not find ${name} in backend production dependencies`);
-};
-```
-
-Tenta carregar o pacote em cada raiz. Se o erro for “módulo não encontrado”, continua para o caminho seguinte; outros erros são propagados imediatamente. Se esgotar as opções, informa que a dependência de produção não foi encontrada.
-
-```js
-const Ajv = requireBackendModule('ajv/dist/ajv.js');
-const addFormatsModule =
-    requireBackendModule('ajv-formats/dist/index.js');
-const addFormats = addFormatsModule.default || addFormatsModule;
-```
-
-Carrega Ajv e o complemento de formatos. `default || addFormatsModule` permite lidar com a forma como o módulo exporta a função, consoante a versão/formato do pacote.
-
-```js
-const configPath = process.argv[2];
-const schemaPath = process.argv[3];
-
-if (!configPath || !schemaPath) {
-    console.error('Usage: validate-allowed-endpoints.mjs <config.json> <schema.json>');
-    process.exit(2);
-}
-```
-
-Os argumentos do programa estão em `process.argv`. Se faltar algum, imprime a utilização correcta e termina com código `2`, que representa utilização incorrecta do validador.
-
-```js
-const config = JSON.parse(readFileSync(configPath, 'utf8'));
-const schema = JSON.parse(readFileSync(schemaPath, 'utf8'));
-const ajv = new Ajv({ allErrors: true, strict: true, strictRequired: false });
-addFormats(ajv);
-const validate = ajv.compile(schema);
-```
-
-Lê os dois ficheiros como UTF-8 e interpreta-os como JSON. Cria Ajv com:
-
-- `allErrors: true`: recolhe mais do que o primeiro erro;
-- `strict: true`: activa verificações estritas do schema;
-- `strictRequired: false`: desactiva uma verificação estrita específica relacionada com propriedades obrigatórias.
-
-Adiciona formatos como `date`, compila o schema e obtém uma função `validate`.
-
-```js
-if (!validate(config)) {
-    for (const error of validate.errors || []) {
-        console.error(`${error.instancePath || '/'} ${error.message}`);
-    }
-    process.exit(1);
-}
-```
-
-Se o JSON não corresponder ao schema, imprime cada erro com o caminho do campo afectado (`instancePath`) e a mensagem. `|| '/'` usa `/` quando o erro não tem caminho específico. Termina com código `1`.
+Por fim, verifica nomes repetidos:
 
 ```js
 const names = config.endpoints.map((endpoint) => endpoint.name);
 const duplicateNames =
     names.filter((name, index) => names.indexOf(name) !== index);
-if (duplicateNames.length > 0) {
-    console.error(`duplicate endpoint name: ${[...new Set(duplicateNames)].join(', ')}`);
-    process.exit(1);
-}
 ```
 
-O schema não consegue expressar directamente a unicidade do campo `name` entre objectos. Este código percorre os endpoints, recolhe os nomes e identifica os repetidos. Se encontrar algum, imprime os nomes sem duplicar a própria mensagem e termina com falha.
+Se houver nomes duplicados, imprime-os e termina.
 
-## 7. Descobrir DNS e resolver cada destino
+**Justificação:** o schema valida a estrutura e os valores de cada endpoint, mas a unicidade entre propriedades `name` de vários objectos é tratada explicitamente pelo validador.
 
-O script constrói a lista de servidores DNS:
+## 9. Descobrir os servidores DNS
 
-```bash
-NAMESERVER_LIST="$(python3 - "${DOCKER_DNS_SERVERS:-}" <<'PY'
-...
-PY
-)" || fail "invalid DNS resolver configuration"
-```
+O script executa Python para recolher servidores IPv4 de `/etc/resolv.conf` e acrescentar os endereços definidos em `DOCKER_DNS_SERVERS`.
 
-O Python lê os `nameserver` IPv4 do `/etc/resolv.conf` e acrescenta os endereços indicados em `DOCKER_DNS_SERVERS`. Valida cada endereço através de `ipaddress`, rejeita endereços que não sejam IPv4, remove duplicados e exige pelo menos um servidor DNS.
+O Python:
 
-Depois transforma os servidores numa lista Bash:
+1. percorre linhas `nameserver`;
+2. valida os endereços através de `ipaddress`;
+3. conserva os IPv4;
+4. valida os valores de `DOCKER_DNS_SERVERS`;
+5. remove duplicados;
+6. exige que exista pelo menos um resolver.
 
-```bash
-mapfile -t NAMESERVERS <<< "${NAMESERVER_LIST}"
-```
+A saída é carregada para o array `NAMESERVERS` através de `mapfile`.
 
-`mapfile` lê cada linha da saída e coloca-a como um elemento do array `NAMESERVERS`.
+**Justificação:** os nomes configurados precisam de ser resolvidos antes de serem convertidos em regras IP. Validar a lista de resolvers evita usar um endereço mal formado ou não suportado.
 
-A lista usada para resolver os destinos é escolhida assim:
+A lista de resolvers para as consultas é seleccionada assim:
 
 ```bash
 if [[ -n "${DOCKER_DNS_SERVERS:-}" ]]; then
@@ -443,107 +363,68 @@ else
 fi
 ```
 
-Se estiver configurada uma lista explícita, divide-a pelas vírgulas, remove espaços em redor e ordena/remover duplicados. Caso contrário, usa os DNS obtidos do host.
+Se houver DNS upstream Docker explícitos, o script consulta esses endereços; caso contrário, usa os resolvers IPv4 recolhidos do host.
 
-A lista de resultados começa vazia:
+**Justificação:** quando os contentores usam o DNS embutido do Docker, esse resolver encaminha consultas para upstreams configurados no host. Consultar esses mesmos upstreams ajuda a alinhar os IPs autorizados com as respostas DNS que a aplicação recebe.
+
+## 10. Resolver os destinos do YAML
 
 ```bash
 : > "${RESOLVED}"
 FAILED=()
 ```
 
-`: > ficheiro` cria o ficheiro ou esvazia-o. `FAILED` guardará os destinos externos que não puderam ser resolvidos.
+Esvazia/cria o ficheiro de resultados e inicializa a lista de nomes que falharem resolução.
 
-O ciclo lê as linhas produzidas por `jq`:
+O `jq` percorre os endpoints, ignora os marcados `internal_only`, expande destinos e portas e produz linhas tabuladas:
 
 ```bash
-while IFS=$'\t' read -r name protocol port destination; do
-    ...
-done < <(
-  jq -r '.endpoints[]
-    | select((.internal_only // false) | not)
-    | . as $e
-    | $e.destinations[] as $d
-    | ($e.port // $e.ports[])
-    | [$e.name,$e.protocol,(tostring),$d]
-    | @tsv' "${CONFIG_JSON}"
-)
+.endpoints[]
+| select((.internal_only // false) | not)
+| . as $e
+| $e.destinations[] as $d
+| ($e.port // $e.ports[])
+| [$e.name,$e.protocol,(tostring),$d]
+| @tsv
 ```
 
-Este `jq`:
+**Justificação:** endpoints internos como `prolog` e `postgres` não devem gerar regras de saída para a Internet. As regras externas são construídas apenas para endpoints não internos.
 
-1. percorre `.endpoints[]`;
-2. exclui as entradas com `internal_only: true`;
-3. percorre cada destino de cada endpoint;
-4. usa `port` ou, se não existir, percorre `ports`;
-5. produz colunas separadas por tabulação: nome, protocolo, porta e destino.
-
-`IFS=$'\t'` diz ao `read` para separar pelos tabs; `-r` impede que barras invertidas sejam interpretadas.
-
-Dentro do ciclo, um destino que contenha `/` é tratado como CIDR:
+Dentro do ciclo, destinos com `/` são tratados como redes:
 
 ```bash
 if [[ "${destination}" == */* ]]; then
-    resolved="$(python3 - "${destination}" <<'PY'
-...
-PY
-)" || fail "invalid/non-IPv4 CIDR destination: ${destination}"
 ```
 
-O Python interpreta a rede e aceita apenas IPv4 individual com prefixo `/32`. Isto impede usar aqui um intervalo IPv4 amplo ou uma rede IPv6.
+O Python valida que se trata de um endereço IPv4 `/32`, ou seja, um único endereço, e não um intervalo amplo.
 
-Se não for CIDR, trata-se como nome DNS:
+**Justificação:** permitir apenas um IPv4 individual neste formato limita a amplitude de uma regra escrita como CIDR.
+
+Os restantes destinos são tratados como nomes DNS. Para cada resolver, o script executa `dig` para registos A, com limites de tempo:
 
 ```bash
-resolved=""
-for resolver in "${RESOLUTION_SERVERS[@]}"; do
-    answers="$(
-      timeout 5s dig +short +time=2 +tries=1 @"${resolver}" \
-      "${destination}" A 2>/dev/null |
-      grep -E '^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$' || true
-    )"
-    [[ -z "${answers}" ]] || resolved+="${answers}"$'\n'
-done
+timeout 5s dig +short +time=2 +tries=1 \
+  @"${resolver}" "${destination}" A
 ```
 
-Para cada resolver, `dig` pede registos A. `+short` reduz a resposta ao essencial; `+time=2 +tries=1` limita a espera da consulta; `timeout 5s` impõe um limite exterior. O `grep` mantém apenas linhas com formato IPv4. Erros de `dig` são ocultados e `|| true` permite continuar a consultar os outros servidores.
+O `grep` conserva respostas IPv4; `sort -u` agrega e remove duplicados entre os resolvers.
 
-Depois normaliza as respostas:
+Se um nome não produzir respostas IPv4, é acrescentado a `FAILED`. Depois do ciclo:
 
 ```bash
-resolved="$(
-  printf '%s\n' "${resolved}" |
-  grep -E '^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$' |
-  sort -u || true
-)"
-[[ -n "${resolved}" ]] || FAILED+=("${destination}")
+[[ ${#FAILED[@]} -eq 0 ]] ||
+    fail "DNS resolution failed: ${FAILED[*]}"
+[[ -s "${RESOLVED}" ]] ||
+    fail "no external allow rules resolved"
 ```
 
-`sort -u` ordena e remove respostas repetidas. Se não houver nenhuma resposta IPv4, o destino é acrescentado a `FAILED`.
+A aplicação é interrompida se algum destino externo não resolver ou se não houver regras externas.
 
-Por cada IP obtido, cria uma linha tabulada:
+**Justificação:** não é seguro aplicar uma nova tabela parcialmente, com alguns destinos autorizados e outros omitidos por uma falha DNS. A resolução completa é um pré-requisito para avançar.
 
-```bash
-for address in ${resolved}; do
-    printf '%s\t%s\t%s\t%s\n' \
-      "${name}" "${address}" "${protocol}" "${port}" >> "${RESOLVED}"
-done
-```
+## 11. Construir a tabela nftables
 
-Por exemplo, um nome com dois registos A gera duas linhas. Assim, a regra posterior autoriza cada IP resolvido.
-
-Quando termina a resolução:
-
-```bash
-[[ ${#FAILED[@]} -eq 0 ]] || fail "DNS resolution failed: ${FAILED[*]}"
-[[ -s "${RESOLVED}" ]] || fail "no external allow rules resolved"
-```
-
-`#FAILED[@]` é o número de falhas. Se houver qualquer destino não resolvido, a configuração é rejeitada. Se o ficheiro de resultados estiver vazio, não há regra externa para aplicar e a operação também é rejeitada.
-
-## 8. Construir a tabela nftables
-
-O ficheiro de regras começa vazio e inclui uma substituição da tabela anterior, se ela existir:
+O script começa por esvaziar o ficheiro de regras e inclui uma instrução para apagar a tabela anterior, caso exista:
 
 ```bash
 : > "${NFT_FILE}"
@@ -552,109 +433,104 @@ if nft list table inet laprizza_sys03 >/dev/null 2>&1; then
 fi
 ```
 
-`nft list table` é usado aqui como teste de existência. A saída é descartada. Se a tabela existir, a instrução de remoção é acrescentada ao lote que será validado e aplicado.
+**Justificação:** ao gerar a tabela inteira, a execução seguinte não acumula regras duplicadas. A substituição limita-se à tabela gerida pela SYS03.
 
-O script escreve o início da tabela e da chain:
+O início do lote é:
 
-```bash
-cat >> "${NFT_FILE}" <<NFT
+```nft
 table inet laprizza_sys03 {
     chain container_egress {
         type filter hook forward priority -10; policy accept;
         ct state invalid drop
         ct state established,related accept
-NFT
 ```
 
-`cat <<NFT` é um *here-document*: tudo até ao delimitador `NFT` é acrescentado ao ficheiro. Aqui não há expansão de variáveis no texto inicial; é um bloco fixo de sintaxe nftables.
+- `table inet`: família capaz de expressar regras IPv4 e IPv6.
+- `hook forward`: observa pacotes encaminhados pelo host.
+- `priority -10`: define a prioridade da chain no hook.
+- `policy accept`: mantém a decisão por omissão desta chain como aceitar, e são as regras específicas seguintes que limitam o tráfego seleccionado.
+- `ct state invalid drop`: descarta pacotes inválidos.
+- `ct state established,related accept`: aceita tráfego de ligações já estabelecidas ou relacionadas.
 
-- `table inet laprizza_sys03`: cria uma tabela da família `inet`, que pode tratar tráfego IPv4 e IPv6.
-- `chain container_egress`: nome da chain gerida pelo script.
-- `hook forward`: inspecciona pacotes que o host encaminha, como saída de contentores pela bridge.
-- `priority -10`: define a prioridade da chain no hook `forward`.
-- `policy accept`: esta chain não descarta por defeito todo o tráfego que a atravessa. As regras explícitas de recusa mais abaixo são limitadas ao tráfego da bridge seleccionada para a WAN.
-- `ct state invalid drop`: descarta pacotes que o connection tracking classifica como inválidos.
-- `ct state established,related accept`: aceita pacotes de ligações que o connection tracking identifica como estabelecidas ou relacionadas.
+**Justificação:** o controlo SYS03 concentra-se no tráfego de saída dos contentores pela bridge de runtime para a WAN. Não substitui a política global de encaminhamento do host nem pretende assumir a gestão das tabelas Docker.
 
-As regras de autorização são acrescentadas dinamicamente:
+As regras permitidas são geradas a partir do ficheiro `RESOLVED`:
 
 ```bash
-RULE_COUNT=0
 while IFS=$'\t' read -r _name address protocol port; do
-    printf '        iifname "%s" oifname "%s" ip saddr %s ip daddr %s %s dport %s accept\n' \
+    printf 'iifname "%s" oifname "%s" ip saddr %s ip daddr %s %s dport %s accept\n' \
       "${DOCKER_BRIDGE}" "${WAN_INTERFACE}" "${NETWORK_SUBNET}" \
       "${address}" "${protocol}" "${port}" >> "${NFT_FILE}"
     RULE_COUNT=$((RULE_COUNT + 1))
 done < <(sort -u "${RESOLVED}")
 ```
 
-Para cada combinação única de endereço, protocolo e porta:
+Cada regra exige:
 
-- `iifname` exige que o pacote entre pela bridge Docker seleccionada;
-- `oifname` exige que saia pela interface WAN;
-- `ip saddr` limita a origem à sub-rede IPv4 dos contentores;
-- `ip daddr` limita o destino ao IP resolvido;
-- `tcp dport` ou `udp dport` limita protocolo e porta;
-- `accept` autoriza a ligação correspondente;
-- `RULE_COUNT` conta as regras de endpoints geradas.
+- entrada pela bridge seleccionada;
+- saída pela interface WAN;
+- origem dentro da sub-rede da rede Docker;
+- destino igual ao IP resolvido;
+- protocolo e porta declarados no YAML.
 
-Os DNS são tratados separadamente:
+Depois aceita esse fluxo. `sort -u` evita gerar regras exactamente repetidas, e `RULE_COUNT` conta as regras de endpoint.
+
+**Justificação:** a regra combina interface, sub-rede, destino e serviço. Uma autorização não se aplica a qualquer processo do host nem a qualquer contentor: aplica-se ao tráfego da rede seleccionada para o destino e porta especificados.
+
+## 12. Permitir DNS e registar/descartar o restante
+
+Para cada resolver da lista, são geradas regras DNS UDP e TCP na porta 53:
 
 ```bash
 for nameserver in "${NAMESERVERS[@]}"; do
     for protocol in udp tcp; do
-        printf '        iifname "%s" oifname "%s" ip saddr %s ip daddr %s %s dport 53 accept\n' \
-          "${DOCKER_BRIDGE}" "${WAN_INTERFACE}" "${NETWORK_SUBNET}" \
-          "${nameserver}" "${protocol}" >> "${NFT_FILE}"
-        RULE_COUNT=$((RULE_COUNT + 1))
+        ...
+        ip daddr "${nameserver}" "${protocol}" dport 53 accept
     done
 done
 ```
 
-Para cada servidor DNS, permite consultas tanto UDP/53 — o caso mais comum — como TCP/53, que também pode ser necessário para respostas DNS maiores ou operações específicas.
+**Justificação:** os contentores precisam de resolver nomes; sem uma regra DNS, poderiam não conseguir alcançar nem os destinos que estão autorizados. TCP/53 é incluído juntamente com UDP/53 para suportar consultas que usem TCP.
 
-No fim do bloco são escritas as recusas:
+O fim da chain contém regras de log e `drop` para IPv4 e IPv6:
 
 ```nft
 iifname "<bridge>" oifname "<wan>" ip saddr <subnet> \
-  limit rate 5/second burst 10 packets \
-  log prefix "LAPRIZZA-SYS03-DENY " flags all
+    limit rate 5/second burst 10 packets \
+    log prefix "LAPRIZZA-SYS03-DENY " flags all
 
 iifname "<bridge>" oifname "<wan>" ip saddr <subnet> counter drop
 
 iifname "<bridge>" oifname "<wan>" meta nfproto ipv6 \
-  limit rate 5/second burst 10 packets \
-  log prefix "LAPRIZZA-SYS03-DENY6 " flags all
+    limit rate 5/second burst 10 packets \
+    log prefix "LAPRIZZA-SYS03-DENY6 " flags all
 
 iifname "<bridge>" oifname "<wan>" meta nfproto ipv6 counter drop
 ```
 
-As duas primeiras regras são para tráfego IPv4 não autorizado da bridge para a WAN:
+- O primeiro par regista e descarta tráfego IPv4 da bridge para a WAN que não correspondeu às autorizações anteriores.
+- O segundo par regista e descarta tráfego IPv6 nesse caminho.
+- `limit rate` limita a frequência do logging.
+- `counter` conta os pacotes descartados.
 
-1. `limit rate ... log` regista até cinco mensagens por segundo, com um burst inicial de dez pacotes;
-2. `counter drop` incrementa o contador e descarta o pacote.
+**Justificação:** uma allowlist precisa de um comportamento definido para o que não está listado. Aqui, o tráfego seleccionado que não corresponde a uma autorização é descartado; o prefixo permite procurá-lo no journal e os contadores permitem observar os descartes sem depender apenas do número de mensagens de log.
 
-As duas seguintes fazem o mesmo para IPv6, usando o prefixo `LAPRIZZA-SYS03-DENY6`. A política actual não gera allow rules IPv6 para os endpoints; a saída IPv6 da bridge seleccionada para a WAN é descartada.
+A política actual não gera autorizações IPv6 para endpoints. O tráfego IPv6 da bridge para a WAN é tratado pelas regras explícitas de `drop`.
 
-Finalmente:
+## 13. Validar, pré-visualizar e aplicar
 
-```bash
-}
-NFT
-```
-
-Fecha a chain, a tabela e o *here-document*. Até este ponto o script só construiu texto num ficheiro temporário; ainda não aplicou a nova tabela.
-
-## 9. Validar, pré-visualizar e aplicar
+Depois de gerar o ficheiro, o script regista um resumo com hash, rede e número de regras. Em seguida:
 
 ```bash
-log INFO "Validated YAML sha256=${YAML_SHA256}; network=..."
-nft -c -f "${NFT_FILE}" || fail "nftables syntax/check failed; previous policy remains active"
+nft -c -f "${NFT_FILE}" ||
+    fail "nftables syntax/check failed; previous policy remains active"
 ```
 
-A primeira linha regista a configuração validada, a rede descoberta, a sub-rede, as interfaces e a quantidade de regras. `nft -c -f` pede ao nftables para verificar o lote sem o aplicar. Se houver erro, chama `fail` e termina antes da aplicação.
+`-c` verifica o lote sem o aplicar.
 
-O comportamento predefinido é apenas mostrar o plano:
+**Justificação:** há duas validações distintas. Ajv verifica o conteúdo da configuração; `nft -c` verifica o lote nftables que foi efectivamente gerado. O segundo passo detecta problemas na sintaxe da política final antes da aplicação.
+
+O modo normal é pré-visualizar:
 
 ```bash
 if [[ "${APPLY}" != "true" ]]; then
@@ -664,89 +540,85 @@ if [[ "${APPLY}" != "true" ]]; then
 fi
 ```
 
-Se `APPLY` não for exactamente `true`, imprime o conteúdo gerado e termina com sucesso. Isto permite rever as regras propostas sem alterar o estado activo.
+Sem `APPLY=true`, o lote é mostrado e a tabela activa não é alterada.
 
-A aplicação é explícita:
+**Justificação:** uma execução para inspecção não deve modificar inadvertidamente a firewall. A aplicação fica separada e explícita.
+
+Com `APPLY=true`:
 
 ```bash
 nft -f "${NFT_FILE}" ||
-  fail "nftables apply failed; previous policy should remain active"
+    fail "nftables apply failed; previous policy should remain active"
 audit success "${RULE_COUNT}"
 log INFO "Applied container egress policy atomically; host OUTPUT and Docker-managed tables were left unchanged"
 echo "EGRESS: SUCCESS — ${RULE_COUNT} allow rules applied to ${DOCKER_EGRESS_NETWORK}"
 nft list table inet laprizza_sys03
 ```
 
-- `nft -f` pede ao nftables para aplicar o lote.
-- Se falhar, `fail` regista uma tentativa inválida.
-- Se resultar, `audit success` guarda a quantidade de regras, hash e origem.
-- A mensagem de log deixa claro que o âmbito são os contentores e que `OUTPUT` do host e tabelas Docker não foram substituídos.
-- `nft list table` mostra a tabela que ficou activa.
+`nft -f` aplica o lote. Se falhar, a tentativa é registada como inválida. Se tiver sucesso, escreve a auditoria, regista a aplicação e apresenta a tabela activa.
 
-**Distinção importante na defesa:** `nft -c` valida, mas não aplica. `nft -f` aplica. `APPLY=true` é o que selecciona o segundo caminho.
+**Justificação:** o uso de um lote permite substituir a tabela como uma operação de configuração única, após a validação. A última listagem confirma o resultado no estado activo do kernel.
 
-# O validador, ligado ao resultado observado
+## 14. O schema e a razão das restrições
 
-No teste que enviaste, o erro foi:
+O [schema JSON](C:/Users/pedro/vsc/LEI-SEM5-PI-2026-27-3DJ-05/config/allowed-endpoints.schema.json) estabelece, entre outras regras:
 
-```text
-/endpoints/3/protocol must be equal to one of the allowed values
-...
-EGRESS: INVALID — schema validation failed
-```
+- `version` é obrigatório e tem de ser `1`;
+- `endpoints` é obrigatório e não pode estar vazio;
+- campos não definidos no schema são rejeitados;
+- `protocol` só pode ser `tcp` ou `udp`;
+- cada endpoint tem `port` ou `ports`, mas não ambos;
+- as portas têm de estar entre 1 e 65535;
+- cada destino é uma string não vazia;
+- os nomes têm formato restrito.
 
-Isto corresponde ao caminho `/endpoints/3/protocol`: o quinto item da lista — índices JSON começam em zero — tinha um `protocol` que não correspondia aos permitidos pelo schema (`tcp` e `udp`). O validador imprime o caminho e a razão; o Bash chama `fail`; a tabela não chega ao bloco de aplicação.
+**Justificação:** a validação transforma a configuração numa interface controlada para a política. Erros de escrita, portas inválidas ou propriedades inesperadas são detectados antes de serem convertidos em regras.
 
-# Como explicar os testes e o que cada um demonstra
+Os nomes dos endpoints são ainda verificados pelo JavaScript para evitar duplicados. Essa validação adicional foi escolhida porque a unicidade da propriedade `name` entre vários objectos não é garantida simplesmente por validar cada objecto individualmente.
 
-## 1. Pré-visualização
+## 15. Actualização DNS automática
+
+O serviço e o timer estão em [laprizza-egress.service](C:/Users/pedro/vsc/LEI-SEM5-PI-2026-27-3DJ-05/config/cron/laprizza-egress.service) e [laprizza-egress.timer](C:/Users/pedro/vsc/LEI-SEM5-PI-2026-27-3DJ-05/config/cron/laprizza-egress.timer).
+
+O serviço é `oneshot`, corre como `root`, define `APPLY=true` e executa o script instalado em `/opt/laprizza/scripts/egress.sh`. O timer agenda novas execuções de seis em seis horas.
+
+**Justificação:** os nomes DNS podem passar a apontar para outros endereços. Como as regras nftables geradas contêm endereços IP resolvidos, uma execução periódica volta a validar a configuração e a actualizar esses IPs sem exigir alteração manual de regras.
+
+`make egress-timer` instala os ficheiros necessários e activa o timer. O Makefile verifica primeiro que Ajv e Ajv Formats estão instalados nas dependências de produção do backend.
+
+## 16. Verificações e justificação de cada teste
+
+### Pré-visualizar
 
 ```bash
 make egress-dry-run
 ```
 
-O alvo chama o script sem `APPLY=true`. Demonstra que o YAML foi analisado, validado, resolvido e convertido num lote que passou `nft -c`. **Não demonstra, por si só, que essa tabela foi aplicada.**
+Valida o YAML, resolve os destinos, constrói o lote e executa `nft -c`, sem aplicar as regras.
 
-Depois de uma aplicação, a verificação do estado activo é:
+**Justificação:** permite rever a política proposta antes de alterar a firewall.
+
+**Limite:** não prova que a tabela esteja activa.
+
+### Aplicar
+
+```bash
+make egress-apply
+```
+
+Define `APPLY=true` e executa o caminho de aplicação.
+
+**Justificação:** a aplicação requer uma decisão explícita distinta da pré-visualização.
+
+### Inspeccionar a política activa
 
 ```bash
 sudo nft list table inet laprizza_sys03
 ```
 
-## 2. Destino permitido e destino recusado
+**Justificação:** confirma que a tabela está no estado activo do kernel e permite verificar destinos, portas, regras de descarte e contadores.
 
-Os registos de validação em `docs/asist/evidence/sys02-sys03-vs582-20261121.md` resumem os seguintes resultados no servidor:
-
-- Google por HTTPS: resposta HTTP 200;
-- Gmail por TCP/587: ligação estabelecida;
-- `1.1.1.1:443`, que não consta da lista autorizada: timeout e aumento do contador IPv4 de *drop*.
-
-O teste permitido demonstra que o serviço necessário continua acessível. O teste recusado, em conjunto com o contador, dá evidência de que o pacote não autorizado foi descartado pela política.
-
-## 3. Configuração inválida e preservação da tabela
-
-O teste de configuração inválida que executaste usou uma cópia temporária do YAML, modificou o valor de `protocol` e comparou a tabela antes e depois. A saída que partilhaste foi:
-
-```text
-/endpoints/3/protocol must be equal to one of the allowed values
-[ERROR] schema validation failed
-EGRESS: INVALID — schema validation failed
-PASS: configuração inválida rejeitada (exit=1)
-PASS: a política activa não mudou
-...
-ACTION=apply RESULT=invalid ...
-```
-
-Este teste demonstra quatro coisas para aquela alteração inválida:
-
-1. o schema detectou o valor não permitido;
-2. o script devolveu código de erro;
-3. a operação ficou registada como inválida;
-4. a tabela comparada antes e depois não mudou.
-
-## 4. Serviço e timer
-
-Os comandos de verificação descritos no runbook são:
+### Verificar o serviço e o timer
 
 ```bash
 sudo systemctl status laprizza-egress.service
@@ -755,32 +627,53 @@ systemctl list-timers laprizza-egress.timer
 sudo journalctl -u laprizza-egress --no-pager
 ```
 
-Mostram, respectivamente, o estado da execução do serviço, se o timer está activado, a próxima execução agendada e as mensagens de execuções anteriores. A evidência versionada da SYS03 regista timer activo e uma execução manual do serviço terminada com `status=0/SUCCESS`.
+Estes comandos mostram o resultado da execução do serviço, se o timer está habilitado, quando está prevista a próxima execução e as mensagens das execuções.
 
-## 5. Auditoria e mensagens do kernel
+**Justificação:** a presença do script no repositório não prova que foi instalado ou executado no servidor. As unidades systemd permitem verificar essa parte operacional.
+
+### Testar um destino permitido e um não permitido
+
+Os resultados registados na evidência SYS03 indicam que:
+
+- HTTPS para Google devolveu HTTP 200;
+- TCP/587 para Gmail foi estabelecido;
+- a ligação a `1.1.1.1:443`, que não estava na allowlist, expirou e incrementou o contador IPv4 de `drop`.
+
+**Justificação:** testar os dois casos verifica simultaneamente a disponibilidade dos serviços necessários e a recusa de um destino não declarado. O contador de `drop` ajuda a relacionar a falha com a política de firewall; um timeout sem essa correlação não identifica, por si só, onde ocorreu o bloqueio.
+
+### Testar configuração inválida
+
+Na execução partilhada, uma cópia temporária da configuração continha um `protocol` não permitido. O resultado foi:
+
+```text
+/endpoints/3/protocol must be equal to one of the allowed values
+[ERROR] schema validation failed
+EGRESS: INVALID — schema validation failed
+PASS: configuração inválida rejeitada (exit=1)
+PASS: a política activa não mudou
+```
+
+O teste comparou a tabela antes e depois da execução inválida.
+
+**Justificação:** comprova que a validação rejeitou esse valor, devolveu erro e não alterou a tabela activa observada. É uma verificação do comportamento de falha segura para essa configuração concreta.
+
+### Verificar logs e auditoria
 
 ```bash
 sudo tail -n 20 /var/log/laprizza/egress.log
 sudo tail -n 20 /var/log/laprizza/egress-changes.log
 sudo journalctl -k --grep 'LAPRIZZA-SYS03-DENY' --no-pager
-sudo nft list table inet laprizza_sys03
 ```
 
-- `egress.log`: mensagens de validação e execução.
-- `egress-changes.log`: actor, resultado, contagem de regras, hash do YAML e revisão Git.
-- `journalctl -k`: mensagens do kernel geradas pelas regras `log`.
-- `nft list table`: regras e contadores activos.
+- `egress.log` contém mensagens operacionais;
+- `egress-changes.log` identifica actor, resultado, quantidade de regras, hash e revisão;
+- `journalctl -k` permite procurar os pacotes registados pelas regras.
 
-O `limit rate` nas regras de log impede que cada pacote de um fluxo intenso produza uma mensagem. Por isso, os registos são limitados; os contadores de *drop* continuam a ser úteis para observar o tráfego descartado.
+**Justificação:** logs operacionais, auditoria de alterações e registo de pacotes respondem a perguntas diferentes. Mantê-los separados torna mais fácil perceber se ocorreu uma falha de configuração, uma aplicação ou um pacote recusado.
 
-# `vim` versus `cat <<NFT`
+## 17. `vim` versus `cat <<NFT`
 
-A pergunta é boa, mas na SYS03 há **dois tipos diferentes de ficheiro**:
-
-1. **A configuração mantida por pessoas:** `config/allowed-endpoints.yml`. É perfeitamente razoável editá-la com `vim`, VS Code ou outro editor.
-2. **As regras nftables geradas:** `policy.nft`, em `/tmp`. São produzidas pelo script para incorporar valores dinâmicos descobertos nessa execução.
-
-Por exemplo, uma alteração manual legítima começa por editar o YAML, não por editar `policy.nft`:
+A configuração editável é `config/allowed-endpoints.yml`; pode ser alterada num editor. Por exemplo:
 
 ```bash
 vim config/allowed-endpoints.yml
@@ -788,47 +681,39 @@ make egress-dry-run
 make egress-apply
 ```
 
-O `cat <<NFT` no script escreve um bloco de regras para um ficheiro temporário. As regras autorizadas são acrescentadas com `printf`, porque contêm variáveis como bridge, interface WAN, IP resolvido e porta. Um editor interactivo não serve para a execução do serviço systemd, que tem de terminar sem esperar por uma pessoa.
+O `cat <<NFT` usado no script gera o ficheiro temporário de regras. As regras dependem de valores obtidos durante a execução, como o nome da bridge, a sub-rede, a interface WAN e os IPs DNS resolvidos.
 
-Também convém corrigir uma ideia demasiado absoluta da resposta de referência: usar `vim` **não impede** versionamento ou auditoria. Se editares o YAML dentro do repositório, a alteração pode ser versionada em Git e revista por pull request. A vantagem do script é gerar as regras activas de forma repetível a partir dessa configuração, validá-las e aplicar apenas o lote produzido.
+**Justificação:** o editor é adequado à configuração mantida por pessoas; o script gera o lote específico do ambiente. Usar um editor para o lote durante a execução automática exigiria intervenção humana e não reproduziria de forma fiável os valores dinâmicos. A alteração ao YAML, por outro lado, pode ser versionada e revista em Git.
 
-# Perguntas difíceis do professor
+# Perguntas prováveis do professor
 
-**“Qual é a diferença entre a allowlist YAML e a tabela nftables?”**  
-A YAML é a configuração humana e versionada. A tabela nftables é a representação activa no kernel, gerada a partir da YAML depois de validação e resolução DNS.
+**“Por que se usa `forward` em vez de `OUTPUT`?”**  
+A política controla tráfego de contentores encaminhado pelo host. `OUTPUT` é o caminho de tráfego criado pelo próprio host.
 
-**“Por que o script consulta a rede Docker?”**  
-Para construir as regras com a sub-rede e a bridge da rede seleccionada. Assim, a regra aplica-se ao tráfego que parte dessa rede e não a uma interface presumida sem validação.
+**“Porque não guardar nomes DNS directamente nas regras?”**  
+As regras geradas usam IPs. O script resolve os nomes para endereços A antes da aplicação e regenera esses endereços nas execuções periódicas.
 
-**“Porque resolver nomes para IPv4?”**  
-As regras geradas usam endereços IP concretos. O script consulta os servidores configurados, reúne as respostas A e cria uma regra por endereço resolvido.
+**“O que acontece se um destino não resolver?”**  
+O nome é registado na lista de falhas e a execução termina antes da aplicação da nova tabela.
 
-**“O que acontece se um endpoint não resolver?”**  
-O nome entra na lista `FAILED`; no fim da fase DNS, `fail` termina o script antes de substituir a tabela.
+**“O que significa `internal_only`?”**  
+Significa que esse endpoint é excluído da geração de regras externas. A comunicação entre serviços internos depende da configuração das redes Docker.
 
-**“O que garante que o YAML está bem formado?”**  
-`yq` tenta analisá-lo. Depois, Ajv valida o JSON contra o schema. O validador também verifica a unicidade dos nomes dos endpoints.
+**“O `policy accept` significa que a SYS03 autoriza qualquer saída?”**  
+Não. As regras específicas de `log` e `drop` tratam o tráfego da bridge seleccionada para a interface WAN. A tabela não substitui a política de saída do host nem as tabelas Docker.
 
-**“O `policy accept` significa que tudo está permitido?”**  
-Não significa isso isoladamente. As regras explícitas de recusa da SYS03 correspondem à bridge e sub-rede seleccionadas em direcção à WAN. O `policy accept` evita que esta chain descarte indiscriminadamente todo o encaminhamento do host.
+**“O que valida o Ajv e o que valida `nft -c`?”**  
+Ajv valida estrutura e valores da configuração. `nft -c` valida a sintaxe e aceitabilidade do lote de regras gerado. São validações de camadas diferentes.
 
-**“Porque há uma regra `established,related accept`?”**  
-Para deixar passar pacotes pertencentes a ligações que o connection tracking já conhece. As regras de autorização definem os novos destinos e portas; o estado permite o tráfego das ligações autorizadas já estabelecidas.
+**“Por que se regista um hash do YAML?”**  
+Para identificar o conteúdo exacto da configuração associada à tentativa de aplicação, incluindo quando o código do script é o mesmo.
 
-**“A SYS03 controla a saída do host?”**  
-Não. O âmbito declarado é o tráfego encaminhado dos contentores de runtime. A saída originada pelo host e as tabelas que o Docker gere ficam fora da tabela `laprizza_sys03`.
+**“O que demonstra o teste inválido?”**  
+Que o valor de protocolo testado foi rejeitado pelo schema, a execução terminou com código diferente de zero e a comparação da tabela antes/depois indicou que a política activa não mudou.
 
-**“Porque existe um timer de seis em seis horas?”**  
-As regras contêm IPs resolvidos, que podem mudar com o DNS. O timer volta a validar e resolver a configuração e reaplica a tabela.
+**“O timer actualiza imediatamente um endereço DNS?”**  
+Não. O script volta a resolver os nomes quando é executado. Com o timer de seis horas, uma alteração DNS é incorporada na execução seguinte.
 
-**“A alteração de firewall exige reiniciar a aplicação?”**  
-Não. `nft -f` aplica a tabela no kernel; o alvo `make egress-apply` não reinicia os serviços da aplicação.
+## Síntese para a defesa
 
-**“O que prova `nft -c`?”**  
-Que o lote gerado é aceite pela verificação do nftables. Como é modo de verificação, não prova que a tabela tenha sido instalada.
-
-**“O que prova a comparação antes/depois do teste inválido?”**  
-Que, para aquela configuração que falhou no schema, a execução não alterou a tabela activa observada. O output também mostrou o erro e o código de saída não zero.
-
-**Resposta curta para apresentar a SYS03:**  
-“Definimos os destinos externos num YAML versionado e validado por JSON Schema. O script resolve os nomes, descobre a rede Docker e a interface WAN, gera uma tabela nftables específica para o tráfego encaminhado dos contentores, valida-a com `nft -c` e só a aplica com `APPLY=true`. As regras autorizam os destinos e portas definidos, registam e descartam a saída não listada, e um timer renova os IPs obtidos por DNS. Verificámos destinos permitidos e bloqueados e testámos que um `protocol` inválido é rejeitado sem alterar a tabela activa.”
+> “A SYS03 declara os destinos externos num YAML versionado e valida-os contra um JSON Schema, complementado por uma verificação de nomes únicos. O script descobre a rede Docker e a interface WAN, resolve os destinos para IPv4 e gera regras nftables no hook `forward`, limitadas à bridge, sub-rede, destino, protocolo e porta. O tráfego não autorizado nesse percurso é registado e descartado; o tráfego IPv6 da bridge para a WAN também é descartado. O script valida o lote com `nft -c` e só o aplica com `APPLY=true`. Um timer volta a resolver os nomes periodicamente. Verificámos destinos autorizados e não autorizados e testámos que uma configuração com protocolo inválido é rejeitada sem alterar a tabela activa observada.”
